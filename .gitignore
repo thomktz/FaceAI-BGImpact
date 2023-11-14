@@ -1,1 +1,5 @@
-data_processing/ffhq_raw/*
+# Ignore image files in data_processing folder and subfolders
+data_processing/**/*.jpg
+data_processing/**/*.jpeg
+data_processing/**/*.png
+data_processing/**/*.gif

@@ -1,0 +1,7 @@
+dataset_kaggle_path = "greatgamedota/ffhq-face-data-set"
+data_folder = "data_processing/"
+original_raw_folder_name = data_folder + "thumbnails128x128"
+raw_folder_name = data_folder + "ffhq_raw"
+mask_folder_name = data_folder + "ffhq_mask"
+blur_folder_name = data_folder + "ffhq_blur"
+grey_folder_name = data_folder + "ffhq_grey"
