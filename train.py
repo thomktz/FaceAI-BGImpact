@@ -10,9 +10,14 @@ from models.data_loader import get_dataloaders
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Deep Learning Model Training")
-    # Only GAN works for now, VAE later
-    parser.add_argument("--model_type", type=str, required=True, choices=["gan", "vae"], help="Type of model to train")
-    parser.add_argument("--config_path", type=str, default=None, help="Path to a custom JSON configuration file")
+    parser.add_argument("--model-type", type=str, required=True, choices=["gan", "vae"], help="Type of model to train")
+    parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
+    parser.add_argument("--lr", type=float, help="Learning rate")
+    parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
+    parser.add_argument("--batch-size", type=int, help="Batch size")
+    parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
+    parser.add_argument("--log-interval", type=int, help="Number of batches to wait before logging training progress")
+    parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
     return parser.parse_args()
 
 def load_default_config(model_type):
@@ -25,13 +30,20 @@ def main(args):
     # Load the default configuration based on the model type
     default_config = load_default_config(args.model_type)
 
-    # Merge the default configuration with the custom JSON configuration file if provided
+    # Load the custom configuration from the provided JSON file if specified
     if args.config_path:
         with open(args.config_path, "r") as custom_config_file:
             custom_config = json.load(custom_config_file)
-        config = {**default_config, **custom_config}
     else:
-        config = default_config
+        custom_config = {}
+
+    # Merge the default and custom configurations, giving priority to custom settings
+    config = {**default_config, **custom_config}
+
+    # Override specific settings with command-line arguments, if provided
+    for key, value in vars(args).items():
+        if value is not None:
+            config[key] = value
 
     # Set the device (CPU or GPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -44,8 +56,6 @@ def main(args):
             latent_dim=config["latent_dim"],
             batch_size=config["batch_size"]
         )
-    elif args.model_type == "vae":
-        raise NotImplementedError("VAE not implemented yet")
     else:
         raise ValueError("Invalid model type")
 
@@ -55,7 +65,7 @@ def main(args):
         device=device,
         log_interval=config["log_interval"],
         save_interval=config["save_interval"],
-        test_batches_limit=config["test_batches_limit"]
+        test_batches_limit=None
     )
 
 if __name__ == "__main__":

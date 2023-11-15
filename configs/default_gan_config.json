@@ -5,6 +5,5 @@
     "batch_size": 64,
     "num_epochs": 5,
     "log_interval": 630,
-    "save_interval": 1,
-    "test_batches_limit": null
+    "save_interval": 1
 }
