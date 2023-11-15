@@ -7,8 +7,8 @@ from datetime import datetime
 from tqdm import tqdm
 from torchvision.utils import save_image
 
-from .data_loader import get_dataloaders
-from .abstract_model import AbstractModel
+from models.data_loader import get_dataloaders
+from models.abstract_model import AbstractModel
 
 DEFAULT_LATENT_DIM = 100
 

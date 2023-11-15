@@ -1,6 +1,6 @@
 import os
 import kaggle
-from .paths import (
+from data_processing.paths import (
     data_folder,
     ffhq_raw_kaggle_path,
     raw_folder_name,
