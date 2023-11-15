@@ -11,6 +11,7 @@ from models.data_loader import get_dataloaders
 def parse_args():
     parser = argparse.ArgumentParser(description="Deep Learning Model Training")
     parser.add_argument("--model-type", type=str, required=True, choices=["gan", "vae"], help="Type of model to train")
+    parser.add_argument("--dataset-name", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
     parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
     parser.add_argument("--lr", type=float, help="Learning rate")
     parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
