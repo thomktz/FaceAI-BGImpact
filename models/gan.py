@@ -8,8 +8,9 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 
 from .data_loader import get_dataloaders
+from .abstract_model import AbstractModel
 
-LATENT_DIM = 100
+DEFAULT_LATENT_DIM = 100
 
 class Generator(nn.Module):
     """
@@ -167,38 +168,38 @@ class Discriminator(nn.Module):
         optimizer_D.step()
         return d_loss
                     
-class GAN:
+class GAN(AbstractModel):
     """
-    GAN class.
+    GAN class that inherits from our AbstractModel.
     
     Parameters
     ----------
-    dataset : str
-        Name of the dataset to use. Defaults to "ffhq_raw".
+    dataset_name : str
+        Name of the dataset to use.
     lr : float
-        Learning rate. Defaults to 0.0002.
+        Learning rate.
     latent_dim : int
-        Dimension of the latent space. Defaults to 100.
+        Dimension of the latent space.
     batch_size : int
-        Batch size. Defaults to 64.
+        Batch size.
     """
     
-    def __init__(self, dataset="ffhq_raw", lr=0.0002, latent_dim=LATENT_DIM, batch_size=64):
-        self.dataset = dataset
+    def __init__(self, dataset_name="ffhq_raw", lr=0.0002, latent_dim=DEFAULT_LATENT_DIM, batch_size=64):
+        # Initialize the abstract class
+        super().__init__(dataset_name, batch_size)
+
+        # GAN-specific attributes
         self.generator = Generator(latent_dim)
         self.discriminator = Discriminator()
         self.latent_dim = latent_dim
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.adversarial_loss = nn.BCELoss()
-        
-        self.train_loader, self.test_loader = get_dataloaders(dataset, batch_size)
 
+        # Apply the weights initialization
         self.generator.apply(self.weights_init_normal)
         self.discriminator.apply(self.weights_init_normal)
-        
-        self.epoch_losses = {"train": [], "test": []}
-        
+
     @staticmethod
     def weights_init_normal(m):
         """
