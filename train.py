@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
     parser.add_argument("--to-drive", default=False, action='store_true', help="Flag indicating whether to save outputs to Google Drive")
+    parser.add_argument("--from-drive", default=False, action='store_true', help="Flag indicating whether to load checkpoints from Google Drive")
     parser.add_argument("--drive-path", type=str, default="AML/", help="Subdirectory path in Google Drive to save the outputs")
     return parser.parse_args()
 
@@ -52,14 +53,16 @@ def main(args):
     
     # Set checkpoint path if resuming from a checkpoint
     checkpoint_path = None
-    if args.checkpoint_epoch is not None:
-        checkpoint_dir = "outputs/checkpoints_{}".format(args.dataset_name)
+    if args.from_drive and args.checkpoint_epoch is not None:
+        checkpoint_dir = f"/content/drive/MyDrive/{args.drive_path}/outputs/checkpoints_{args.dataset_name}"
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
-        print(f"Resuming from checkpoint: {checkpoint_path}")
         
-    if args.checkpoint_path is not None:
+    elif args.checkpoint_epoch is not None:
+        checkpoint_dir = f"outputs/checkpoints_{args.dataset_name}"
+        checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
+        
+    elif args.checkpoint_path is not None:
         checkpoint_path = args.checkpoint_path
-        print(f"Resuming from checkpoint: {checkpoint_path}")
 
     if args.model_type == "gan":
         model = GAN(
