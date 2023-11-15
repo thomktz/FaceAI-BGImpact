@@ -278,6 +278,7 @@ class GAN(AbstractModel):
                 self.epoch_losses[phase].append(epoch_loss)
             
             if ((epoch + 1) % save_interval == 0) or (epoch <= 3) :
+                print(f"Saving models and generated images at epoch {epoch+1}...")
                 self.save_checkpoint(epoch)
                 self.save_generated_images(epoch, device)
     
