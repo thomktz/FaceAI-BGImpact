@@ -12,7 +12,8 @@ Advanced Machine Learning project: Effect of removing the background from traini
 ├── data_processing           # Scripts for data preprocessing and organization
 │ ├── create_blur_and_grey.py # Script to create blurred and grey variants of images
 │ ├── create_masks.py         # Script to create masks for images
-│ ├── download_ffhq.py        # Script to download the FFHQ dataset
+│ ├── download_raw_ffhq.py    # Script to download the raw FFHQ dataset
+│ ├── download_all_ffhq.py    # Script to download all FFHQs dataset
 │ └── paths.py                # Utility script to define path constants
 ├── models                    # Model definitions and utilities
 │ ├── data_loader.py          # Data loading utilities for GAN training
