@@ -51,7 +51,7 @@ def main(args):
     # Initialize the appropriate model
     if args.model_type == "gan":
         model = GAN(
-            dataset=config["dataset_name"],
+            dataset_name=config["dataset_name"],
             lr=config["lr"],
             latent_dim=config["latent_dim"],
             batch_size=config["batch_size"]

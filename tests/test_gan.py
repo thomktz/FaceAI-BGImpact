@@ -6,7 +6,7 @@ from models.data_loader import get_dataloaders
 
 @pytest.fixture
 def sample_gan():
-    return GAN(dataset="ffhq_raw", lr=0.0002, latent_dim=100, batch_size=10)
+    return GAN(dataset_name="ffhq_raw", lr=0.0002, latent_dim=100, batch_size=10)
 
 def test_gan_initialization(sample_gan):
     assert sample_gan.generator is not None, "Generator not initialized"

@@ -10,6 +10,8 @@ class AbstractModel(ABC):
     """
     
     def __init__(self, dataset_name, batch_size):
+        self.dataset_name = dataset_name
+        self.batch_size = batch_size
         self.train_loader, self.test_loader = get_dataloaders(dataset_name, batch_size)
         self.epoch_losses = {"train": [], "test": []}
     

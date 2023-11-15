@@ -377,7 +377,7 @@ class GAN(AbstractModel):
             Generator loss.
         """
         
-        print(f"Dataset {self.dataset} - Epoch [{epoch+1}/{num_epochs}] Batch {batch_idx}/{total_batches} "
+        print(f"Dataset {self.dataset_name} - Epoch [{epoch+1}/{num_epochs}] Batch {batch_idx}/{total_batches} "
             f"Loss D: {d_loss.item():.4f}, Loss G: {g_loss.item():.4f}")
 
     def save_models(self, epoch, save_dir="models"):
@@ -391,7 +391,7 @@ class GAN(AbstractModel):
         save_dir : str
             Directory to save the models to.
         """
-        save_folder = f"{save_dir}_{self.dataset}"
+        save_folder = f"{save_dir}_{self.dataset_name}"
         os.makedirs(save_folder, exist_ok=True)
         
         torch.save(self.generator.state_dict(), f"{save_folder}/generator_epoch_{epoch+1}.pth")
@@ -411,7 +411,7 @@ class GAN(AbstractModel):
             Directory to save the images to.
         """
         
-        save_folder = f"{save_dir}_{self.dataset}"
+        save_folder = f"{save_dir}_{self.dataset_name}"
         os.makedirs(save_folder, exist_ok=True)
         z = torch.randn(64, self.latent_dim).to(device)  # Generate random latent vectors
         fake_images = self.generator(z).detach().cpu()
