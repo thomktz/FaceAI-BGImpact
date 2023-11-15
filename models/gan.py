@@ -219,7 +219,7 @@ class GAN(AbstractModel):
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
                 
-    def train(self, num_epochs, device, log_interval=100, save_interval=1, test_batches_limit=None):
+    def train(self, num_epochs, device, log_interval=100, save_interval=1, test_batches_limit=None, checkpoint_path=None):
         """
         Main training loop.
         
@@ -235,11 +235,17 @@ class GAN(AbstractModel):
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
         test_batches_limit : int
             Number of batches to use for testing. Defaults to None.
+        checkpoint_path : str
+            Path to a checkpoint to load. Defaults to None.
         """
         
         dataloaders = {"train": self.train_loader, "test": self.test_loader}
 
-        for epoch in range(num_epochs):
+        start_epoch = 0
+        if checkpoint_path:
+            start_epoch = self.load_checkpoint(checkpoint_path, device)
+        
+        for epoch in range(start_epoch, num_epochs):
             for phase in ["train", "test"]:
                 if phase == "train":
                     self.generator.train()
@@ -283,9 +289,10 @@ class GAN(AbstractModel):
 
                 epoch_loss = running_loss / len(dataloaders[phase])
                 self.epoch_losses[phase].append(epoch_loss)
-
+            
             if (epoch + 1) % save_interval == 0:
                 self.save_models(epoch)
+                self.save_checkpoint(epoch)
                 self.save_generated_images(epoch, device)
     
     def perform_train_step(self, real_imgs, real_labels, fake_labels, batch_size, device):
@@ -384,7 +391,7 @@ class GAN(AbstractModel):
 
     def save_models(self, epoch, save_dir="models"):
         """
-        Save the models.
+        Save only the models.
         
         Parameters
         ----------
@@ -418,3 +425,44 @@ class GAN(AbstractModel):
         z = torch.randn(64, self.latent_dim).to(device)  # Generate random latent vectors
         fake_images = self.generator(z).detach().cpu()
         save_image(fake_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=True)
+        
+    def save_checkpoint(self, epoch, save_dir='checkpoints'):
+        """
+        Save a checkpoint of the current state. This includes the models, optimizers, and losses.
+        
+        Parameters
+        ----------
+        epoch : int
+            Current epoch.
+        save_dir : str
+            Directory to save the checkpoint to.
+        """
+        
+        save_folder = f"{save_dir}_{self.dataset_name}"
+        os.makedirs(save_folder, exist_ok=True)
+        checkpoint_path = os.path.join(save_folder, f"checkpoint_epoch_{epoch}.pth")
+        
+        checkpoint = {
+            'epoch': epoch,
+            'generator_state_dict': self.generator.state_dict(),
+            'discriminator_state_dict': self.discriminator.state_dict(),
+            'optimizer_G_state_dict': self.optimizer_G.state_dict(),
+            'optimizer_D_state_dict': self.optimizer_D.state_dict(),
+            'losses': self.epoch_losses
+        }
+        torch.save(checkpoint, checkpoint_path)
+        return checkpoint_path
+
+    def load_checkpoint(self, checkpoint_path, device):
+        """
+        Load the checkpoint.
+        """
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        
+        self.generator.load_state_dict(checkpoint['generator_state_dict'])
+        self.discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
+        self.optimizer_G.load_state_dict(checkpoint['optimizer_G_state_dict'])
+        self.optimizer_D.load_state_dict(checkpoint['optimizer_D_state_dict'])
+        self.epoch_losses = checkpoint['losses']
+        
+        return checkpoint['epoch']
