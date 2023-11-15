@@ -244,6 +244,7 @@ class GAN(AbstractModel):
         start_epoch = 0
         if checkpoint_path:
             start_epoch = self.load_checkpoint(checkpoint_path, device)
+            print(f"Resuming training from epoch {start_epoch}...")
         
         for epoch in range(start_epoch, num_epochs):
             for phase in ["train", "test"]:
