@@ -9,7 +9,7 @@ class AbstractModel(ABC):
     Subclasses are required to implement the defined abstract methods.
     """
     
-    def __init__(self, dataset_name, batch_size, drive_path="AML", to_drive=False):
+    def __init__(self, dataset_name, batch_size, drive_path, to_drive):
         
         self.drive_path = drive_path
         self.to_drive = to_drive

@@ -10,8 +10,6 @@ from torchvision.utils import save_image
 from models.data_loader import get_dataloaders
 from models.abstract_model import AbstractModel
 
-DEFAULT_LATENT_DIM = 100
-
 class Generator(nn.Module):
     """
     Generator class for the GAN.
@@ -187,9 +185,9 @@ class GAN(AbstractModel):
         Device to use for training.
     """
     
-    def __init__(self, dataset_name="ffhq_raw", lr=0.0002, latent_dim=DEFAULT_LATENT_DIM, batch_size=64, device="cpu"):
+    def __init__(self, dataset_name, lr, latent_dim, batch_size, device, drive_path, to_drive):
         # Initialize the abstract class
-        super().__init__(dataset_name, batch_size)
+        super().__init__(dataset_name, batch_size, drive_path, to_drive)
 
         # GAN-specific attributes
         self.generator = Generator(latent_dim).to(device)
@@ -220,7 +218,7 @@ class GAN(AbstractModel):
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
                 
-    def train(self, num_epochs, device, log_interval=100, save_interval=1, test_batches_limit=None, checkpoint_path=None):
+    def train(self, num_epochs, device, log_interval, save_interval, checkpoint_path=None):
         """
         Main training loop.
         
@@ -234,8 +232,6 @@ class GAN(AbstractModel):
             Number of batches to wait before logging training progress. Defaults to 100. Can be None.
         save_interval : int
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
-        test_batches_limit : int
-            Number of batches to use for testing. Defaults to None.
         checkpoint_path : str
             Path to a checkpoint to load. Defaults to None.
         """
@@ -279,10 +275,6 @@ class GAN(AbstractModel):
 
                         if log_interval is not None and i % log_interval == 0:
                             self.log_training(epoch, num_epochs, i, len(dataloaders[phase]), g_loss, d_loss)
-                        
-                        # Early stopping for pytest
-                        if test_batches_limit is not None and i == test_batches_limit:
-                            break
                     
                     else:  # phase == "test"
                         with torch.no_grad():
