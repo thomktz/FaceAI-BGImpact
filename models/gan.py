@@ -230,7 +230,7 @@ class GAN(AbstractModel):
         device : torch.device
             Device to use for training.
         log_interval : int
-            Number of batches to wait before logging training progress. Defaults to 100.
+            Number of batches to wait before logging training progress. Defaults to 100. Can be None.
         save_interval : int
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
         test_batches_limit : int
@@ -275,7 +275,7 @@ class GAN(AbstractModel):
                         g_loss, d_loss = self.perform_train_step(imgs, real_labels, fake_labels, batch_size, device)
                         running_loss += g_loss.item() + d_loss.item()
 
-                        if i % log_interval == 0:
+                        if log_interval is not None and i % log_interval == 0:
                             self.log_training(epoch, num_epochs, i, len(dataloaders[phase]), g_loss, d_loss)
                         
                         # Early stopping for pytest

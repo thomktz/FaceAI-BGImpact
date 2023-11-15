@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--log-interval", type=int, help="Number of batches to wait before logging training progress")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
+    parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training")
     return parser.parse_args()
 
 def load_default_config(model_type):
@@ -68,7 +69,8 @@ def main(args):
         device=device,
         log_interval=config["log_interval"],
         save_interval=config["save_interval"],
-        test_batches_limit=None
+        test_batches_limit=None,
+        checkpoint_path=args.checkpoint_path,
     )
 
 if __name__ == "__main__":
