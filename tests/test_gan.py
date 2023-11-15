@@ -15,10 +15,9 @@ def test_gan_initialization(sample_gan):
 def test_gan_train_step(sample_gan):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     num_epochs = 1
-    test_batches_limit = 50  # Limit the number of batches for testing
 
 
-    sample_gan.train(num_epochs=num_epochs, device=device, test_batches_limit=test_batches_limit)
+    sample_gan.train(num_epochs=num_epochs, device=device)
 
     # Check if grads are updated
     assert sample_gan.generator_optimizer.param_groups[0]['params'][0].grad is not None, "Generator grads not updated"
