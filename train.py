@@ -85,7 +85,6 @@ def main(args):
         device=device,
         log_interval=config["log_interval"],
         save_interval=config["save_interval"],
-        test_batches_limit=None,
         checkpoint_path=checkpoint_path,
     )
 
