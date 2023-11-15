@@ -19,7 +19,8 @@ def parse_args():
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--log-interval", type=int, help="Number of batches to wait before logging training progress")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
-    parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training")
+    parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
+    parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
     return parser.parse_args()
 
 def load_default_config(model_type):
@@ -50,6 +51,17 @@ def main(args):
     # Set the device (CPU or GPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
+    
+    # Set checkpoint path if resuming from a checkpoint
+    checkpoint_path = None
+    if args.checkpoint_epoch is not None:
+        checkpoint_dir = "outputs/checkpoints_{}".format(args.dataset_name)
+        checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
+        print(f"Resuming from checkpoint: {checkpoint_path}")
+        
+    if args.checkpoint_path is not None:
+        checkpoint_path = args.checkpoint_path
+        print(f"Resuming from checkpoint: {checkpoint_path}")
 
     # Initialize the appropriate model
     if args.model_type == "gan":
@@ -70,7 +82,7 @@ def main(args):
         log_interval=config["log_interval"],
         save_interval=config["save_interval"],
         test_batches_limit=None,
-        checkpoint_path=args.checkpoint_path,
+        checkpoint_path=checkpoint_path,
     )
 
 if __name__ == "__main__":
