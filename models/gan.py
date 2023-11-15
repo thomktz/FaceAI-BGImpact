@@ -214,7 +214,7 @@ class GAN(AbstractModel):
         """
         
         classname = m.__class__.__name__
-        if classname.find('Linear') != -1: 
+        if classname.find("Linear") != -1: 
             nn.init.normal_(m.weight.data, 0.0, 0.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
@@ -389,7 +389,7 @@ class GAN(AbstractModel):
         print(f"Dataset {self.dataset_name} - Epoch [{epoch+1}/{num_epochs}] Batch {batch_idx}/{total_batches} "
             f"Loss D: {d_loss.item():.4f}, Loss G: {g_loss.item():.4f}")
 
-    def save_models(self, epoch, save_dir="models"):
+    def save_models(self, epoch, save_dir="outputs/models"):
         """
         Save only the models.
         
@@ -406,7 +406,7 @@ class GAN(AbstractModel):
         torch.save(self.generator.state_dict(), f"{save_folder}/generator_epoch_{epoch+1}.pth")
         torch.save(self.discriminator.state_dict(), f"{save_folder}/discriminator_epoch_{epoch+1}.pth")
 
-    def save_generated_images(self, epoch, device, save_dir="generated_images"):
+    def save_generated_images(self, epoch, device, save_dir="outputs/generated_images"):
         """
         Save generated images.
         
@@ -426,7 +426,7 @@ class GAN(AbstractModel):
         fake_images = self.generator(z).detach().cpu()
         save_image(fake_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=True)
         
-    def save_checkpoint(self, epoch, save_dir='checkpoints'):
+    def save_checkpoint(self, epoch, save_dir="outputs/checkpoints"):
         """
         Save a checkpoint of the current state. This includes the models, optimizers, and losses.
         
@@ -443,12 +443,12 @@ class GAN(AbstractModel):
         checkpoint_path = os.path.join(save_folder, f"checkpoint_epoch_{epoch}.pth")
         
         checkpoint = {
-            'epoch': epoch,
-            'generator_state_dict': self.generator.state_dict(),
-            'discriminator_state_dict': self.discriminator.state_dict(),
-            'optimizer_G_state_dict': self.optimizer_G.state_dict(),
-            'optimizer_D_state_dict': self.optimizer_D.state_dict(),
-            'losses': self.epoch_losses
+            "epoch": epoch + 1, # Since we want to start from the next epoch
+            "generator_state_dict": self.generator.state_dict(),
+            "discriminator_state_dict": self.discriminator.state_dict(),
+            "optimizer_G_state_dict": self.optimizer_G.state_dict(),
+            "optimizer_D_state_dict": self.optimizer_D.state_dict(),
+            "losses": self.epoch_losses
         }
         torch.save(checkpoint, checkpoint_path)
         return checkpoint_path
@@ -459,10 +459,10 @@ class GAN(AbstractModel):
         """
         checkpoint = torch.load(checkpoint_path, map_location=device)
         
-        self.generator.load_state_dict(checkpoint['generator_state_dict'])
-        self.discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
-        self.optimizer_G.load_state_dict(checkpoint['optimizer_G_state_dict'])
-        self.optimizer_D.load_state_dict(checkpoint['optimizer_D_state_dict'])
-        self.epoch_losses = checkpoint['losses']
+        self.generator.load_state_dict(checkpoint["generator_state_dict"])
+        self.discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
+        self.optimizer_G.load_state_dict(checkpoint["optimizer_G_state_dict"])
+        self.optimizer_D.load_state_dict(checkpoint["optimizer_D_state_dict"])
+        self.epoch_losses = checkpoint["losses"]
         
-        return checkpoint['epoch']
+        return checkpoint["epoch"]
