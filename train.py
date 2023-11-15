@@ -47,6 +47,7 @@ def main(args):
 
     # Set the device (CPU or GPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
     # Initialize the appropriate model
     if args.model_type == "gan":
