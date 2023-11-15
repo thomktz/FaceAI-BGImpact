@@ -1,5 +1,3 @@
-import torch
-import torch.nn as nn
 from abc import ABC, abstractmethod
 from models.data_loader import get_dataloaders
 

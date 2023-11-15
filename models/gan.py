@@ -3,11 +3,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from datetime import datetime
 from tqdm import tqdm
 from torchvision.utils import save_image
 
-from models.data_loader import get_dataloaders
 from models.abstract_model import AbstractModel
 
 class Generator(nn.Module):
@@ -276,7 +274,7 @@ class GAN(AbstractModel):
                         if log_interval is not None and i % log_interval == 0:
                             self.log_training(epoch, num_epochs, i, len(dataloaders[phase]), g_loss, d_loss)
                     
-                    else:  # phase == "test"
+                    else:
                         with torch.no_grad():
                             g_loss, d_loss = self.perform_validation_step(imgs, real_labels, fake_labels, batch_size, device)
                             running_loss += g_loss.item() + d_loss.item()
@@ -285,7 +283,6 @@ class GAN(AbstractModel):
                 self.epoch_losses[phase].append(epoch_loss)
             
             if (epoch + 1) % save_interval == 0:
-                self.save_models(epoch)
                 self.save_checkpoint(epoch)
                 self.save_generated_images(epoch, device)
     
