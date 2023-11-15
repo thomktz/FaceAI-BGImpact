@@ -4,6 +4,5 @@
     "latent_dim": 100,
     "batch_size": 64,
     "num_epochs": 5,
-    "log_interval": 10,
     "save_interval": 1
 }

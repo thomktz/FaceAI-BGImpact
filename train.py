@@ -14,7 +14,6 @@ def parse_args():
     parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
     parser.add_argument("--batch-size", type=int, help="Batch size")
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
-    parser.add_argument("--log-interval", type=int, help="Number of batches to wait before logging training progress")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
@@ -78,7 +77,6 @@ def main(args):
     model.train(
         num_epochs=config["num_epochs"],
         device=device,
-        log_interval=config["log_interval"],
         save_interval=config["save_interval"],
         checkpoint_path=checkpoint_path,
     )

@@ -26,7 +26,7 @@ Advanced Machine Learning project: Effect of removing the background from traini
 ```
 ## Training Script (train.py)
 
-The `train.py` script is an entry point to train a GAN. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for logging and saving.
+The `train.py` script is an entry point to train a GAN. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for saving.
 
 ## How to Use
 
@@ -38,7 +38,6 @@ The `train.py` script is an entry point to train a GAN. It includes command-line
 --latent-dim # Dimension of the latent space
 --batch-size # Batch size
 --num-epochs # Number of epochs to train
---log-interval # Interval for logging progress
 --save-interval # Interval for saving models and generated images
 ```
 3. To start training, run:

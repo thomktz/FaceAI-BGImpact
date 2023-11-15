@@ -47,7 +47,7 @@ class AbstractModel(ABC):
             return f"{base_dir}_{self.dataset_name}"
     
     @abstractmethod
-    def train(self, num_epochs, device, log_interval, save_interval):
+    def train(self, num_epochs, device, save_interval):
         """
         Run the training loop for the model.
         """

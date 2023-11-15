@@ -216,7 +216,7 @@ class GAN(AbstractModel):
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
                 
-    def train(self, num_epochs, device, log_interval, save_interval, checkpoint_path=None):
+    def train(self, num_epochs, device, save_interval, checkpoint_path=None):
         """
         Main training loop.
         
@@ -226,8 +226,6 @@ class GAN(AbstractModel):
             Number of epochs to train for.
         device : torch.device
             Device to use for training.
-        log_interval : int
-            Number of batches to wait before logging training progress. Defaults to 100. Can be None.
         save_interval : int
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
         checkpoint_path : str
@@ -270,9 +268,6 @@ class GAN(AbstractModel):
                         # Forward pass, backward pass, and optimize
                         g_loss, d_loss = self.perform_train_step(imgs, real_labels, fake_labels, batch_size, device)
                         running_loss += g_loss.item() + d_loss.item()
-
-                        if log_interval is not None and i % log_interval == 0:
-                            self.log_training(epoch, num_epochs, i, len(dataloaders[phase]), g_loss, d_loss)
                     
                     else:
                         with torch.no_grad():
@@ -282,7 +277,7 @@ class GAN(AbstractModel):
                 epoch_loss = running_loss / len(dataloaders[phase])
                 self.epoch_losses[phase].append(epoch_loss)
             
-            if (epoch + 1) % save_interval == 0:
+            if ((epoch + 1) % save_interval == 0) or (epoch <= 3) :
                 self.save_checkpoint(epoch)
                 self.save_generated_images(epoch, device)
     
@@ -355,30 +350,6 @@ class GAN(AbstractModel):
         d_loss = (real_loss + fake_loss) / 2
         
         return g_loss, d_loss
-
-                
-    def log_training(self, epoch, num_epochs, batch_idx, total_batches, d_loss, g_loss):
-        """
-        Log training progress.
-        
-        Parameters
-        ----------
-        epoch : int
-            Current epoch.
-        num_epochs : int
-            Total number of epochs.
-        batch_idx : int
-            Current batch index.
-        total_batches : int
-            Total number of batches.
-        d_loss : torch.Tensor
-            Discriminator loss.
-        g_loss : torch.Tensor
-            Generator loss.
-        """
-        
-        print(f"Dataset {self.dataset_name} - Epoch [{epoch+1}/{num_epochs}] Batch {batch_idx}/{total_batches} "
-            f"Loss D: {d_loss.item():.4f}, Loss G: {g_loss.item():.4f}")
 
     def save_models(self, epoch, save_dir="outputs/models"):
         """
