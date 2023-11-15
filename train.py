@@ -55,7 +55,8 @@ def main(args):
             dataset_name=config["dataset_name"],
             lr=config["lr"],
             latent_dim=config["latent_dim"],
-            batch_size=config["batch_size"]
+            batch_size=config["batch_size"],
+            device=device,
         )
     else:
         raise ValueError("Invalid model type")

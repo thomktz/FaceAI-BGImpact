@@ -182,15 +182,17 @@ class GAN(AbstractModel):
         Dimension of the latent space.
     batch_size : int
         Batch size.
+    device : torch.device
+        Device to use for training.
     """
     
-    def __init__(self, dataset_name="ffhq_raw", lr=0.0002, latent_dim=DEFAULT_LATENT_DIM, batch_size=64):
+    def __init__(self, dataset_name="ffhq_raw", lr=0.0002, latent_dim=DEFAULT_LATENT_DIM, batch_size=64, device="cpu"):
         # Initialize the abstract class
         super().__init__(dataset_name, batch_size)
 
         # GAN-specific attributes
-        self.generator = Generator(latent_dim)
-        self.discriminator = Discriminator()
+        self.generator = Generator(latent_dim).to(device)
+        self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
