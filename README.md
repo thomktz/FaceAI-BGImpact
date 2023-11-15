@@ -33,13 +33,22 @@ The `train.py` script is an entry point to train a GAN. It includes command-line
 1. To train a model, you need to specify the model type using the `--model-type` flag, and optionally provide a path to a custom JSON configuration file with `--config-path`.
 
 2. Additional command-line arguments allow for fine-tuning the training process:
-```
---lr # Learning rate
---latent-dim # Dimension of the latent space
---batch-size # Batch size
---num-epochs # Number of epochs to train
---save-interval # Interval for saving models and generated images
-```
+
+- `--model-type`: Required. The type of model to train (options: "gan", "vae").
+- `--dataset-name`: Required. The dataset to use (options: "ffhq_raw", "ffhq_blur", "ffhq_grey").
+- `--config-path`: Path to a custom JSON configuration file.
+- `--lr`: Learning rate for the model training.
+- `--latent-dim`: Dimension of the model's latent space.
+- `--batch-size`: Number of samples per batch during training.
+- `--num-epochs`: Total number of epochs for which to train the model.
+- `--log-interval`: Batches to process between logging training progress.
+- `--save-interval`: Epochs to complete before saving models and images.
+- `--checkpoint-path`: Path to a checkpoint file to resume training (overrides `--checkpoint-epoch`).
+- `--checkpoint-epoch`: Epoch number from which to resume training.
+- `--to-drive`: Flag to indicate saving outputs to Google Drive (boolean).
+- `--from-drive`: Flag to indicate loading checkpoints to Google Drive (boolean).
+- `--drive-path`: Google Drive subdirectory path for saving outputs (default: "AML/").
+
 3. To start training, run:
 
 `python train.py --model-type gan`
