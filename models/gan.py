@@ -25,6 +25,7 @@ class Generator(nn.Module):
     def __init__(self, latent_dim):
         super(Generator, self).__init__()
         self.init_size = 128 // 4  # Initial size before upsampling
+        
         self.l1 = nn.Sequential(nn.Linear(latent_dim, 128 * self.init_size ** 2))
 
         self.conv_blocks = nn.Sequential(
@@ -244,7 +245,7 @@ class GAN(AbstractModel):
         start_epoch = 0
         if checkpoint_path:
             start_epoch = self.load_checkpoint(checkpoint_path, device)
-            print(f"Resuming training from epoch {start_epoch}...")
+            print(f"Resuming training after epoch {start_epoch}...")
         
         for epoch in range(start_epoch, num_epochs):
             for phase in ["train", "test"]:
@@ -401,7 +402,7 @@ class GAN(AbstractModel):
         save_dir : str
             Directory to save the models to.
         """
-        save_folder = f"{save_dir}_{self.dataset_name}"
+        save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
         
         torch.save(self.generator.state_dict(), f"{save_folder}/generator_epoch_{epoch+1}.pth")
@@ -421,8 +422,9 @@ class GAN(AbstractModel):
             Directory to save the images to.
         """
         
-        save_folder = f"{save_dir}_{self.dataset_name}"
+        save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
+        
         z = torch.randn(64, self.latent_dim).to(device)  # Generate random latent vectors
         fake_images = self.generator(z).detach().cpu()
         save_image(fake_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=True)
@@ -438,11 +440,10 @@ class GAN(AbstractModel):
         save_dir : str
             Directory to save the checkpoint to.
         """
-        
-        save_folder = f"{save_dir}_{self.dataset_name}"
+        save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
-        checkpoint_path = os.path.join(save_folder, f"checkpoint_epoch_{epoch}.pth")
         
+        checkpoint_path = os.path.join(save_folder, f"checkpoint_epoch_{epoch+1}.pth")
         checkpoint = {
             "epoch": epoch + 1, # Since we want to start from the next epoch
             "generator_state_dict": self.generator.state_dict(),

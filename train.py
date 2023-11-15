@@ -21,6 +21,8 @@ def parse_args():
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
+    parser.add_argument("--to-drive", default=False, action='store_true', help="Flag indicating whether to save outputs to Google Drive")
+    parser.add_argument("--drive-path", type=str, default="AML/", help="Subdirectory path in Google Drive to save the outputs")
     return parser.parse_args()
 
 def load_default_config(model_type):
@@ -71,6 +73,8 @@ def main(args):
             latent_dim=config["latent_dim"],
             batch_size=config["batch_size"],
             device=device,
+            drive_path=args.drive_path,
+            to_drive=args.to_drive
         )
     else:
         raise ValueError("Invalid model type")

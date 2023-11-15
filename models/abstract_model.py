@@ -9,11 +9,44 @@ class AbstractModel(ABC):
     Subclasses are required to implement the defined abstract methods.
     """
     
-    def __init__(self, dataset_name, batch_size):
+    def __init__(self, dataset_name, batch_size, drive_path="AML", to_drive=False):
+        
+        self.drive_path = drive_path
+        self.to_drive = to_drive
+        
         self.dataset_name = dataset_name
         self.batch_size = batch_size
         self.train_loader, self.test_loader = get_dataloaders(dataset_name, batch_size)
         self.epoch_losses = {"train": [], "test": []}
+        
+    @staticmethod
+    def _sanitize_path(path, trailing_slash=False):
+        """
+        Sanitize the folder path to be compatible with Unix paths.
+
+        Parameters:
+        ----------
+        path : str
+            The path to sanitize.
+        trailing_slash : bool
+            Whether to add a trailing slash to the path.
+        """
+        
+        path = path.strip()  # Remove leading/trailing whitespace
+        path = path.rstrip("/")  # Remove trailing slashes
+        if trailing_slash:
+            path += '/'  # Add trailing slash if requested
+        return path
+    
+    def get_save_dir(self, base_dir):
+        """
+        Get the full save directory path, adjusting for Google Drive if needed.
+        """
+        base_dir = self._sanitize_path(base_dir)
+        if self.to_drive:
+            return f"/content/drive/MyDrive/{self.drive_path}{base_dir}_{self.dataset_name}"
+        else:
+            return f"{base_dir}_{self.dataset_name}"
     
     @abstractmethod
     def train(self, num_epochs, device, log_interval, save_interval, test_batches_limit=None):
