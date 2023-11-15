@@ -16,6 +16,7 @@ Advanced Machine Learning project: Effect of removing the background from traini
 │ └── paths.py                # Utility script to define path constants
 ├── models                    # Model definitions and utilities
 │ ├── data_loader.py          # Data loading utilities for GAN training
+│ ├── abstract_model.py       # Abstract base class for our models
 │ └── gan.py                  # GAN model definition
 ├── tests                     # Automated tests for the project
 │ ├── test_data_loader.py     # Tests for the data loader utility
