@@ -33,7 +33,7 @@ class FFHQDataset(Dataset):
 
         return image
 
-def get_dataloader(dataset_name, batch_size):
+def get_dataloader(dataset_name, batch_size, shuffle=True):
     """
     Create a DataLoader for the specified FFHQ dataset.
     
@@ -48,7 +48,7 @@ def get_dataloader(dataset_name, batch_size):
     transform = transforms.Compose([
         transforms.ToTensor(),
         # Normalize the image using ImageNet statistics
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
     # Load the dataset
@@ -56,19 +56,13 @@ def get_dataloader(dataset_name, batch_size):
     dataset = FFHQDataset(root_dir=root_dir, transform=transform)
 
     # Create DataLoaders
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
     return loader
 
-invTrans = transforms.Compose([ 
-    transforms.Normalize(
-        mean = [0., 0., 0.],
-        std = [1/0.229, 1/0.224, 1/0.225]
-    ),
-    transforms.Normalize(
-        mean = [-0.485, -0.456, -0.406],
-        std = [1., 1., 1.]
-    )
+inv_normalize = transforms.Compose([
+    transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[2.0, 2.0, 2.0]),
+    transforms.Normalize(mean=[-0.5, -0.5, -0.5], std=[1.0, 1.0, 1.0])
 ])
 
 def denormalize_imagenet(tensor):
@@ -85,5 +79,5 @@ def denormalize_imagenet(tensor):
     torch.Tensor
         The denormalized tensor.
     """
-    return invTrans(tensor)
+    return inv_normalize(tensor)
     

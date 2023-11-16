@@ -292,7 +292,7 @@ class GAN(AbstractModel):
             self.generate_images(epoch, device)
             
             # Evaluate the FID score, and log it as 'test' loss
-            fid_score = self.calculate_fid(1000, batch_size, device)
+            fid_score = self.calculate_fid(2048+batch_size, batch_size, device)
             self.epoch_losses["test"].append(fid_score)
             print(f"FID: {fid_score:.2f}")
     
@@ -361,7 +361,7 @@ class GAN(AbstractModel):
         denormalized_imgs = denormalize_imagenet(imgs)
         
         stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
-        return get_fid(denormalized_imgs, stats_path, use_torch=True)
+        return get_fid(denormalized_imgs, stats_path)
 
     def save_models(self, epoch, save_dir="outputs/models"):
         """
