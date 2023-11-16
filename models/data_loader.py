@@ -85,14 +85,5 @@ def denormalize_imagenet(tensor):
     torch.Tensor
         The denormalized tensor.
     """
-
-    x = invTrans(tensor)
-    
-    # Ensure that the values are between 0 and 1
-    print("TRANSFORM", x.min(), x.max())
-    
-    # Print shape of tensor
-    print("SHAPE", x.shape)
-    
-    return x.clamp(0, 1)
+    return invTrans(tensor)
     

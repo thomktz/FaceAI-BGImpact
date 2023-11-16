@@ -361,7 +361,7 @@ class GAN(AbstractModel):
         denormalized_imgs = denormalize_imagenet(imgs)
         
         stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
-        return get_fid(denormalized_imgs, stats_path)
+        return get_fid(denormalized_imgs, stats_path, use_torch=True)
 
     def save_models(self, epoch, save_dir="outputs/models"):
         """
