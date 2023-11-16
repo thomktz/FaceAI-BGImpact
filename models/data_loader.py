@@ -60,6 +60,17 @@ def get_dataloader(dataset_name, batch_size):
 
     return loader
 
+invTrans = transforms.Compose([ 
+    transforms.Normalize(
+        mean = [0., 0., 0.],
+        std = [1/0.229, 1/0.224, 1/0.225]
+    ),
+    transforms.Normalize(
+        mean = [-0.485, -0.456, -0.406],
+        std = [1., 1., 1.]
+    )
+])
+
 def denormalize_imagenet(tensor):
     """
     Reverses the ImageNet normalization applied to images.
@@ -74,11 +85,11 @@ def denormalize_imagenet(tensor):
     torch.Tensor
         The denormalized tensor.
     """
-    mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
-    std = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
-    
-    if tensor.is_cuda:
-        mean = mean.cuda()
-        std = std.cuda()
 
-    return tensor * std + mean
+    x = invTrans(tensor)
+    
+    # Ensure that the values are between 0 and 1
+    print("TRANSFORM", x.min(), x.max())
+    
+    return x.clamp(0, 1)
+    
