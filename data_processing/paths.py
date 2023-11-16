@@ -1,6 +1,7 @@
 ffhq_raw_kaggle_path = "greatgamedota/ffhq-face-data-set"
 ffhq_grey_kaggle_path = "thomaskientz/ffhq-grey"
 ffhq_blur_kaggle_path = "thomaskientz/ffhq-blur"
+ffhq_stats_kaggle_path = "thomaskientz/ffhq-fid-statistics"
 
 data_folder = "data_processing/"
 original_raw_folder_name = data_folder + "thumbnails128x128"
