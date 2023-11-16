@@ -8,7 +8,7 @@ from torchvision.utils import save_image
 from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
-from models.data_loader import get_dataloader
+from models.data_loader import get_dataloader, denormalize_imagenet
 
 class Generator(nn.Module):
     """
@@ -356,9 +356,10 @@ class GAN(AbstractModel):
         
         self.generator.train()
         imgs = torch.cat(images, dim=0) 
+        denormalized_imgs = denormalize_imagenet(imgs)
         
         stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
-        return get_fid(imgs, stats_path)
+        return get_fid(denormalized_imgs, stats_path)
 
     def save_models(self, epoch, save_dir="outputs/models"):
         """
@@ -396,7 +397,8 @@ class GAN(AbstractModel):
         
         z = torch.randn(64, self.latent_dim).to(device)  # Generate random latent vectors
         fake_images = self.generator(z).detach().cpu()
-        save_image(fake_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=True)
+        denormalized_images = denormalize_imagenet(fake_images)
+        save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
         
     def generate_one_image(self, device, save_folder, filename):
         """Generate one image and save it to the directory."""
@@ -404,7 +406,8 @@ class GAN(AbstractModel):
         os.makedirs(save_folder, exist_ok=True)
         z = torch.randn(1, self.latent_dim).to(device)
         fake_image = self.generator(z).detach().cpu()
-        save_image(fake_image, os.path.join(save_folder, filename), normalize=True)
+        denormalized_image = denormalize_imagenet(fake_image)
+        save_image(denormalized_image, os.path.join(save_folder, filename), normalize=False)
         
         
         

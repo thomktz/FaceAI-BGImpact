@@ -2,7 +2,7 @@ import os
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-from torch.utils.data import random_split
+import torch
 
 class FFHQDataset(Dataset):
     """
@@ -34,10 +34,21 @@ class FFHQDataset(Dataset):
         return image
 
 def get_dataloader(dataset_name, batch_size):
+    """
+    Create a DataLoader for the specified FFHQ dataset.
+    
+    Parameters
+    ----------
+    dataset_name : str
+        The name of the dataset to load.
+    batch_size : int
+        The batch size to use for the DataLoader.
+    """
     # Define transformations
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize the images to [-1, 1]
+        # Normalize the image using ImageNet statistics
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
 
     # Load the dataset
@@ -48,3 +59,26 @@ def get_dataloader(dataset_name, batch_size):
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     return loader
+
+def denormalize_imagenet(tensor):
+    """
+    Reverses the ImageNet normalization applied to images.
+
+    Parameters:
+    ----------
+    tensor : torch.Tensor
+        The normalized tensor.
+        
+    Returns:
+    -------
+    torch.Tensor
+        The denormalized tensor.
+    """
+    mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
+    std = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+    
+    if tensor.is_cuda:
+        mean = mean.cuda()
+        std = std.cuda()
+
+    return tensor * std + mean
