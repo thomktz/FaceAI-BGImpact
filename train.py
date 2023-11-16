@@ -7,11 +7,15 @@ from models.gan import GAN
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Deep Learning Model Training")
-    parser.add_argument("--model-type", type=str, required=True, choices=["gan", "vae"], help="Type of model to train")
-    parser.add_argument("--dataset-name", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
-    parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
-    parser.add_argument("--lr", type=float, help="Learning rate")
+    
+    # Model-specific arguments
+    parser.add_argument("--model-type", type=str, required=True, choices=["GAN", "VAE"], help="Type of model to train")
+    parser.add_argument("--dataset", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
     parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
+    parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
+    
+    # Training arguments
+    parser.add_argument("--lr", type=float, help="Learning rate")
     parser.add_argument("--batch-size", type=int, help="Batch size")
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
@@ -54,34 +58,40 @@ def main(args):
     # Set checkpoint path if resuming from a checkpoint
     checkpoint_path = None
     if args.from_drive and args.checkpoint_epoch is not None:
-        checkpoint_dir = f"/content/drive/MyDrive/{args.drive_path}/outputs/checkpoints_{args.dataset_name}"
+        checkpoint_dir = f"/content/drive/MyDrive/{args.drive_path}/outputs/checkpoints_{args.dataset}"
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
         
     elif args.checkpoint_epoch is not None:
-        checkpoint_dir = f"outputs/checkpoints_{args.dataset_name}"
+        checkpoint_dir = f"outputs/checkpoints_{args.dataset}"
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
         
     elif args.checkpoint_path is not None:
         checkpoint_path = args.checkpoint_path
 
-    if args.model_type == "gan":
-        model = GAN(
-            dataset_name=config["dataset_name"],
-            lr=config["lr"],
-            latent_dim=config["latent_dim"],
-            batch_size=config["batch_size"],
-            device=device,
-            drive_path=args.drive_path,
-            to_drive=args.to_drive
-        )
+    if args.model_type == "GAN":
+        if checkpoint_path is None:
+            model = GAN(
+                dataset_name=args.dataset,
+                latent_dim=config["latent_dim"],
+                device=device,
+            )
+        else:
+            model = GAN.from_checkpoint(
+                checkpoint_path=checkpoint_path,
+                device=device,
+            )
+
     else:
         raise ValueError("Invalid model type")
 
     model.train(
         num_epochs=config["num_epochs"],
+        batch_size=config["batch_size"],
+        lr=config["lr"],
         device=device,
         save_interval=config["save_interval"],
-        checkpoint_path=checkpoint_path,
+        to_drive=args.to_drive,
+        drive_path=args.drive_path,
     )
 
 if __name__ == "__main__":

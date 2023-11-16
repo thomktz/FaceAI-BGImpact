@@ -1855,6 +1855,24 @@ text-unidecode = ">=1.3"
 unidecode = ["Unidecode (>=1.1.1)"]
 
 [[package]]
+name = "pytorch-gan-metrics"
+version = "0.5.3"
+description = "Package for calculating GAN metrics using Pytorch"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pytorch_gan_metrics-0.5.3-py3-none-any.whl", hash = "sha256:e70443cf6ec8b6f74acb1a9643c406d2134de771c728ab2b08dc7a137e617b92"},
+    {file = "pytorch_gan_metrics-0.5.3.tar.gz", hash = "sha256:df5a32f57f5b669dfcc8cc008221ebc9022234f3e3a2dd199f66d71756408102"},
+]
+
+[package.dependencies]
+packaging = "*"
+scipy = "*"
+torch = ">=1.8.2"
+torchvision = ">=0.9.2"
+tqdm = "*"
+
+[[package]]
 name = "pywin32"
 version = "306"
 description = "Python for Window Extensions"
@@ -2597,4 +2615,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "3c7eabc9112a14e9c3c9e7a37c411a0ad8ad4d756237fa8409fa293e6052cc3f"
+content-hash = "0b39a4a3a5ea5c4be106d136b5313676b90487c28a2cbc085134800611291f45"

@@ -3,7 +3,7 @@ data_processing/**/*.jpg
 data_processing/**/*.jpeg
 data_processing/**/*.png
 data_processing/**/*.gif
-
+*.png
 *.pyc
 
 # VSCode settings

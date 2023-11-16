@@ -7,6 +7,7 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 
 from models.abstract_model import AbstractModel
+from models.data_loader import get_dataloaders
 
 class Generator(nn.Module):
     """
@@ -173,31 +174,30 @@ class GAN(AbstractModel):
     ----------
     dataset_name : str
         Name of the dataset to use.
-    lr : float
-        Learning rate.
     latent_dim : int
         Dimension of the latent space.
-    batch_size : int
-        Batch size.
     device : torch.device
         Device to use for training.
     """
     
-    def __init__(self, dataset_name, lr, latent_dim, batch_size, device, drive_path, to_drive):
+    def __init__(self, dataset_name, latent_dim, device):
         # Initialize the abstract class
-        super().__init__(dataset_name, batch_size, drive_path, to_drive)
+        super().__init__(dataset_name)
 
         # GAN-specific attributes
         self.generator = Generator(latent_dim).to(device)
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
-        self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
-        self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
-        self.adversarial_loss = nn.BCELoss()
 
         # Apply the weights initialization
         self.generator.apply(self.weights_init_normal)
         self.discriminator.apply(self.weights_init_normal)
+        
+        self.start_epoch = 0
+        self.optimizer_G_config = {}
+        self.optimizer_D_config = {}
+        self.to_drive = False
+        self.drive_path = ""
 
     @staticmethod
     def weights_init_normal(m):
@@ -215,8 +215,26 @@ class GAN(AbstractModel):
             nn.init.normal_(m.weight.data, 0.0, 0.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
-                
-    def train(self, num_epochs, device, save_interval, checkpoint_path=None):
+    
+    def train_init(self, lr, batch_size, to_drive, drive_path):
+        """Initialize the training parameters and optimizer."""
+        
+        self.to_drive = to_drive
+        self.drive_path = drive_path
+        self.train_loader, self.test_loader = get_dataloaders(self.dataset_name, batch_size)
+        self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
+        self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+        self.adversarial_loss = nn.BCELoss()
+        
+        if self.optimizer_D_config:
+            print("Using loaded optimizer_D state...")
+            self.optimizer_D.load_state_dict(self.optimizer_D_config)
+        if self.optimizer_G_config:
+            print("Using loaded optimizer_G state...")
+            self.optimizer_G.load_state_dict(self.optimizer_G_config)
+        
+    
+    def train(self, num_epochs, lr, batch_size, device, save_interval, to_drive, drive_path):
         """
         Main training loop.
         
@@ -224,22 +242,21 @@ class GAN(AbstractModel):
         ----------
         num_epochs : int
             Number of epochs to train for.
+        lr : float
+            Learning rate.
+        batch_size : int
+            Batch size.
         device : torch.device
             Device to use for training.
         save_interval : int
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
-        checkpoint_path : str
-            Path to a checkpoint to load. Defaults to None.
         """
+        # Initialize training parameters and optimizer
+        self.train_init(lr, batch_size, to_drive, drive_path)
         
         dataloaders = {"train": self.train_loader, "test": self.test_loader}
-
-        start_epoch = 0
-        if checkpoint_path:
-            start_epoch = self.load_checkpoint(checkpoint_path, device)
-            print(f"Resuming training after epoch {start_epoch}...")
         
-        for epoch in range(start_epoch, num_epochs):
+        for epoch in range(self.start_epoch, num_epochs):
             for phase in ["train", "test"]:
                 if phase == "train":
                     self.generator.train()
@@ -280,7 +297,7 @@ class GAN(AbstractModel):
             if ((epoch + 1) % save_interval == 0) or (epoch <= 3) :
                 print(f"Saving checkpoint at epoch {epoch+1}...")
                 self.save_checkpoint(epoch)
-            self.save_generated_images(epoch, device)
+            self.generated_images(epoch, device)
     
     def perform_train_step(self, real_imgs, real_labels, fake_labels, batch_size, device):
         """
@@ -369,7 +386,7 @@ class GAN(AbstractModel):
         torch.save(self.generator.state_dict(), f"{save_folder}/generator_epoch_{epoch+1}.pth")
         torch.save(self.discriminator.state_dict(), f"{save_folder}/discriminator_epoch_{epoch+1}.pth")
 
-    def save_generated_images(self, epoch, device, save_dir="outputs/generated_images"):
+    def generate_images(self, epoch, device, save_dir="outputs/generated_images"):
         """
         Save generated images.
         
@@ -390,9 +407,20 @@ class GAN(AbstractModel):
         fake_images = self.generator(z).detach().cpu()
         save_image(fake_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=True)
         
+    def generate_one_image(self, device, save_folder, filename):
+        """Generate one image and save it to the directory."""
+        
+        os.makedirs(save_folder, exist_ok=True)
+        z = torch.randn(1, self.latent_dim).to(device)
+        fake_image = self.generator(z).detach().cpu()
+        save_image(fake_image, os.path.join(save_folder, filename), normalize=True)
+        
+        
+        
     def save_checkpoint(self, epoch, save_dir="outputs/checkpoints"):
         """
-        Save a checkpoint of the current state. This includes the models, optimizers, and losses.
+        Save a checkpoint of the current state. This includes the models, optimizers, losses,
+        and training parameters.
         
         Parameters
         ----------
@@ -406,26 +434,52 @@ class GAN(AbstractModel):
         
         checkpoint_path = os.path.join(save_folder, f"checkpoint_epoch_{epoch+1}.pth")
         checkpoint = {
-            "epoch": epoch + 1, # Since we want to start from the next epoch
+            "epoch": epoch + 1,  # Since we want to start from the next epoch
             "generator_state_dict": self.generator.state_dict(),
             "discriminator_state_dict": self.discriminator.state_dict(),
             "optimizer_G_state_dict": self.optimizer_G.state_dict(),
             "optimizer_D_state_dict": self.optimizer_D.state_dict(),
-            "losses": self.epoch_losses
+            "losses": self.epoch_losses,
+            "dataset_name": self.dataset_name,
+            "latent_dim": self.latent_dim,
         }
         torch.save(checkpoint, checkpoint_path)
         return checkpoint_path
-
-    def load_checkpoint(self, checkpoint_path, device):
+    
+    @classmethod
+    def from_checkpoint(cls, checkpoint_path, device):
         """
-        Load the checkpoint.
+        Create a GAN instance from a checkpoint file.
+
+        Parameters
+        ----------
+        checkpoint_path : str
+            Path to the checkpoint file.
+        device : torch.device
+            Device to use for training.
+
+        Returns
+        -------
+        instance : GAN
+            A GAN instance with loaded state.
         """
         checkpoint = torch.load(checkpoint_path, map_location=device)
+
+        # Extract necessary components from checkpoint
+        dataset_name = checkpoint.get("dataset_name", "ffhq_raw")
+        latent_dim = checkpoint.get("latent_dim", 100)
+
+        # Create a new GAN instance
+        instance = cls(dataset_name, latent_dim, device)
+
+        # Load the state into the instance
+        instance.generator.load_state_dict(checkpoint["generator_state_dict"])
+        instance.discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
+        instance.epoch_losses = checkpoint["losses"]
+        instance.start_epoch = checkpoint["epoch"]
         
-        self.generator.load_state_dict(checkpoint["generator_state_dict"])
-        self.discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
-        self.optimizer_G.load_state_dict(checkpoint["optimizer_G_state_dict"])
-        self.optimizer_D.load_state_dict(checkpoint["optimizer_D_state_dict"])
-        self.epoch_losses = checkpoint["losses"]
-        
-        return checkpoint["epoch"]
+        # Load the optimizer state
+        instance.optimizer_G_config = checkpoint["optimizer_G_state_dict"]
+        instance.optimizer_D_config = checkpoint["optimizer_D_state_dict"]
+
+        return instance
