@@ -5,9 +5,10 @@ import torch.optim as optim
 
 from tqdm import tqdm
 from torchvision.utils import save_image
+from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
-from models.data_loader import get_dataloaders
+from models.data_loader import get_dataloader
 
 class Generator(nn.Module):
     """
@@ -221,7 +222,7 @@ class GAN(AbstractModel):
         
         self.to_drive = to_drive
         self.drive_path = drive_path
-        self.train_loader, self.test_loader = get_dataloaders(self.dataset_name, batch_size)
+        self.loader = get_dataloader(self.dataset_name, batch_size)
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.adversarial_loss = nn.BCELoss()
@@ -254,50 +255,44 @@ class GAN(AbstractModel):
         # Initialize training parameters and optimizer
         self.train_init(lr, batch_size, to_drive, drive_path)
         
-        dataloaders = {"train": self.train_loader, "test": self.test_loader}
-        
         for epoch in range(self.start_epoch, num_epochs):
-            for phase in ["train", "test"]:
-                if phase == "train":
-                    self.generator.train()
-                else:
-                    self.generator.eval()
-
-                running_loss = 0.0
-                
-                data_iter = tqdm(
-                    enumerate(dataloaders[phase]), 
-                    total=len(dataloaders[phase]), 
-                    desc=f"Epoch {epoch+1}/{num_epochs} [{phase}]"
-                )
-
-                for i, imgs in data_iter:
-                    imgs = imgs.to(device)
-                    batch_size = imgs.size(0)
-                    real_labels = torch.ones(batch_size, 1).to(device)
-                    fake_labels = torch.zeros(batch_size, 1).to(device)
-
-                    if phase == "train":
-                        # Zero the parameter gradients
-                        self.optimizer_G.zero_grad()
-                        self.optimizer_D.zero_grad()
-
-                        # Forward pass, backward pass, and optimize
-                        g_loss, d_loss = self.perform_train_step(imgs, real_labels, fake_labels, batch_size, device)
-                        running_loss += g_loss.item() + d_loss.item()
-                    
-                    else:
-                        with torch.no_grad():
-                            g_loss, d_loss = self.perform_validation_step(imgs, real_labels, fake_labels, batch_size, device)
-                            running_loss += g_loss.item() + d_loss.item()
-
-                epoch_loss = running_loss / len(dataloaders[phase])
-                self.epoch_losses[phase].append(epoch_loss)
+            self.generator.train()
+            running_loss = 0.0
             
-            if ((epoch + 1) % save_interval == 0) or (epoch <= 3) :
+            data_iter = tqdm(
+                enumerate(self.loader), 
+                total=len(self.loader), 
+                desc=f"Epoch {epoch+1}/{num_epochs}"
+            )
+
+            for i, imgs in data_iter:
+                imgs = imgs.to(device)
+                batch_size = imgs.size(0)
+                real_labels = torch.ones(batch_size, 1).to(device)
+                fake_labels = torch.zeros(batch_size, 1).to(device)
+
+                # Zero the parameter gradients
+                self.optimizer_G.zero_grad()
+                self.optimizer_D.zero_grad()
+
+                # Forward pass, backward pass, and optimize
+                g_loss, d_loss = self.perform_train_step(imgs, real_labels, fake_labels, batch_size, device)
+                
+                running_loss += g_loss.item() + d_loss.item()
+
+            epoch_loss = running_loss / len(self.loader)
+            self.epoch_losses["train"].append(epoch_loss)
+            
+            # Evaluate the FID score, and log it as 'test' loss
+            fid_score = self.calculate_fid(1000, batch_size, device)
+            self.epoch_losses["test"].append(fid_score)
+            print(f"FID: {fid_score:.2f}")
+            
+            if ((epoch + 1) % save_interval == 0) or (epoch <= 3):
                 print(f"Saving checkpoint at epoch {epoch+1}...")
                 self.save_checkpoint(epoch)
-            self.generated_images(epoch, device)
+                
+            self.generate_images(epoch, device)
     
     def perform_train_step(self, real_imgs, real_labels, fake_labels, batch_size, device):
         """
@@ -337,37 +332,33 @@ class GAN(AbstractModel):
 
         return g_loss, d_loss
 
-    def perform_validation_step(self, real_imgs, real_labels, fake_labels, batch_size, device):
+    def calculate_fid(self, num_images, batch_size, device):
         """
-        One step for the validation phase.
+        Calculate the FID score.
         
         Parameters
         ----------
-        real_imgs : torch.Tensor
-            Tensor of shape (batch_size, 3, 128, 128) containing the real images.
-        real_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the real labels.
-        fake_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the fake labels.
-        batch_size : int
-            Batch size.
         device : torch.device
-            Device to use for training.
+            Device to use for calculation.
+        
+        Returns
+        -------
+        fid_score : float
+            Computed FID score.
         """
+        # Path to precomputed statistics file
+        self.generator.eval()
+        images = []
+        with torch.no_grad():
+            for _ in range(num_images // batch_size):
+                z = torch.randn(batch_size, self.latent_dim).to(device)
+                images.append(self.generator(z))
         
-        # Generate fake images
-        z = torch.randn(batch_size, self.latent_dim).to(device)
-        fake_imgs = self.generator(z)
+        self.generator.train()
+        imgs = torch.cat(images, dim=0) 
         
-        # Compute generator loss
-        g_loss = self.adversarial_loss(self.discriminator(fake_imgs), real_labels)
-
-        # Compute discriminator loss
-        fake_loss = self.adversarial_loss(self.discriminator(fake_imgs), fake_labels)
-        real_loss = self.adversarial_loss(self.discriminator(real_imgs), real_labels)
-        d_loss = (real_loss + fake_loss) / 2
-        
-        return g_loss, d_loss
+        stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
+        return get_fid(imgs, stats_path)
 
     def save_models(self, epoch, save_dir="outputs/models"):
         """

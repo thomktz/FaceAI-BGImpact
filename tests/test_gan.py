@@ -2,7 +2,6 @@
 import pytest
 import torch
 from models.gan import GAN
-from models.data_loader import get_dataloaders
 
 @pytest.fixture
 def sample_gan():

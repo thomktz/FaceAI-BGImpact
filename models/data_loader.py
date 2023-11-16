@@ -33,7 +33,7 @@ class FFHQDataset(Dataset):
 
         return image
 
-def get_dataloaders(dataset_name, batch_size, train_test_split=0.9):
+def get_dataloader(dataset_name, batch_size):
     # Define transformations
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -44,13 +44,7 @@ def get_dataloaders(dataset_name, batch_size, train_test_split=0.9):
     root_dir = f"data_processing/{dataset_name}"
     dataset = FFHQDataset(root_dir=root_dir, transform=transform)
 
-    # Splitting the dataset
-    train_size = int(train_test_split * len(dataset))
-    test_size = len(dataset) - train_size
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-
     # Create DataLoaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    return train_loader, test_loader
+    return loader
