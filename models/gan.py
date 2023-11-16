@@ -283,16 +283,18 @@ class GAN(AbstractModel):
             epoch_loss = running_loss / len(self.loader)
             self.epoch_losses["train"].append(epoch_loss)
             
-            # Evaluate the FID score, and log it as 'test' loss
-            fid_score = self.calculate_fid(1000, batch_size, device)
-            self.epoch_losses["test"].append(fid_score)
-            print(f"FID: {fid_score:.2f}")
+            
             
             if ((epoch + 1) % save_interval == 0) or (epoch <= 3):
                 print(f"Saving checkpoint at epoch {epoch+1}...")
                 self.save_checkpoint(epoch)
                 
             self.generate_images(epoch, device)
+            
+            # Evaluate the FID score, and log it as 'test' loss
+            fid_score = self.calculate_fid(1000, batch_size, device)
+            self.epoch_losses["test"].append(fid_score)
+            print(f"FID: {fid_score:.2f}")
     
     def perform_train_step(self, real_imgs, real_labels, fake_labels, batch_size, device):
         """
@@ -352,7 +354,7 @@ class GAN(AbstractModel):
         with torch.no_grad():
             for _ in range(num_images // batch_size):
                 z = torch.randn(batch_size, self.latent_dim).to(device)
-                images.append(self.generator(z))
+                images.append(self.generator(z).detach().cpu())
         
         self.generator.train()
         imgs = torch.cat(images, dim=0) 
