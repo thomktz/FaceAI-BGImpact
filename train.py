@@ -2,14 +2,14 @@ import os
 import json
 import argparse
 import torch
-from models.gan import GAN
+from models.dcgan import DCDCGAN
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Deep Learning Model Training")
     
     # Model-specific arguments
-    parser.add_argument("--model-type", type=str, required=True, choices=["GAN", "VAE"], help="Type of model to train")
+    parser.add_argument("--model-type", type=str, required=True, choices=["DCGAN", "VAE"], help="Type of model to train")
     parser.add_argument("--dataset", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
     parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
     parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
@@ -68,15 +68,15 @@ def main(args):
     elif args.checkpoint_path is not None:
         checkpoint_path = args.checkpoint_path
 
-    if args.model_type == "GAN":
+    if args.model_type == "DCGAN":
         if checkpoint_path is None:
-            model = GAN(
+            model = DCGAN(
                 dataset_name=args.dataset,
                 latent_dim=config["latent_dim"],
                 device=device,
             )
         else:
-            model = GAN.from_checkpoint(
+            model = DCGAN.from_checkpoint(
                 checkpoint_path=checkpoint_path,
                 device=device,
             )

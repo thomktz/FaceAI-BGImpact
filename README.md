@@ -18,15 +18,15 @@ Advanced Machine Learning project: Effect of removing the background from traini
 ├── models                    # Model definitions and utilities
 │ ├── data_loader.py          # Data loading utilities for GAN training
 │ ├── abstract_model.py       # Abstract base class for our models
-│ └── gan.py                  # GAN model definition
+│ └── dcgan.py                  # DCGAN model definition
 ├── tests                     # Automated tests for the project
 │ ├── test_data_loader.py     # Tests for the data loader utility
-│ └── test_gan.py             # Tests for the GAN model
+│ └── test_dcgan.py             # Tests for the DCGAN model
 └── train.py             # Main training script for the models
 ```
 ## Training Script (train.py)
 
-The `train.py` script is an entry point to train a GAN. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for saving.
+The `train.py` script is an entry point to train a model. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for saving.
 
 ## How to Use
 
@@ -34,7 +34,7 @@ The `train.py` script is an entry point to train a GAN. It includes command-line
 
 2. Additional command-line arguments allow for fine-tuning the training process:
 
-- `--model-type`: Required. The type of model to train (options: "gan", "vae").
+- `--model-type`: Required. The type of model to train (options: "DCGAN", "VAE").
 - `--dataset-name`: Required. The dataset to use (options: "ffhq_raw", "ffhq_blur", "ffhq_grey").
 - `--config-path`: Path to a custom JSON configuration file.
 - `--lr`: Learning rate for the model training.

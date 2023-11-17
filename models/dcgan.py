@@ -1,3 +1,9 @@
+"""
+DCDCGAN implementation.
+
+https://arxiv.org/pdf/1511.06434.pdf]
+"""
+
 import os
 import torch
 import torch.nn as nn
@@ -12,7 +18,7 @@ from models.data_loader import get_dataloader, denormalize_imagenet
 
 class Generator(nn.Module):
     """
-    Generator class for the GAN.
+    Generator class for the DCGAN.
     
     Parameters
     ----------
@@ -60,36 +66,8 @@ class Generator(nn.Module):
         img = self.conv_blocks(out)
         return img
     
-    def train_generator(self, optimizer_G, adversarial_loss, discriminator, real_labels, batch_size, device):
-        """
-        Train the generator.
-        
-        Parameters
-        ----------
-        optimizer_G : torch.optim.Optimizer
-            Optimizer for the generator.
-        adversarial_loss : torch.nn.Module
-            Adversarial loss function.
-        discriminator : torch.nn.Module
-            Discriminator.
-        real_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the real labels.
-        batch_size : int
-            Batch size.
-        device : torch.device
-            Device to use for training.
-        """
-        
-        optimizer_G.zero_grad()
-        z = torch.randn(batch_size, self.latent_dim).to(device)
-        gen_imgs = self(z)
-        g_loss = adversarial_loss(discriminator(gen_imgs), real_labels)
-        g_loss.backward()
-        optimizer_G.step()
-        return g_loss
-
 class Discriminator(nn.Module):
-    """Discriminator class for the GAN."""
+    """Discriminator class for the DCGAN."""
     def __init__(self):
         super(Discriminator, self).__init__()
         
@@ -138,38 +116,10 @@ class Discriminator(nn.Module):
         out = out.view(out.size(0), -1)
         validity = self.adv_layer(out)
         return validity
-    
-    def train_discriminator(self, optimizer_D, adversarial_loss, real_imgs, fake_imgs, real_labels, fake_labels):
-        """
-        Train the discriminator.
-        
-        Parameters
-        ----------
-        optimizer_D : torch.optim.Optimizer
-            Optimizer for the discriminator.
-        adversarial_loss : torch.nn.Module
-            Adversarial loss function.
-        real_imgs : torch.Tensor
-            Tensor of shape (batch_size, 3, 128, 128) containing the real images.
-        fake_imgs : torch.Tensor
-            Tensor of shape (batch_size, 3, 128, 128) containing the fake images.
-        real_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the real labels.
-        fake_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the fake labels.
-        """
-        
-        optimizer_D.zero_grad()
-        real_loss = adversarial_loss(self(real_imgs), real_labels)
-        fake_loss = adversarial_loss(self(fake_imgs.detach()), fake_labels)
-        d_loss = (real_loss + fake_loss) / 2
-        d_loss.backward()
-        optimizer_D.step()
-        return d_loss
-                    
-class GAN(AbstractModel):
+          
+class DCGAN(AbstractModel):
     """
-    GAN class that inherits from our AbstractModel.
+    DCGAN class that inherits from our AbstractModel.
     
     Parameters
     ----------
@@ -185,7 +135,7 @@ class GAN(AbstractModel):
         # Initialize the abstract class
         super().__init__(dataset_name)
 
-        # GAN-specific attributes
+        # DCGAN-specific attributes
         self.generator = Generator(latent_dim).to(device)
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
@@ -292,6 +242,9 @@ class GAN(AbstractModel):
             self.generate_images(epoch, device)
             
             # Evaluate the FID score, and log it as 'test' loss
+            # FID needs at least 2048 images to compare the final average pooling features
+            # C.f. https://github.com/mseitzer/pytorch-fid
+            # We use 2048 + batch_size to ensure that ((2048 + batch_size) // batch_size) * batch_size > 2048
             fid_score = self.calculate_fid(2048+batch_size, batch_size, device)
             self.epoch_losses["test"].append(fid_score)
             print(f"FID: {fid_score:.2f}")
@@ -445,7 +398,7 @@ class GAN(AbstractModel):
     @classmethod
     def from_checkpoint(cls, checkpoint_path, device):
         """
-        Create a GAN instance from a checkpoint file.
+        Create a DCGAN instance from a checkpoint file.
 
         Parameters
         ----------
@@ -456,8 +409,8 @@ class GAN(AbstractModel):
 
         Returns
         -------
-        instance : GAN
-            A GAN instance with loaded state.
+        instance : DCGAN
+            A DCGAN instance with loaded state.
         """
         checkpoint = torch.load(checkpoint_path, map_location=device)
 
@@ -465,7 +418,7 @@ class GAN(AbstractModel):
         dataset_name = checkpoint.get("dataset_name", "ffhq_raw")
         latent_dim = checkpoint.get("latent_dim", 100)
 
-        # Create a new GAN instance
+        # Create a new DCGAN instance
         instance = cls(dataset_name, latent_dim, device)
 
         # Load the state into the instance
