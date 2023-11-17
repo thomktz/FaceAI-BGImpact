@@ -1,9 +1,9 @@
-# AML-VAE
-Advanced Machine Learning project: Effect of removing the background from training images on Variational AutoEncoders
+# AML-VAE-GAN
+Advanced Machine Learning project: Effect of removing the background from training images on Variational AutoEncoders and Generative Adversarial Networks.
 
 ## Motivation
 - ORL dataset only has 400 images.
-- A lot of variance captured by the background in generation tasks.
+- A lot of the latent space of VAEs and GANs seems to be captured by the image background in generation tasks, instead of the subject.
 
 ## Folder structure
 ```
