@@ -14,3 +14,6 @@ data_processing/**/*.gif
 
 # .zip files
 *.zip
+
+*.ipynb_checkpoints
+*.ipynb
