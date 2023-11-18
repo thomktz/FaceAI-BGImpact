@@ -9,8 +9,6 @@ class AbstractModel(ABC):
     def __init__(self, dataset_name):
         self.dataset_name = dataset_name
         self.epoch_losses = {"train": [], "test": []}
-        self.to_drive = False
-        self.drive_path = ""
         
     @staticmethod
     def _sanitize_path(path, trailing_slash=False):
@@ -33,13 +31,10 @@ class AbstractModel(ABC):
     
     def get_save_dir(self, base_dir):
         """
-        Get the full save directory path, adjusting for Google Drive if needed.
+        Get the full save directory path
         """
         base_dir = self._sanitize_path(base_dir)
-        if self.to_drive:
-            return f"/content/drive/MyDrive/{self.drive_path}{base_dir}_{self.dataset_name}"
-        else:
-            return f"{base_dir}_{self.dataset_name}"
+        return f"{base_dir}_{self.dataset_name}"
     
     @abstractmethod
     def train(self, num_epochs, device, save_interval):
@@ -74,13 +69,5 @@ class AbstractModel(ABC):
     def from_checkpoint(cls, checkpoint_path, device):
         """
         Create a model instance from a checkpoint.
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def weights_init_normal(m):
-        """
-        Initialize weights of the model with a normal distribution.
         """
         pass

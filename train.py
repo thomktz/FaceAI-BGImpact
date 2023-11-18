@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 import torch
-from models.dcgan import DCDCGAN
+from models.dcgan import DCGAN
 
 def parse_args():
     """Parse command-line arguments."""
@@ -21,9 +21,6 @@ def parse_args():
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
-    parser.add_argument("--to-drive", default=False, action='store_true', help="Flag indicating whether to save outputs to Google Drive")
-    parser.add_argument("--from-drive", default=False, action='store_true', help="Flag indicating whether to load checkpoints from Google Drive")
-    parser.add_argument("--drive-path", type=str, default="AML/", help="Subdirectory path in Google Drive to save the outputs")
     return parser.parse_args()
 
 def load_default_config(model_type):
@@ -57,11 +54,8 @@ def main(args):
     
     # Set checkpoint path if resuming from a checkpoint
     checkpoint_path = None
-    if args.from_drive and args.checkpoint_epoch is not None:
-        checkpoint_dir = f"/content/drive/MyDrive/{args.drive_path}/outputs/checkpoints_{args.dataset}"
-        checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
         
-    elif args.checkpoint_epoch is not None:
+    if args.checkpoint_epoch is not None:
         checkpoint_dir = f"outputs/checkpoints_{args.dataset}"
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
         
@@ -90,8 +84,6 @@ def main(args):
         lr=config["lr"],
         device=device,
         save_interval=config["save_interval"],
-        to_drive=args.to_drive,
-        drive_path=args.drive_path,
     )
 
 if __name__ == "__main__":

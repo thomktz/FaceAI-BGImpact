@@ -45,9 +45,6 @@ The `train.py` script is an entry point to train a model. It includes command-li
 - `--save-interval`: Epochs to complete before saving models and images.
 - `--checkpoint-path`: Path to a checkpoint file to resume training (overrides `--checkpoint-epoch`).
 - `--checkpoint-epoch`: Epoch number from which to resume training.
-- `--to-drive`: Flag to indicate saving outputs to Google Drive (boolean).
-- `--from-drive`: Flag to indicate loading checkpoints to Google Drive (boolean).
-- `--drive-path`: Google Drive subdirectory path for saving outputs (default: "AML/").
 
 3. To start training, run:
 

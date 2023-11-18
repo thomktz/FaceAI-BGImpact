@@ -1,18 +1,17 @@
 import torch
 import pytest
-from models.stylegan import Generator, SynthesisNetwork, MappingNetwork, Discriminator
+from models.stylegan_ import Generator, SynthesisNetwork, MappingNetwork, Discriminator
 
 class TestStyleGAN:
     latent_dim = 100
     w_dim = 512
     style_layers = 8
-    image_size = 128  # Assuming target image size is 128x128
 
     def test_initialization(self):
         """Test the initialization of StyleGAN components."""
         mapping_network = MappingNetwork(self.latent_dim, self.style_layers, self.w_dim)
         synthesis_network = SynthesisNetwork(self.w_dim)
-        generator = Generator(self.latent_dim, self.w_dim, self.style_layers, self.image_size)
+        generator = Generator(self.latent_dim, self.w_dim, self.style_layers)
 
         assert mapping_network is not None
         assert synthesis_network is not None
@@ -31,7 +30,7 @@ class TestStyleGAN:
     )
     def test_forward_pass(self, level, alpha):
         """Test the forward pass of StyleGAN at different levels."""
-        generator = Generator(self.latent_dim, self.w_dim, self.style_layers, self.image_size)
+        generator = Generator(self.latent_dim, self.w_dim, self.style_layers)
         batch_size = 2
         z = torch.randn(batch_size, self.latent_dim)  # Single latent vector
 
@@ -49,23 +48,29 @@ class TestStyleGANDiscriminator:
         assert discriminator is not None
 
     @pytest.mark.parametrize(
-        "resolution", 
+        "alpha,current_level", 
         [
-            (4, 4), 
-            (8, 8), 
-            (16, 16), 
-            (32, 32), 
-            (64, 64),
-            (128, 128)
+            (1.0, 0), 
+            (0.5, 1), 
+            (1.0, 1), 
+            (0.5, 2), 
+            (1.0, 2),
+            (0.5, 3),
+            (1.0, 3),
+            (0.5, 4),
+            (1.0, 4),
+            (0.5, 5),
+            (1.0, 5)
         ]
     )
-    def test_forward_pass(self, resolution):
+    def test_forward_pass(self, alpha, current_level):
         """Test the forward pass of StyleGAN Discriminator at different resolutions."""
         discriminator = Discriminator()
         batch_size = 2
-        input_tensor = torch.randn(batch_size, 3, *resolution)  # Random image tensor
+        resolution = 4 * 2 ** current_level
+        image = torch.randn(batch_size, 3, resolution, resolution)
 
         with torch.no_grad():
-            output = discriminator(input_tensor)
+            output = discriminator(image, current_level, alpha)
 
-        assert output.shape == (batch_size, 1)  # Expecting a single value per image in the batch
+        assert output.shape == (batch_size, 1)

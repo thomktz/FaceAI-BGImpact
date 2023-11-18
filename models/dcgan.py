@@ -15,6 +15,7 @@ from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
 from models.data_loader import get_dataloader, denormalize_imagenet
+from models.utils import weights_init
 
 class Generator(nn.Module):
     """
@@ -141,37 +142,16 @@ class DCGAN(AbstractModel):
         self.latent_dim = latent_dim
 
         # Apply the weights initialization
-        self.generator.apply(self.weights_init_normal)
-        self.discriminator.apply(self.weights_init_normal)
+        self.generator.apply(weights_init)
+        self.discriminator.apply(weights_init)
         
         self.start_epoch = 0
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
-        self.to_drive = False
-        self.drive_path = ""
-
-    @staticmethod
-    def weights_init_normal(m):
-        """
-        Initialize weights with a normal distribution.
-        
-        Parameters
-        ----------
-        m : torch.nn.Module
-            Module to initialize. In practice, this is either the generator or the discriminator.
-        """
-        
-        classname = m.__class__.__name__
-        if classname.find("Linear") != -1: 
-            nn.init.normal_(m.weight.data, 0.0, 0.02)
-            if m.bias is not None:
-                nn.init.constant_(m.bias.data, 0)
     
-    def train_init(self, lr, batch_size, to_drive, drive_path):
+    def train_init(self, lr, batch_size):
         """Initialize the training parameters and optimizer."""
         
-        self.to_drive = to_drive
-        self.drive_path = drive_path
         self.loader = get_dataloader(self.dataset_name, batch_size)
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
@@ -185,7 +165,7 @@ class DCGAN(AbstractModel):
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
         
     
-    def train(self, num_epochs, lr, batch_size, device, save_interval, to_drive, drive_path):
+    def train(self, num_epochs, lr, batch_size, device, save_interval):
         """
         Main training loop.
         
@@ -203,7 +183,7 @@ class DCGAN(AbstractModel):
             Number of epochs to wait before saving the models and generated images. Defaults to 10.
         """
         # Initialize training parameters and optimizer
-        self.train_init(lr, batch_size, to_drive, drive_path)
+        self.train_init(lr, batch_size)
         
         for epoch in range(self.start_epoch, num_epochs):
             self.generator.train()

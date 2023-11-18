@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .utils import PixelNorm, AdaIN, NoiseInjection
-
+# TODO: PixelNorm
 
 class MappingNetwork(nn.Module):
     """
@@ -146,19 +146,20 @@ class SynthesisNetwork(nn.Module):
         x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
         x = self.init_block(x, w)
         # Get the initial RGB image at 4x4 resolution
-        rgb = self.to_rgb_layers[0](x)
+        if current_level <= 1:
+            rgb = self.to_rgb_layers[0](x)
 
         for level in range(1, current_level + 1):
             x = self.upscale_blocks[level - 1](x, w)
-            new_rgb = self.to_rgb_layers[level](x)
-
+        
             if alpha < 1.0 and level == current_level:
                 # Interpolate between the new RGB image of the current resolution
                 # and the upscaled RGB image of the previous resolution
+                new_rgb = self.to_rgb_layers[level](x)
                 rgb = F.interpolate(rgb, scale_factor=2, mode='nearest')
                 rgb = alpha * new_rgb + (1 - alpha) * rgb 
             else:
-                rgb = new_rgb
+                rgb = self.to_rgb_layers[level](x)
         return rgb
 
 
@@ -166,7 +167,7 @@ class Generator(nn.Module):
     """
     StyleGAN Generator Network.
     """
-    def __init__(self, latent_dim, w_dim, style_layers, image_size):
+    def __init__(self, latent_dim, w_dim, style_layers):
         super(Generator, self).__init__()
         self.mapping = MappingNetwork(latent_dim, style_layers, w_dim)
         self.synthesis = SynthesisNetwork(w_dim)
