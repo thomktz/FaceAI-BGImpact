@@ -31,8 +31,4 @@ class NoiseInjection(nn.Module):
         self.weight = nn.Parameter(torch.zeros(1, channel, 1, 1))
 
     def forward(self, image, noise):
-        # Print the shapes of everything
-        print(f"Image shape: {image.shape}")
-        print(f"Noise shape: {noise.shape}")
-        print(f"Weight shape: {self.weight.shape}")
         return image + self.weight * noise
