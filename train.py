@@ -104,6 +104,7 @@ def main(args):
                 for (k, v) in config["level_epochs"].items()
             },
             lambda_gp=config["lambda_gp"],
+            transition_ratio=config["transition_ratio"],
         )
 
     else:
