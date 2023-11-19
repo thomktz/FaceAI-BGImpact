@@ -1,5 +1,6 @@
 import os
 import torch
+import logging
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
@@ -13,6 +14,7 @@ from models.stylegan_.generator import Generator
 from models.stylegan_.discriminator import Discriminator
 from models.stylegan_.utils import compute_gradient_penalty
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 class StyleGAN(AbstractModel):
     """
     StyleGAN class inheriting from AbstractModel.
@@ -44,7 +46,7 @@ class StyleGAN(AbstractModel):
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
 
-    def train_init(self, lr, batch_size):
+    def train_init(self, lr):
         """
         Initialize the training process.
         
@@ -83,7 +85,7 @@ class StyleGAN(AbstractModel):
         level_epochs : dict
             Dictionary mapping resolution levels to the number of epochs to train at that level.
         """
-        self.train_init(lr, batch_size)
+        self.train_init(lr)
         total_steps = sum(level_epochs.values())
         current_step = 0
 
@@ -104,28 +106,14 @@ class StyleGAN(AbstractModel):
                     # Stabilization phase
                     alpha = 1.0
         
-                self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, batch_size, save_interval)
+                self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval)
 
-    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, batch_size, save_interval):
+    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval):
         # Training loop for one epoch
-        # print(
-        #     f"""
-        #     level_step: {level_step},
-        #     level_steps: {level_steps},
-        #     current_step: {current_step},
-        #     total_steps: {total_steps},
-        #     level: {level},
-        #     alpha: {alpha},
-        #     lambda_gp: {lambda_gp},
-        #     device: {device},
-        #     batch_size: {batch_size},
-        #     save_interval: {save_interval}
-        #     """
-        # )
         self.generator.train()
         running_loss = 0.0
 
-        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step}/{level_steps} total {current_step}/{total_steps}")
+        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
 
         for i, imgs in data_iter:
             imgs = imgs.to(device)
@@ -169,24 +157,43 @@ class StyleGAN(AbstractModel):
         fake_imgs = self.generator(z, current_level, alpha)
 
         # Train the Discriminator
-        self.optimizer_D.zero_grad()
         real_output = self.discriminator(real_imgs, current_level, alpha)
         fake_output = self.discriminator(fake_imgs.detach(), current_level, alpha)
 
         # Gradient Penalty
         gradient_penalty = compute_gradient_penalty(self.discriminator, real_imgs, fake_imgs, current_level, alpha, device)
+        
+        self.optimizer_D.zero_grad()
         d_loss = torch.mean(fake_output) - torch.mean(real_output) + lambda_gp * gradient_penalty
-
         d_loss.backward(retain_graph=True)
+        # self.monitor_gradients(self.discriminator, "Discriminator")
+        
         self.optimizer_D.step()
 
         # Train the Generator
         self.optimizer_G.zero_grad()
         g_loss = -torch.mean(self.discriminator(fake_imgs, current_level, alpha))
         g_loss.backward()
+        # self.monitor_gradients(self.generator, "Generator")
         self.optimizer_G.step()
 
+        # logging.info(f"Level {current_level}, Alpha {alpha:.2f} - Generator loss: {g_loss.item()}, Discriminator loss: {d_loss.item()}")
         return g_loss.item(), d_loss.item()
+    
+    def monitor_gradients(self, model, model_name):
+        """
+        Monitor and log gradient norms for each parameter in the model.
+        """
+        for name, parameter in model.named_parameters():
+            if parameter.grad is not None:
+                grad_norm = parameter.grad.norm()
+                if torch.isnan(grad_norm) or torch.isinf(grad_norm):
+                    logging.warning(f"{model_name} - Gradient for {name} is NaN or Inf!")
+                else:
+                    logging.info(f"{model_name} - {name}, Grad Norm: {grad_norm.item()}")
+            else:
+                pass
+                #logging.warning(f"{model_name} - No gradient for {name}")
     
     def save_checkpoint(self, current_step, current_level, alpha, save_dir="outputs/StyleGAN_checkpoints"):
         """

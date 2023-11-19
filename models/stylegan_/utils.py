@@ -50,7 +50,6 @@ def compute_gradient_penalty(D, real_samples, fake_samples, level, alpha, device
         grad_outputs=fake,
         create_graph=True,
         retain_graph=True,
-        only_inputs=True,
     )[0]
     gradients = gradients.view(gradients.size(0), -1)
     # Add epsilon as per https://github.com/EmilienDupont/wgan-gp/blob/master/training.py
