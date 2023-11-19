@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .utils import PixelNorm, AdaIN, NoiseInjection
-# TODO: PixelNorm
 
 class MappingNetwork(nn.Module):
     """
@@ -21,10 +20,10 @@ class MappingNetwork(nn.Module):
     
     def __init__(self, latent_dim, layers, w_dim):
         super(MappingNetwork, self).__init__()
-        model = [nn.Linear(latent_dim, w_dim), nn.LeakyReLU(0.2)]
+        
+        model = [nn.Linear(latent_dim, w_dim), PixelNorm(), nn.LeakyReLU(0.2)]
         for _ in range(layers - 1):
-            model.append(nn.Linear(w_dim, w_dim))
-            model.append(nn.LeakyReLU(0.2))
+            model.extend([nn.Linear(w_dim, w_dim), PixelNorm(), nn.LeakyReLU(0.2)])
         self.model = nn.Sequential(*model)
 
     def forward(self, z):

@@ -1,6 +1,7 @@
 import torch
 import pytest
 from models.stylegan_ import Generator, SynthesisNetwork, MappingNetwork, Discriminator
+from models.data_loader import denormalize_imagenet
 
 class TestStyleGAN:
     latent_dim = 100
@@ -40,7 +41,6 @@ class TestStyleGAN:
         expected_size = 4 * 2 ** level  # The expected size of the image at the current level
         assert image.shape == (batch_size, 3, expected_size, expected_size)
 
-
 class TestStyleGANDiscriminator:
     def test_initialization(self):
         """Test the initialization of StyleGAN Discriminator."""
@@ -74,3 +74,4 @@ class TestStyleGANDiscriminator:
             output = discriminator(image, current_level, alpha)
 
         assert output.shape == (batch_size, 1)
+        print(output)

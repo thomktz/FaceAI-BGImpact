@@ -157,15 +157,14 @@ class StyleGAN(AbstractModel):
 
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
-        
+
         # Train the Discriminator
         self.optimizer_D.zero_grad()
         real_output = self.discriminator(real_imgs, current_level, alpha)
         fake_output = self.discriminator(fake_imgs.detach(), current_level, alpha)
 
-        # Gradient penalty for improved training stability
+        # Gradient Penalty
         gradient_penalty = compute_gradient_penalty(self.discriminator, real_imgs, fake_imgs, current_level, alpha, device)
-        
         d_loss = torch.mean(fake_output) - torch.mean(real_output) + lambda_gp * gradient_penalty
 
         d_loss.backward(retain_graph=True)
@@ -178,7 +177,7 @@ class StyleGAN(AbstractModel):
         self.optimizer_G.step()
 
         return g_loss.item(), d_loss.item()
-
+    
     def save_checkpoint(self, current_step, current_level, alpha, save_dir="outputs/StyleGAN_checkpoints"):
         """
         Save a checkpoint of the current state, including models, optimizers, and training parameters.
