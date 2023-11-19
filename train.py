@@ -2,14 +2,14 @@ import os
 import json
 import argparse
 import torch
-from models.dcgan import DCGAN
+from models import DCGAN, StyleGAN
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Deep Learning Model Training")
     
     # Model-specific arguments
-    parser.add_argument("--model-type", type=str, required=True, choices=["DCGAN", "VAE"], help="Type of model to train")
+    parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model to train")
     parser.add_argument("--dataset", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
     parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
     parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
@@ -23,9 +23,9 @@ def parse_args():
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
     return parser.parse_args()
 
-def load_default_config(model_type):
+def load_default_config(model):
     """Load the default configuration JSON for the specified model type."""
-    default_config_path = os.path.join("configs", f"default_{model_type.lower()}_config.json")
+    default_config_path = os.path.join("configs", f"default_{model.lower()}_config.json")
     with open(default_config_path, "r") as default_config_file:
         default_config = json.load(default_config_file)
     return default_config
@@ -33,7 +33,7 @@ def load_default_config(model_type):
 def main(args):
     """Main parsing script."""
     
-    default_config = load_default_config(args.model_type)
+    default_config = load_default_config(args.model)
     
     if args.config_path:
         with open(args.config_path, "r") as custom_config_file:
@@ -61,8 +61,7 @@ def main(args):
         
     elif args.checkpoint_path is not None:
         checkpoint_path = args.checkpoint_path
-
-    if args.model_type == "DCGAN":
+    if args.model.lower() == "dcgan":
         if checkpoint_path is None:
             model = DCGAN(
                 dataset_name=args.dataset,
@@ -74,17 +73,43 @@ def main(args):
                 checkpoint_path=checkpoint_path,
                 device=device,
             )
+        train_config = dict(
+            num_epochs=config["num_epochs"],
+            batch_size=config["batch_size"],
+            lr=config["lr"],
+            device=device,
+            save_interval=config["save_interval"],
+        )
+    elif args.model.lower() == "stylegan":
+        if checkpoint_path is None:
+            model = StyleGAN(
+                dataset_name=args.dataset,
+                latent_dim=config["latent_dim"],
+                w_dim=config["w_dim"],
+                style_layers=config["style_layers"],
+                device=device,
+            )
+        else:
+            model = StyleGAN.from_checkpoint(
+                checkpoint_path=checkpoint_path,
+                device=device,
+            )
+        train_config = dict(
+            lr=config["lr"],
+            batch_size=config["batch_size"],
+            device=device,
+            save_interval=config["save_interval"],
+            level_epochs={
+                int(k): int(v) 
+                for (k, v) in config["level_epochs"].items()
+            },
+            lambda_gp=config["lambda_gp"],
+        )
 
     else:
         raise ValueError("Invalid model type")
 
-    model.train(
-        num_epochs=config["num_epochs"],
-        batch_size=config["batch_size"],
-        lr=config["lr"],
-        device=device,
-        save_interval=config["save_interval"],
-    )
+    model.train(**train_config)
 
 if __name__ == "__main__":
     args = parse_args()

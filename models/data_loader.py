@@ -33,7 +33,7 @@ class FFHQDataset(Dataset):
 
         return image
 
-def get_dataloader(dataset_name, batch_size, shuffle=True):
+def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128):
     """
     Create a DataLoader for the specified FFHQ dataset.
     
@@ -43,11 +43,16 @@ def get_dataloader(dataset_name, batch_size, shuffle=True):
         The name of the dataset to load.
     batch_size : int
         The batch size to use for the DataLoader.
+    shuffle : bool
+        Whether to shuffle the dataset.
+    resolution : int
+        The resolution of the images in the dataset.
     """
+    print(f"Loading dataset: {dataset_name} with resolution {resolution}")
     # Define transformations
     transform = transforms.Compose([
         transforms.ToTensor(),
-        # Normalize the image using ImageNet statistics
+        transforms.Resize((resolution, resolution), antialias=True),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 

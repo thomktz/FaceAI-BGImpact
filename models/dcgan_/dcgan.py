@@ -17,107 +17,10 @@ from models.abstract_model import AbstractModel
 from models.data_loader import get_dataloader, denormalize_imagenet
 from models.utils import weights_init
 
-class Generator(nn.Module):
-    """
-    Generator class for the DCGAN.
-    
-    Parameters
-    ----------
-    latent_dim : int
-        Dimension of the latent space. Defaults to 100.
-    """
-    
-    def __init__(self, latent_dim):
-        super(Generator, self).__init__()
-        self.init_size = 128 // 4  # Initial size before upsampling
-        
-        self.l1 = nn.Sequential(nn.Linear(latent_dim, 128 * self.init_size ** 2))
-
-        self.conv_blocks = nn.Sequential(
-            nn.BatchNorm2d(128),
-            nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(128, 0.8),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(64, 0.8),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1),
-            nn.Tanh()
-        )
-
-    def forward(self, z):
-        """
-        Forward pass for the generator.
-        
-        Parameters
-        ----------
-        z : torch.Tensor
-            Input tensor of shape (batch_size, latent_dim).
-            
-        Returns
-        -------
-        img : torch.Tensor
-            Output tensor of shape (batch_size, 3, 128, 128).
-        """
-        
-        out = self.l1(z)
-        out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks(out)
-        return img
-    
-class Discriminator(nn.Module):
-    """Discriminator class for the DCGAN."""
-    def __init__(self):
-        super(Discriminator, self).__init__()
-        
-        def discriminator_block(in_filters, out_filters, bn=True):
-            """
-            Discriminator block. 
-            Consists of a convolutional layer, a leaky ReLU activation, and a dropout layer.
-            """
-            block = [
-                nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=2, padding=1), 
-                nn.LeakyReLU(0.2, inplace=True), 
-                nn.Dropout2d(0.25),
-            ]
-            if bn:
-                block.append(nn.BatchNorm2d(out_filters, 0.8))
-            return block
-
-        self.model = nn.Sequential(
-            *discriminator_block(3, 16, bn=False),
-            *discriminator_block(16, 32),
-            *discriminator_block(32, 64),
-            *discriminator_block(64, 128),
-        )
-
-        # The height and width of downsampled image
-        ds_size = 128 // 2**4
-        self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
+from models.dcgan_.generator import Generator
+from models.dcgan_.discriminator import Discriminator
 
 
-    def forward(self, img):
-        """
-        Forward pass for the discriminator.
-        
-        Parameters
-        ----------
-        img : torch.Tensor
-            Input tensor of shape (batch_size, 3, 128, 128).
-        
-        Returns
-        -------
-        validity : torch.Tensor
-            Output tensor of shape (batch_size, 1).
-        """
-        
-        out = self.model(img)
-        out = out.view(out.size(0), -1)
-        validity = self.adv_layer(out)
-        return validity
-          
 class DCGAN(AbstractModel):
     """
     DCGAN class that inherits from our AbstractModel.
@@ -202,6 +105,8 @@ class DCGAN(AbstractModel):
                 fake_labels = torch.zeros(batch_size, 1).to(device)
 
                 # Zero the parameter gradients
+                # TODO: Why do we need to zero the gradients here?
+                # We're doing it twice
                 self.optimizer_G.zero_grad()
                 self.optimizer_D.zero_grad()
 
@@ -281,7 +186,6 @@ class DCGAN(AbstractModel):
         fid_score : float
             Computed FID score.
         """
-        # Path to precomputed statistics file
         self.generator.eval()
         images = []
         with torch.no_grad():
@@ -295,23 +199,6 @@ class DCGAN(AbstractModel):
         
         stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
-
-    def save_models(self, epoch, save_dir="outputs/models"):
-        """
-        Save only the models.
-        
-        Parameters
-        ----------
-        epoch : int
-            Current epoch.
-        save_dir : str
-            Directory to save the models to.
-        """
-        save_folder = self.get_save_dir(save_dir)
-        os.makedirs(save_folder, exist_ok=True)
-        
-        torch.save(self.generator.state_dict(), f"{save_folder}/generator_epoch_{epoch+1}.pth")
-        torch.save(self.discriminator.state_dict(), f"{save_folder}/discriminator_epoch_{epoch+1}.pth")
 
     def generate_images(self, epoch, device, save_dir="outputs/generated_images"):
         """
@@ -330,7 +217,8 @@ class DCGAN(AbstractModel):
         save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
         
-        z = torch.randn(64, self.latent_dim).to(device)  # Generate random latent vectors
+        z = torch.randn(64, self.latent_dim).to(device)
+        
         fake_images = self.generator(z).detach().cpu()
         denormalized_images = denormalize_imagenet(fake_images)
         save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
@@ -339,7 +227,9 @@ class DCGAN(AbstractModel):
         """Generate one image and save it to the directory."""
         
         os.makedirs(save_folder, exist_ok=True)
+        
         z = torch.randn(1, self.latent_dim).to(device)
+        
         fake_image = self.generator(z).detach().cpu()
         denormalized_image = denormalize_imagenet(fake_image)
         save_image(denormalized_image, os.path.join(save_folder, filename), normalize=False)

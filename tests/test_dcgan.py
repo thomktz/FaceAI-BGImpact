@@ -1,7 +1,7 @@
 # test_gan.py
 import pytest
 import torch
-from models.dcgan import DCGAN
+from models import DCGAN
 
 @pytest.fixture
 def sample_gan():
