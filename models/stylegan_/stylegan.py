@@ -120,7 +120,7 @@ class StyleGAN(AbstractModel):
         for i, imgs in data_iter:
             imgs = imgs.to(device)
 
-            g_loss, d_loss = self.perform_train_step(imgs, batch_size, lambda_gp, device, level, alpha)
+            g_loss, d_loss = self.perform_train_step(imgs, lambda_gp, device, level, alpha)
             running_loss += g_loss + d_loss
 
         self.generate_images(current_step, device, level, alpha)
