@@ -123,11 +123,11 @@ class StyleGAN(AbstractModel):
             g_loss, d_loss = self.perform_train_step(imgs, batch_size, lambda_gp, device, level, alpha)
             running_loss += g_loss + d_loss
 
-        self.generate_images(current_step, device)
+        self.generate_images(current_step, device, level, alpha)
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha, device)
 
-    def perform_train_step(self, real_imgs, batch_size, lambda_gp, device, current_level, alpha):
+    def perform_train_step(self, real_imgs, lambda_gp, device, current_level, alpha):
         """
         Perform a single training step, including forward and backward passes for both
         the generator and discriminator.
@@ -136,8 +136,6 @@ class StyleGAN(AbstractModel):
         ----------
         real_imgs : torch.Tensor
             Real images batch.
-        batch_size : int
-            Size of the batch.
         lambda_gp : float
             Gradient penalty lambda hyperparameter.
         device : torch.device
@@ -261,7 +259,7 @@ class StyleGAN(AbstractModel):
 
         return instance
 
-    def generate_images(self, epoch, device, save_dir="outputs/StyleGAN_images"):
+    def generate_images(self, epoch, device, level, alpha, save_dir="outputs/StyleGAN_images"):
         """
         Save generated images.
         
@@ -271,6 +269,10 @@ class StyleGAN(AbstractModel):
             Current epoch.
         device : torch.device
             Device to use for training.
+        level : int
+            Current resolution level.
+        alpha : float
+            Current alpha value for blending resolutions.
         save_dir : str
             Directory to save the images to.
         """
@@ -280,6 +282,6 @@ class StyleGAN(AbstractModel):
         
         z = torch.randn(64, self.latent_dim).to(device)
         
-        fake_images = self.generator(z).detach().cpu()
+        fake_images = self.generator(z, level, alpha).detach().cpu()
         denormalized_images = denormalize_imagenet(fake_images)
         save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
