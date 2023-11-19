@@ -9,9 +9,9 @@
     "save_interval": 100, 
     "transition_ratio": 0.5,
     "level_epochs": {
-        "0": 3,           
+        "0": 2,           
         "1": 3,
-        "2": 3,
+        "2": 5,
         "3": 20,
         "4": 30,
         "5": 50     
