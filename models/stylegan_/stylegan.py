@@ -98,20 +98,20 @@ class StyleGAN(AbstractModel):
 
     def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, batch_size, save_interval):
         # Training loop for one epoch
-        print(
-            f"""
-            level_step: {level_step},
-            level_steps: {level_steps},
-            current_step: {current_step},
-            total_steps: {total_steps},
-            level: {level},
-            alpha: {alpha},
-            lambda_gp: {lambda_gp},
-            device: {device},
-            batch_size: {batch_size},
-            save_interval: {save_interval}
-            """
-        )
+        # print(
+        #     f"""
+        #     level_step: {level_step},
+        #     level_steps: {level_steps},
+        #     current_step: {current_step},
+        #     total_steps: {total_steps},
+        #     level: {level},
+        #     alpha: {alpha},
+        #     lambda_gp: {lambda_gp},
+        #     device: {device},
+        #     batch_size: {batch_size},
+        #     save_interval: {save_interval}
+        #     """
+        # )
         self.generator.train()
         running_loss = 0.0
 
@@ -123,7 +123,7 @@ class StyleGAN(AbstractModel):
             g_loss, d_loss = self.perform_train_step(imgs, batch_size, lambda_gp, device, level, alpha)
             running_loss += g_loss + d_loss
 
-
+        self.generate_images(current_step, device)
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha, device)
 
@@ -181,7 +181,7 @@ class StyleGAN(AbstractModel):
 
         return g_loss.item(), d_loss.item()
 
-    def save_checkpoint(self, current_step, current_level, alpha, save_dir="outputs/checkpoints"):
+    def save_checkpoint(self, current_step, current_level, alpha, save_dir="outputs/StyleGAN_checkpoints"):
         """
         Save a checkpoint of the current state, including models, optimizers, and training parameters.
 
@@ -261,5 +261,25 @@ class StyleGAN(AbstractModel):
 
         return instance
 
-    def generate_images(self, epoch, device):
-        return super().generate_images(epoch, device)
+    def generate_images(self, epoch, device, save_dir="outputs/StyleGAN_images"):
+        """
+        Save generated images.
+        
+        Parameters
+        ----------
+        epoch : int
+            Current epoch.
+        device : torch.device
+            Device to use for training.
+        save_dir : str
+            Directory to save the images to.
+        """
+        
+        save_folder = self.get_save_dir(save_dir)
+        os.makedirs(save_folder, exist_ok=True)
+        
+        z = torch.randn(64, self.latent_dim).to(device)
+        
+        fake_images = self.generator(z).detach().cpu()
+        denormalized_images = denormalize_imagenet(fake_images)
+        save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
