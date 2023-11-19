@@ -154,8 +154,10 @@ class StyleGAN(AbstractModel):
         d_loss : torch.Tensor
             Discriminator loss for the step.
         """
+        # On the last batch of the epoch, the number of images may be less than the batch size
+        current_batch_size = real_imgs.size(0)
 
-        z = torch.randn(batch_size, self.latent_dim, device=device)
+        z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
         
         # Train the Discriminator
