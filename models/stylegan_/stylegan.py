@@ -64,7 +64,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, lr, batch_size, lambda_gp, device, save_interval, level_epochs):
+    def train(self, lr, batch_size, lambda_gp, device, save_interval, level_epochs, transition_ratio):
         """
         Main training loop for StyleGAN.
         
@@ -89,11 +89,21 @@ class StyleGAN(AbstractModel):
 
         for level, level_steps in level_epochs.items():
             current_resolution = 4 * 2 ** level
-            print(f"Training at level {level} with resolution {current_resolution}")
+            
+            transition_steps = int(level_steps * transition_ratio)
+            
+            print(f"Training level {level} with resolution {current_resolution} for {level_steps} steps")
+            
             self.loader = get_dataloader(self.dataset_name, batch_size, resolution=current_resolution)
             for level_step in range(level_steps):
                 current_step += 1
-                alpha = min(1, level_step / level_steps) if level > 0 else 1.0
+                if level_step < transition_steps and level > 0:
+                    # Transition phase
+                    alpha = (level_step+1) / (transition_steps+1)
+                else:
+                    # Stabilization phase
+                    alpha = 1.0
+        
                 self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, batch_size, save_interval)
 
     def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, batch_size, save_interval):
@@ -283,4 +293,4 @@ class StyleGAN(AbstractModel):
         
         fake_images = self.generator(z, level, alpha).detach().cpu()
         denormalized_images = denormalize_imagenet(fake_images)
-        save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
+        save_image(denormalized_images, f"{save_folder}/epoch_{epoch}.png", nrow=8, normalize=False)
