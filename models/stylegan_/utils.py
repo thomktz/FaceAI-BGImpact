@@ -38,18 +38,18 @@ def compute_gradient_penalty(D, real_samples, fake_samples, level, alpha, device
     # Random weight term for interpolation between real and fake samples
     # Not the same alpha as the interpolation factor for the resolution level blending
     alpha_ = torch.rand((real_samples.size(0), 1, 1, 1), device=device)
+    
     # Get random interpolation between real and fake samples
-    interpolates = (alpha_ * real_samples + ((1 - alpha_) * fake_samples)).requires_grad_(True)
+    interpolates = (alpha_ * real_samples + ((1 - alpha_) * fake_samples)).detach().requires_grad_(True)
     
     d_interpolates = D(interpolates, level, alpha)
     fake = torch.ones(real_samples.shape[0], 1, requires_grad=False, device=device)
     # Get gradient w.r.t. interpolates
     gradients = torch.autograd.grad(
-        outputs=d_interpolates,
-        inputs=interpolates,
-        grad_outputs=fake,
-        create_graph=True,
-        retain_graph=True,
+        outputs=d_interpolates
+        , inputs=interpolates
+        , grad_outputs=fake
+        , create_graph=True
     )[0]
     gradients = gradients.view(gradients.size(0), -1)
     # Add epsilon as per https://github.com/EmilienDupont/wgan-gp/blob/master/training.py

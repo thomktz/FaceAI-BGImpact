@@ -165,7 +165,7 @@ class StyleGAN(AbstractModel):
         
         self.optimizer_D.zero_grad()
         d_loss = torch.mean(fake_output) - torch.mean(real_output) + lambda_gp * gradient_penalty
-        d_loss.backward(retain_graph=True)
+        d_loss.backward()
         # self.monitor_gradients(self.discriminator, "Discriminator")
         
         self.optimizer_D.step()
