@@ -43,14 +43,15 @@ def compute_gradient_penalty(D, real_samples, fake_samples, level, alpha, device
     interpolates = (alpha_ * real_samples + ((1 - alpha_) * fake_samples)).detach().requires_grad_(True)
     
     d_interpolates = D(interpolates, level, alpha)
-    fake = torch.ones(real_samples.shape[0], 1, requires_grad=False, device=device)
+    
     # Get gradient w.r.t. interpolates
     gradients = torch.autograd.grad(
-        outputs=d_interpolates
-        , inputs=interpolates
-        , grad_outputs=fake
-        , create_graph=True
+        outputs=d_interpolates,
+        inputs=interpolates,
+        grad_outputs=torch.ones(d_interpolates.size(), device=device),
+        create_graph=True
     )[0]
+    
     gradients = gradients.view(gradients.size(0), -1)
     # Add epsilon as per https://github.com/EmilienDupont/wgan-gp/blob/master/training.py
     gradient_penalty = ((gradients.norm(2, dim=1) - 1 + 1e-12) ** 2).mean()

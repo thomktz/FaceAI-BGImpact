@@ -101,7 +101,7 @@ class StyleGAN(AbstractModel):
                 current_step += 1
                 if level_step < transition_steps and level > 0:
                     # Transition phase
-                    alpha = (level_step+1) / (transition_steps+1)
+                    alpha = (level_step+0.5) / (transition_steps+0.5)
                 else:
                     # Stabilization phase
                     alpha = 1.0
@@ -113,7 +113,7 @@ class StyleGAN(AbstractModel):
         self.generator.train()
         running_loss = 0.0
 
-        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
+        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
 
         for i, imgs in data_iter:
             imgs = imgs.to(device)
@@ -156,25 +156,27 @@ class StyleGAN(AbstractModel):
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
 
-        # Train the Discriminator
-        real_output = self.discriminator(real_imgs, current_level, alpha)
-        fake_output = self.discriminator(fake_imgs.detach(), current_level, alpha)
+        # Calculate discriminator loss on real images
+        real_loss = torch.mean(self.discriminator(real_imgs, current_level, alpha))
 
-        # Gradient Penalty
+        # Calculate discriminator loss on fake images
+        fake_loss = torch.mean(self.discriminator(fake_imgs.detach(), current_level, alpha))
+
+        # Compute gradient penalty using interpolated images
         gradient_penalty = compute_gradient_penalty(self.discriminator, real_imgs, fake_imgs, current_level, alpha, device)
-        
+
+        # Calculate total discriminator loss
+        d_loss = fake_loss - real_loss + lambda_gp * gradient_penalty
+
+        # Update discriminator
         self.optimizer_D.zero_grad()
-        d_loss = torch.mean(fake_output) - torch.mean(real_output) + lambda_gp * gradient_penalty
-        d_loss.backward()
-        # self.monitor_gradients(self.discriminator, "Discriminator")
-        
+        d_loss.backward()  # retain_graph is not needed here
         self.optimizer_D.step()
 
-        # Train the Generator
+        # Update generator
         self.optimizer_G.zero_grad()
         g_loss = -torch.mean(self.discriminator(fake_imgs, current_level, alpha))
         g_loss.backward()
-        # self.monitor_gradients(self.generator, "Generator")
         self.optimizer_G.step()
 
         # logging.info(f"Level {current_level}, Alpha {alpha:.2f} - Generator loss: {g_loss.item()}, Discriminator loss: {d_loss.item()}")
