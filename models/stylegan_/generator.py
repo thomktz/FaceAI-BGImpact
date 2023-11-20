@@ -86,6 +86,8 @@ class StyledConvBlock(nn.Module):
             Shape: (batch_size, out_channel, height, width)
         """
         style = self.style(w)
+        print("Pairwise euclidian distance in the style batch:", pairwise_euclidean_distance(style).item())
+        print("Pairwise euclidian distance in the w batch:", pairwise_euclidean_distance(w).item())
         x = self.conv(x)
         
         batch, _, height, width = x.shape
@@ -190,6 +192,7 @@ class Generator(nn.Module):
         ----------
         torch.Tensor: Generated image tensor.
         """
+        print("Pairwise euclidian distance in the z batch:", pairwise_euclidean_distance(z).item())
         w = self.mapping(z)
         image = self.synthesis(w, current_level, alpha)
         return image
