@@ -57,6 +57,9 @@ class StyleGAN(AbstractModel):
         """
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+        
+        self.real_distance = 0.0
+        self.fake_distance = 0.0
 
         # Load optimizer states if available
         if self.optimizer_D_config:
@@ -129,21 +132,23 @@ class StyleGAN(AbstractModel):
         running_g_loss = 0.0
         running_d_loss = 0.0
 
-        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
+        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance}/{self.fake_distance}")
 
         for i, imgs in data_iter:
             imgs = imgs.to(device)
 
-            g_loss, d_loss = self.perform_train_step(imgs, lambda_gp, device, level, alpha)
+            g_loss, d_loss = self.perform_train_step(imgs, device, level, alpha)
             running_g_loss += g_loss
             running_d_loss += d_loss
+            
+            data_iter.desc = f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance:.2f}/{self.fake_distance:.2f}"
             
         print(f"Generator loss: {running_g_loss / len(self.loader)}, discriminator loss: {running_d_loss / len(self.loader)}")
         self.generate_images(current_step, device, level, alpha)
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha, device)
 
-    def perform_train_step(self, real_imgs, lambda_gp, device, current_level, alpha, drift=0.001):
+    def perform_train_step(self, real_imgs, device, current_level, alpha):
         """
         Perform a single training step, including forward and backward passes for both
         the generator and discriminator.
@@ -152,8 +157,6 @@ class StyleGAN(AbstractModel):
         ----------
         real_imgs : torch.Tensor
             Real images batch.
-        lambda_gp : float
-            Gradient penalty lambda hyperparameter.
         device : torch.device
             Device on which to perform computations.
         current_level : int
@@ -188,10 +191,8 @@ class StyleGAN(AbstractModel):
         nn.utils.clip_grad_norm_(self.generator.parameters(), max_norm=10.)
         self.optimizer_G.step()
 
-        real_distance = pairwise_euclidean_distance(real_imgs)
-        fake_distance = pairwise_euclidean_distance(fake_imgs)
-        print(f"Real distance: {real_distance}, fake distance: {fake_distance}")
-        print(f"Generator loss: {g_loss.item()}, discriminator loss: {d_loss.item()}")
+        self.real_distance = pairwise_euclidean_distance(real_imgs)
+        self.fake_distance = pairwise_euclidean_distance(fake_imgs)
         return g_loss.item(), d_loss.item()
     
     

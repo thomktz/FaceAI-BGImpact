@@ -4,7 +4,7 @@
     "loss": "wgan-gp",
     "latent_dim": 512,
     "w_dim": 512,
-    "style_layers": 8,
+    "style_layers": 4,
     "lambda_gp": 10,
     "batch_size": 16,
     "save_interval": 100, 
