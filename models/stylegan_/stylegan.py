@@ -8,7 +8,7 @@ from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
 from models.data_loader import get_dataloader, denormalize_imagenet
-from models.utils import weights_init
+from models.utils import weights_init, pairwise_euclidean_distance
 from models.stylegan_.generator import Generator
 from models.stylegan_.discriminator import Discriminator
 from models.stylegan_.utils import compute_gradient_penalty
@@ -118,6 +118,7 @@ class StyleGAN(AbstractModel):
 
             g_loss, d_loss = self.perform_train_step(imgs, lambda_gp, device, level, alpha)
             running_loss += g_loss + d_loss
+            
 
         self.generate_images(current_step, device, level, alpha)
         if current_step % save_interval == 0:
@@ -153,6 +154,12 @@ class StyleGAN(AbstractModel):
 
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
+        
+        
+        with torch.no_grad():
+            real_distance = pairwise_euclidean_distance(real_imgs)
+            fake_distance = pairwise_euclidean_distance(fake_imgs)
+            print(f"Real distance: {real_distance}, fake distance: {fake_distance}")
 
         # Calculate discriminator loss on real images
         real_scores = self.discriminator(real_imgs, current_level, alpha)
@@ -283,12 +290,12 @@ class StyleGAN(AbstractModel):
         save_dir : str
             Directory to save the images to.
         """
-        
-        save_folder = self.get_save_dir(save_dir)
-        os.makedirs(save_folder, exist_ok=True)
-        
-        z = torch.randn(64, self.latent_dim).to(device)
-        
-        fake_images = self.generator(z, level, alpha).detach().cpu()
-        denormalized_images = denormalize_imagenet(fake_images)
-        save_image(denormalized_images, f"{save_folder}/epoch_{epoch}.png", nrow=8, normalize=False)
+        with torch.no_grad():
+            save_folder = self.get_save_dir(save_dir)
+            os.makedirs(save_folder, exist_ok=True)
+            
+            z = torch.randn(64, self.latent_dim).to(device)
+            
+            fake_images = self.generator(z, level, alpha).detach().cpu()
+            denormalized_images = denormalize_imagenet(fake_images)
+            save_image(denormalized_images, f"{save_folder}/epoch_{epoch}.png", nrow=8, normalize=False)

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.init as init
 
@@ -22,3 +23,28 @@ def weights_init(std=0.02):
             init.constant_(m.bias.data, 0.0)
         
     return f
+
+def pairwise_euclidean_distance(batch):
+    """
+    Compute pairwise Euclidean distance for a batch of images.
+
+    Parameters:
+    -----------
+    batch: torch.Tensor
+        A batch of images. Shape: (batch_size, channels, height, width)
+
+    Returns:
+    --------
+    distances: torch.Tensor
+        Pairwise distances of all images in the batch.
+    """
+    # Flatten the images
+    flattened = batch.view(batch.size(0), -1)
+
+    # Compute pairwise distance
+    dist_matrix = torch.cdist(flattened, flattened, p=2)
+
+    # Optionally, you can return the mean distance for a simple metric
+    mean_dist = dist_matrix.mean()
+
+    return mean_dist
