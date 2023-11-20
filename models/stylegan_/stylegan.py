@@ -38,8 +38,8 @@ class StyleGAN(AbstractModel):
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
 
-        self.generator.apply(weights_init(std=0.1))
-        self.discriminator.apply(weights_init(std=0.1))
+        # self.generator.apply(weights_init(std=0.1))
+        # self.discriminator.apply(weights_init(std=0.1))
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
@@ -179,7 +179,7 @@ class StyleGAN(AbstractModel):
 
         # Update discriminator
         self.optimizer_D.zero_grad()
-        d_loss.backward()  # retain_graph is not needed here
+        d_loss.backward()
         self.optimizer_D.step()
 
         # Calculate generator loss

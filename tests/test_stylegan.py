@@ -74,4 +74,3 @@ class TestStyleGANDiscriminator:
             output = discriminator(image, current_level, alpha)
 
         assert output.shape == (batch_size, 1)
-        print(output)

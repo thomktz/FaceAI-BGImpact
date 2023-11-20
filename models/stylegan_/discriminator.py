@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from models.stylegan_.utils import SConv2d
+
 class DiscriminatorBlock(nn.Module):
     """
     Discriminator Block for a specific resolution with downscaling.
@@ -10,8 +12,8 @@ class DiscriminatorBlock(nn.Module):
     
     def __init__(self, in_channels, out_channels, kernel_size, downsample=True):
         super(DiscriminatorBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size, padding=kernel_size//2)
-        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.conv1 = SConv2d(in_channels, in_channels, kernel_size, padding=kernel_size//2)
+        self.conv2 = SConv2d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
         self.activation = nn.LeakyReLU(0.2)
         self.downsample = nn.AvgPool2d(2) if downsample else nn.Identity()
         self.scale = nn.Parameter(torch.zeros(1, out_channels, 1, 1))
@@ -33,12 +35,12 @@ class Discriminator(nn.Module):
         
         # Assuming the highest resolution is 128x128, we define the from_rgb_layers
         self.from_rgb_layers = nn.ModuleList([
-            nn.Conv2d(3, 16, 1),  # For 128x128 resolution
-            nn.Conv2d(3, 32, 1),  # For 64x64 resolution
-            nn.Conv2d(3, 64, 1),  # For 32x32 resolution
-            nn.Conv2d(3, 128, 1),  # For 16x16 resolution
-            nn.Conv2d(3, 256, 1),  # For 8x8 resolution
-            nn.Conv2d(3, 512, 1)  # For 4x4 resolution
+            SConv2d(3, 16, 1),  # For 128x128 resolution
+            SConv2d(3, 32, 1),  # For 64x64 resolution
+            SConv2d(3, 64, 1),  # For 32x32 resolution
+            SConv2d(3, 128, 1),  # For 16x16 resolution
+            SConv2d(3, 256, 1),  # For 8x8 resolution
+            SConv2d(3, 512, 1)  # For 4x4 resolution
         ])
         
         # Assuming the highest resolution is 128x128, we define the downscale_blocks
