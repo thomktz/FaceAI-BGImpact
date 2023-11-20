@@ -9,13 +9,23 @@ class PixelNorm(nn.Module):
     def forward(self, x):
         return x / torch.sqrt(torch.mean(x ** 2, dim=1, keepdim=True) + 1e-8)
     
-def AdaIN(x, style):
-    """Adaptive Instance Normalization."""
-    mean, std = style.chunk(2, 1)
-    std = std.exp()
-    x = x.sub(x.mean([2, 3], keepdim=True)).div(x.std([2, 3], keepdim=True))
-    x = std * x + mean
-    return x
+class AdaIN(nn.Module):
+
+    def __init__(self, channels, w_dim):
+        super().__init__()
+        self.channels = channels
+        self.w_dim = w_dim
+        self.instance_norm = nn.InstanceNorm2d(channels)
+        self.scale_transform = nn.Linear(w_dim, channels)
+        self.shift_transform = nn.Linear(w_dim, channels)
+
+    def forward(self, image, w):
+        normalized_image = self.instance_norm(image)
+        scale_tensor = self.scale_transform(w)[:, :, None, None]
+        shift_tensor = self.shift_transform(w)[:, :, None, None]
+        transformed_image = scale_tensor * normalized_image + shift_tensor
+        
+        return transformed_image
 
 class NoiseInjection(nn.Module):
     """
@@ -28,7 +38,7 @@ class NoiseInjection(nn.Module):
     """
     def __init__(self, channel):
         super(NoiseInjection, self).__init__()
-        self.weight = nn.Parameter(torch.zeros(1, channel, 1, 1))
+        self.weight = nn.Parameter(torch.randn(channel)[None, :, None, None])
 
     def forward(self, image, noise):
         return image + self.weight * noise

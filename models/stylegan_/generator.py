@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from models.utils import pairwise_euclidean_distance
 from .utils import PixelNorm, AdaIN, NoiseInjection
 
 class MappingNetwork(nn.Module):
@@ -64,11 +64,12 @@ class StyledConvBlock(nn.Module):
             self.conv = nn.ConvTranspose2d(in_channel, out_channel, kernel_size, stride=2, padding=1, output_padding=1)
         else:
             self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, stride=1, padding=1)
-        self.style = nn.Linear(style_dim, out_channel * 2)
+        self.style = nn.Linear(style_dim, out_channel)
         self.noise = NoiseInjection(out_channel)
+        self.adain = AdaIN(out_channel, style_dim)
         self.act = nn.LeakyReLU(0.2)
 
-    def forward(self, x, style):
+    def forward(self, x, w):
         """
         Forward pass for the StyleGAN convolutional block.
         
@@ -76,7 +77,7 @@ class StyledConvBlock(nn.Module):
         ----------
         x (torch.Tensor): Input tensor.
             Shape: (batch_size, in_channel, height, width)
-        style (torch.Tensor): Style vector.
+        w (torch.Tensor): Style tensor.
             Shape: (batch_size, style_dim)
             
         Returns:
@@ -84,14 +85,14 @@ class StyledConvBlock(nn.Module):
         torch.Tensor: Output tensor.
             Shape: (batch_size, out_channel, height, width)
         """
-        style = self.style(style).unsqueeze(2).unsqueeze(3)
+        style = self.style(w)
         x = self.conv(x)
         
         batch, _, height, width = x.shape
         noise = torch.randn(batch, 1, height, width, device=x.device)
         
         x = self.noise(x, noise)
-        x = AdaIN(x, style)
+        x = self.adain(x, style)
         x = self.act(x)
         return x
 
@@ -144,6 +145,7 @@ class SynthesisNetwork(nn.Module):
         """
         x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
         x = self.init_block(x, w)
+        # print("Pairwise euclidian distance in the x batch:", pairwise_euclidean_distance(x))
         # Get the initial RGB image at 4x4 resolution
         if current_level <= 1:
             rgb = self.to_rgb_layers[0](x)
