@@ -60,3 +60,28 @@ def compute_gradient_penalty(D, real_samples, fake_samples, level, alpha, device
     gradient = gradient.view(gradient.shape[0], -1)
 
     return ((gradient.norm(p=2, dim=1) - 1) ** 2).mean()
+
+
+def log_gradient_norms(model):
+    total_norm = 0
+    for p in model.parameters():
+        param_norm = p.grad.detach().data.norm(2)
+        total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** 0.5
+    return total_norm
+
+def log_layer_activations(model, input_tensor):
+    activations = {}
+
+    def get_activation(name):
+        def hook(model, input, output):
+            activations[name] = output.detach()
+        return hook
+
+    for name, layer in model.named_modules():
+        layer.register_forward_hook(get_activation(name))
+
+    with torch.no_grad():
+        model(input_tensor)
+
+    return activations

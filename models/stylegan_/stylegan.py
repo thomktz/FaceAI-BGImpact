@@ -1,6 +1,5 @@
 import os
 import torch
-import logging
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
@@ -14,7 +13,6 @@ from models.stylegan_.generator import Generator
 from models.stylegan_.discriminator import Discriminator
 from models.stylegan_.utils import compute_gradient_penalty
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 class StyleGAN(AbstractModel):
     """
     StyleGAN class inheriting from AbstractModel.
@@ -185,23 +183,8 @@ class StyleGAN(AbstractModel):
         g_loss.backward()
         self.optimizer_G.step()
 
-        # logging.info(f"Level {current_level}, Alpha {alpha:.2f} - Generator loss: {g_loss.item()}, Discriminator loss: {d_loss.item()}")
         return g_loss.item(), d_loss.item()
     
-    def monitor_gradients(self, model, model_name):
-        """
-        Monitor and log gradient norms for each parameter in the model.
-        """
-        for name, parameter in model.named_parameters():
-            if parameter.grad is not None:
-                grad_norm = parameter.grad.norm()
-                if torch.isnan(grad_norm) or torch.isinf(grad_norm):
-                    logging.warning(f"{model_name} - Gradient for {name} is NaN or Inf!")
-                else:
-                    logging.info(f"{model_name} - {name}, Grad Norm: {grad_norm.item()}")
-            else:
-                pass
-                #logging.warning(f"{model_name} - No gradient for {name}")
     
     def save_checkpoint(self, current_step, current_level, alpha, save_dir="outputs/StyleGAN_checkpoints"):
         """
