@@ -71,7 +71,6 @@ class StyledConvBlock(nn.Module):
         self.act = nn.LeakyReLU(0.2)
         
         if not is_first_block:
-            self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
             self.conv1 = SConv2d(in_channel, out_channel, 3, padding=1)
             self.conv2 = SConv2d(out_channel, out_channel, 3, padding=1)
         else:
@@ -96,7 +95,7 @@ class StyledConvBlock(nn.Module):
             Shape: (batch_size, out_channel, height, width)
         """
         if not self.is_first_block:
-            x = self.upsample(x)
+            x = F.interpolate(x, scale_factor=2, mode='bilinear', antialias=True)
             x = self.conv1(x)
 
         x = x + self.noise1(noise)
