@@ -125,7 +125,7 @@ class StyleGAN(AbstractModel):
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha, device)
 
-    def perform_train_step(self, real_imgs, lambda_gp, device, current_level, alpha):
+    def perform_train_step(self, real_imgs, lambda_gp, device, current_level, alpha, drift=0.001):
         """
         Perform a single training step, including forward and backward passes for both
         the generator and discriminator.
@@ -157,25 +157,31 @@ class StyleGAN(AbstractModel):
         fake_imgs = self.generator(z, current_level, alpha)
 
         # Calculate discriminator loss on real images
-        real_loss = torch.mean(self.discriminator(real_imgs, current_level, alpha))
+        real_scores = self.discriminator(real_imgs, current_level, alpha)
 
         # Calculate discriminator loss on fake images
-        fake_loss = torch.mean(self.discriminator(fake_imgs.detach(), current_level, alpha))
+        fake_scores = self.discriminator(fake_imgs.detach(), current_level, alpha)
 
-        # Compute gradient penalty using interpolated images
-        gradient_penalty = compute_gradient_penalty(self.discriminator, real_imgs, fake_imgs, current_level, alpha, device)
+        d_loss = (
+            torch.mean(fake_scores)
+            - torch.mean(real_scores)
+            + (drift * torch.mean(real_scores ** 2))
+        )
 
-        # Calculate total discriminator loss
-        d_loss = fake_loss - real_loss + lambda_gp * gradient_penalty
+        # calculate the WGAN-GP (gradient penalty)
+        gp = compute_gradient_penalty(self.discriminator, real_imgs.data, fake_imgs.data, current_level, alpha, device)
+        d_loss += lambda_gp * gp
 
         # Update discriminator
         self.optimizer_D.zero_grad()
         d_loss.backward()  # retain_graph is not needed here
         self.optimizer_D.step()
 
+        # Calculate generator loss
+        g_loss = -torch.mean(self.discriminator(fake_imgs, current_level, alpha))
+        
         # Update generator
         self.optimizer_G.zero_grad()
-        g_loss = -torch.mean(self.discriminator(fake_imgs, current_level, alpha))
         g_loss.backward()
         self.optimizer_G.step()
 
