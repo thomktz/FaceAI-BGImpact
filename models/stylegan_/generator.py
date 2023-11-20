@@ -89,8 +89,8 @@ class StyledConvBlock(nn.Module):
         
         batch, _, height, width = x.shape
         noise = torch.randn(batch, 1, height, width, device=x.device)
-        x = self.noise(x, noise)
         
+        x = self.noise(x, noise)
         x = AdaIN(x, style)
         x = self.act(x)
         return x

@@ -38,8 +38,8 @@ class StyleGAN(AbstractModel):
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
 
-        self.generator.apply(weights_init)
-        self.discriminator.apply(weights_init)
+        self.generator.apply(weights_init(std=0.1))
+        self.discriminator.apply(weights_init(std=0.1))
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
@@ -114,7 +114,7 @@ class StyleGAN(AbstractModel):
         data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
 
         for i, imgs in data_iter:
-            if i%50 == 0:
+            if i%10 == 0:
                 self.generate_images(i, device, level, alpha)
             imgs = imgs.to(device)
 
