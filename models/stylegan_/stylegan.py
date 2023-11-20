@@ -142,7 +142,7 @@ class StyleGAN(AbstractModel):
             running_d_loss += d_loss
             
             data_iter.desc = f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance:.2f}/{self.fake_distance:.2f}"
-            self.generate_images(i, device, level, alpha)
+            
         print(f"Generator loss: {running_g_loss / len(self.loader)}, discriminator loss: {running_d_loss / len(self.loader)}")
         self.generate_images(current_step, device, level, alpha)
         if current_step % save_interval == 0:
