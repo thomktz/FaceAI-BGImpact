@@ -7,7 +7,7 @@
     "lambda_gp": 10,
     "batch_size": 16,
     "save_interval": 100, 
-    "transition_ratio": 0.5,
+    "transition_ratio": 0.7,
     "level_epochs": {
         "0": 5,           
         "1": 10,

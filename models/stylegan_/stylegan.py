@@ -114,6 +114,8 @@ class StyleGAN(AbstractModel):
         data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f}")
 
         for i, imgs in data_iter:
+            if i%50 == 0:
+                self.generate_images(i, device, level, alpha)
             imgs = imgs.to(device)
 
             g_loss, d_loss = self.perform_train_step(imgs, lambda_gp, device, level, alpha)
