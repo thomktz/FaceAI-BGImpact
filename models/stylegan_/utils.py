@@ -117,31 +117,3 @@ class Scale_B(nn.Module):
         result = noise * self.weight
         return result 
 
-    
-def compute_gradient_penalty(D, real_samples, fake_samples, level, alpha, device):
-    """Calculates the gradient penalty loss for WGAN GP"""
-    batch_size = real_samples.shape[0]
-
-    # generate random epsilon
-    epsilon = torch.rand((batch_size, 1, 1, 1)).to(device)
-
-    # create the merge of both real and fake samples
-    merged = epsilon * real_samples + ((1 - epsilon) * fake_samples)
-    merged.requires_grad_(True)
-
-    # forward pass
-    op = D(merged, level, alpha)
-
-    # perform backward pass from op to merged for obtaining the gradients
-    gradient = torch.autograd.grad(
-        outputs=op,
-        inputs=merged,
-        grad_outputs=torch.ones_like(op),
-        create_graph=True,
-        retain_graph=True,
-        only_inputs=True,
-    )[0]
-
-    gradient = gradient.view(gradient.shape[0], -1)
-
-    return ((gradient.norm(p=2, dim=1) - 1) ** 2).mean()

@@ -40,13 +40,14 @@ def pairwise_euclidean_distance(batch):
     distances: torch.Tensor
         Pairwise distances of all images in the batch.
     """
-    # Flatten the images
-    flattened = batch.view(batch.size(0), -1)
+    with torch.no_grad():
+        # Flatten the images
+        flattened = batch.view(batch.size(0), -1)
 
-    # Compute pairwise distance
-    dist_matrix = torch.cdist(flattened, flattened, p=2)
+        # Compute pairwise distance
+        dist_matrix = torch.cdist(flattened, flattened, p=2)
 
-    # Optionally, you can return the mean distance for a simple metric
-    mean_dist = dist_matrix.mean()
+        # Optionally, you can return the mean distance for a simple metric
+        mean_dist = dist_matrix.mean()
 
-    return mean_dist
+        return mean_dist

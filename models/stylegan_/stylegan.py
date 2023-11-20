@@ -8,10 +8,10 @@ from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
 from models.data_loader import get_dataloader, denormalize_imagenet
-from models.utils import weights_init, pairwise_euclidean_distance
+from models.utils import pairwise_euclidean_distance
 from models.stylegan_.generator import Generator
 from models.stylegan_.discriminator import Discriminator
-from models.stylegan_.utils import compute_gradient_penalty
+from models.stylegan_.loss import WGAN_GP
 
 class StyleGAN(AbstractModel):
     """
@@ -64,7 +64,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, lr, batch_size, lambda_gp, device, save_interval, level_epochs, transition_ratio):
+    def train(self, lr, batch_size, lambda_gp, device, save_interval, level_epochs, transition_ratio, loss):
         """
         Main training loop for StyleGAN.
         
@@ -82,7 +82,21 @@ class StyleGAN(AbstractModel):
             Number of epochs to wait before saving models and images.
         level_epochs : dict
             Dictionary mapping resolution levels to the number of epochs to train at that level.
+        transition_ratio : float
+            Ratio of the total number of epochs to use for the transition phase.
+        loss : str
+            Loss function to use for training.
+            ["wgan-gp"]
         """
+        self.loss = {
+            "wgan-gp": WGAN_GP
+        }.get(
+            loss.lower().replace("-", "_"),
+            WGAN_GP
+        )(
+            self.generator, 
+            self.discriminator
+        )
         self.train_init(lr)
         total_steps = sum(level_epochs.values())
         current_step = 0
@@ -153,43 +167,25 @@ class StyleGAN(AbstractModel):
         current_batch_size = real_imgs.size(0)
 
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
-        fake_imgs = self.generator(z, current_level, alpha)
         
-        
-        with torch.no_grad():
-            real_distance = pairwise_euclidean_distance(real_imgs)
-            fake_distance = pairwise_euclidean_distance(fake_imgs)
-            print(f"Real distance: {real_distance}, fake distance: {fake_distance}")
-
-        # Calculate discriminator loss on real images
-        real_scores = self.discriminator(real_imgs, current_level, alpha)
-
-        # Calculate discriminator loss on fake images
-        fake_scores = self.discriminator(fake_imgs.detach(), current_level, alpha)
-
-        d_loss = (
-            torch.mean(fake_scores)
-            - torch.mean(real_scores)
-            + (drift * torch.mean(real_scores ** 2))
-        )
-
-        # calculate the WGAN-GP (gradient penalty)
-        gp = compute_gradient_penalty(self.discriminator, real_imgs.data, fake_imgs.data, current_level, alpha, device)
-        d_loss += lambda_gp * gp
-
-        # Update discriminator
+        # Calculate discriminator loss
+        fake_imgs = self.generator(z, current_level, alpha).detach()
+        d_loss = self.loss.d_loss(real_imgs, fake_imgs, current_level, alpha)
         self.optimizer_D.zero_grad()
         d_loss.backward()
         self.optimizer_D.step()
 
         # Calculate generator loss
-        g_loss = -torch.mean(self.discriminator(fake_imgs, current_level, alpha))
-        
-        # Update generator
+        fake_imgs = self.generator(z, current_level, alpha)
+        g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         self.optimizer_G.zero_grad()
         g_loss.backward()
         self.optimizer_G.step()
 
+        # real_distance = pairwise_euclidean_distance(real_imgs)
+        # fake_distance = pairwise_euclidean_distance(fake_imgs)
+        # print(f"Real distance: {real_distance}, fake distance: {fake_distance}")
+        # print(f"Generator loss: {g_loss.item()}, discriminator loss: {d_loss.item()}")
         return g_loss.item(), d_loss.item()
     
     

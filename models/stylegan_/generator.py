@@ -171,7 +171,7 @@ class SynthesisNetwork(nn.Module):
         noise = torch.randn(w.shape[0], 1, self.init_size, self.init_size, device=w.device)
         
         x = self.init_block(x, w, noise)
-        print("Pairwise euclidian distance in the x batch:", pairwise_euclidean_distance(x).item())
+        # print("Pairwise euclidian distance in the x batch:", pairwise_euclidean_distance(x).item())
         # Get the initial RGB image at 4x4 resolution
         if current_level <= 1:
             rgb = self.to_rgb_layers[0](x)
@@ -220,7 +220,7 @@ class Generator(nn.Module):
         torch.Tensor: Generated image tensor.
         """
         
-        print("Pairwise euclidian distance in the z batch:", pairwise_euclidean_distance(z).item())
+        # print("Pairwise euclidian distance in the z batch:", pairwise_euclidean_distance(z).item())
         w = self.mapping(z)
         image = self.synthesis(w, current_level, alpha)
         return image

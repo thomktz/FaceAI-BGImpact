@@ -16,6 +16,7 @@ def parse_args():
     
     # Training arguments
     parser.add_argument("--lr", type=float, help="Learning rate")
+    parser.add_argument("--loss", type=str, choices=["wgan-gp"], default="wgan-gp", help="Learning rate decay")
     parser.add_argument("--batch-size", type=int, help="Batch size")
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
@@ -96,6 +97,7 @@ def main(args):
             )
         train_config = dict(
             lr=config["lr"],
+            loss=config["loss"],
             batch_size=config["batch_size"],
             device=device,
             save_interval=config["save_interval"],
