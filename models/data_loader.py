@@ -27,7 +27,7 @@ class FFHQDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         # Load image from dataset (pseudo code)
-        image = Image.open(f"{self.root_dir}/{str(idx+1).zfill(5)}.png")
+        image = Image.open(f"{self.root_dir}/{str(idx).zfill(5)}.png")
 
         # Transform to high resolution and low resolution
         high_res_image = self.transform(image)
