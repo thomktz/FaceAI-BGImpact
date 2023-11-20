@@ -41,6 +41,7 @@ class MappingNetwork(nn.Module):
             Shape: (batch_size, w_dim)
         """
         w = self.model(z)
+        print("PED in the w batch:", pairwise_euclidean_distance(w), "z:", pairwise_euclidean_distance(z))
         return w
 
 class StyledConvBlock(nn.Module):
@@ -219,8 +220,7 @@ class Generator(nn.Module):
         ----------
         torch.Tensor: Generated image tensor.
         """
-        
-        # print("Pairwise euclidian distance in the z batch:", pairwise_euclidean_distance(z).item())
+    
         w = self.mapping(z)
         image = self.synthesis(w, current_level, alpha)
         return image

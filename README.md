@@ -80,3 +80,7 @@ Then, you can install the dependencies using:
 And activate the environment using:
 
 `poetry shell`
+
+## TODO:
+- VAE
+- BMSG-GAN (https://github.com/akanimax/BMSG-GAN)
