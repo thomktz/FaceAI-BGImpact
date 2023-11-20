@@ -1,7 +1,9 @@
-import torch
 from abc import ABC, abstractmethod
+import torch
+import torch.nn as nn
 
 class GANLoss(ABC):
+    """Abstract base class for GAN Losses"""
     def __init__(self, G, D):
         self.G = G
         self.D = D
@@ -15,12 +17,27 @@ class GANLoss(ABC):
         pass
     
 class WGAN_GP(GANLoss):
+    """
+    Wasserstein GAN with Gradient Penalty (WGAN-GP) loss.
+    
+    Parameters:
+    ----------
+    G : torch.nn.Module
+        Generator network.
+    D : torch.nn.Module
+        Discriminator network.
+    lambda_gp : float
+        Gradient penalty coefficient.
+    drift : float
+        Drift coefficient.
+    """
     def __init__(self, G, D, lambda_gp=10.0, drift=0.001):
         super().__init__(G, D)
         self.drift = drift
         self.lambda_gp = lambda_gp
     
     def d_loss(self, real_images, fake_images, level, alpha):
+        """Discriminator loss."""
         real_scores = self.D(real_images, level, alpha)
         fake_scores = self.D(fake_images, level, alpha)
         loss = (
@@ -38,6 +55,7 @@ class WGAN_GP(GANLoss):
         return loss
     
     def g_loss(self, _, fake_images, level, alpha):
+        """Generator loss."""
         fake_scores = self.D(fake_images, level, alpha)
         return -torch.mean(fake_scores)
         
@@ -68,3 +86,34 @@ class WGAN_GP(GANLoss):
         gradient = gradient.view(gradient.shape[0], -1)
 
         return self.lambda_gp * ((gradient.norm(p=2, dim=1) - 1) ** 2).mean()
+    
+class BasicGANLoss(GANLoss):
+    """
+    Basic GAN Loss using Binary Cross-Entropy (BCE) loss.
+    """
+    def __init__(self, G, D):
+        super().__init__(G, D)
+        self.loss_fn = nn.BCEWithLogitsLoss()
+
+    def d_loss(self, real_images, fake_images, level, alpha):
+        """Discriminator loss."""
+        # Real images should be classified as real (label=1)
+        real_scores = self.D(real_images, level, alpha)
+        real_loss = self.loss_fn(real_scores, torch.ones_like(real_scores))
+
+        # Fake images should be classified as fake (label=0)
+        fake_scores = self.D(fake_images, level, alpha)
+        fake_loss = self.loss_fn(fake_scores, torch.zeros_like(fake_scores))
+
+        # Total discriminator loss
+        loss = real_loss + fake_loss
+
+        return loss
+    
+    def g_loss(self, _, fake_images, level, alpha):
+        """Generator loss."""
+        # Generator aims to have fake images classified as real (label=1)
+        fake_scores = self.D(fake_images, level, alpha)
+        loss = self.loss_fn(fake_scores, torch.ones_like(fake_scores))
+
+        return loss
