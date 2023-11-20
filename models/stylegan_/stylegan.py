@@ -109,7 +109,7 @@ class StyleGAN(AbstractModel):
             
             print(f"Training level {level} with resolution {current_resolution} for {level_steps} steps")
             
-            self.loader = get_dataloader(self.dataset_name, batch_size, resolution=current_resolution)
+            
             for level_step in range(level_steps):
                 current_step += 1
                 if level_step < transition_steps and level > 0:
@@ -118,7 +118,9 @@ class StyleGAN(AbstractModel):
                 else:
                     # Stabilization phase
                     alpha = 1.0
-        
+                
+                self.loader = get_dataloader(self.dataset_name, batch_size, resolution=current_resolution, alpha=alpha)
+                
                 self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval)
 
     def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval):

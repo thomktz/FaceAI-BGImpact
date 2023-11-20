@@ -4,36 +4,43 @@ from torchvision import transforms
 from PIL import Image
 import torch
 
-class FFHQDataset(Dataset):
+class FFHQDataset(torch.utils.data.Dataset):
     """
-    Dataloader for the FFHQ dataset.
-    
-    Parameters
-    ----------
-    root_dir : str
-        The root directory of the dataset.
-    transform : torchvision.transforms
-        The transformations to apply to the images.
+    FFHQ dataset that returns blended images at two resolutions.
     """
-    
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, resolution, alpha):
         self.root_dir = root_dir
-        self.transform = transform
         self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+        self.resolution = resolution
+        self.alpha = alpha
+        self.transform = transforms.Compose([
+            transforms.Resize((resolution, resolution), antialias=True),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        self.low_res_transform = transforms.Compose([
+            transforms.Resize((resolution // 2, resolution // 2), antialias=True),
+            transforms.Resize((resolution, resolution), antialias=True),  # Scale back up
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+    def __getitem__(self, idx):
+        # Load image from dataset (pseudo code)
+        image = Image.open(f"{self.root_dir}/{str(idx+1).zfill(5)}.png")
+
+        # Transform to high resolution and low resolution
+        high_res_image = self.transform(image)
+        low_res_image = self.low_res_transform(image)
+
+        # Blend images
+        blended_image = self.alpha * high_res_image + (1 - self.alpha) * low_res_image
+        return blended_image
 
     def __len__(self):
         return len(self.image_files)
 
-    def __getitem__(self, idx):
-        img_name = os.path.join(self.root_dir, self.image_files[idx])
-        image = Image.open(img_name)
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image
-
-def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128):
+def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha=1.0):
     """
     Create a DataLoader for the specified FFHQ dataset.
     
@@ -47,20 +54,16 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128):
         Whether to shuffle the dataset.
     resolution : int
         The resolution of the images in the dataset.
+    alpha : float
+        The alpha value for progressive growing.
     """
-    print(f"Loading dataset: {dataset_name} with resolution {resolution}")
-    # Define transformations
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((resolution, resolution), antialias=True),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    print(f"Loading dataset: {dataset_name} with resolution {resolution} and alpha {alpha}")        
 
-    # Load the dataset
+    # Load the dataset with blended images
     root_dir = f"data_processing/{dataset_name}"
-    dataset = FFHQDataset(root_dir=root_dir, transform=transform)
+    dataset = FFHQDataset(root_dir=root_dir, resolution=resolution, alpha=alpha)
 
-    # Create DataLoaders
+    # Create DataLoader
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
     return loader
