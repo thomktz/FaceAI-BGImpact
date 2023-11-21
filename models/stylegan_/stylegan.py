@@ -11,7 +11,7 @@ from models.data_loader import get_dataloader, denormalize_imagenet
 from models.utils import pairwise_euclidean_distance
 from models.stylegan_.generator import Generator
 from models.stylegan_.discriminator import Discriminator
-from models.stylegan_.loss import WGAN_GP, BasicGANLoss
+from models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN
 
 class StyleGAN(AbstractModel):
     """
@@ -67,7 +67,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, lr, batch_size, lambda_gp, device, save_interval, level_epochs, transition_ratio, loss):
+    def train(self, lr, batch_size, device, save_interval, level_epochs, transition_ratio, loss):
         """
         Main training loop for StyleGAN.
         
@@ -77,8 +77,6 @@ class StyleGAN(AbstractModel):
             Learning rate.
         batch_size : int
             Batch size.
-        lambda_gp : float
-            Gradient penalty lambda hyperparameter.
         device : torch.device
             Device to use for training.
         save_interval : int
@@ -90,8 +88,11 @@ class StyleGAN(AbstractModel):
         loss : str
             Loss function to use for training.
             ["wgan-gp"]
+        c : float
+            Weight clipping value for the discriminator.
         """
         self.loss = {
+            "wgan": WGAN,
             "wgan-gp": WGAN_GP,
             "basic": BasicGANLoss
         }.get(
@@ -124,9 +125,9 @@ class StyleGAN(AbstractModel):
                 
                 self.loader = get_dataloader(self.dataset_name, batch_size, resolution=current_resolution, alpha=alpha)
                 
-                self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval)
+                self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, c, device, save_interval)
 
-    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, lambda_gp, device, save_interval):
+    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, c, device, save_interval):
         # Training loop for one epoch
         self.generator.train()
         running_g_loss = 0.0
@@ -137,18 +138,18 @@ class StyleGAN(AbstractModel):
         for i, imgs in data_iter:
             imgs = imgs.to(device)
 
-            g_loss, d_loss = self.perform_train_step(imgs, device, level, alpha)
+            g_loss, d_loss = self.perform_train_step(imgs, device, level, alpha, c)
             running_g_loss += g_loss
             running_d_loss += d_loss
             
-            data_iter.desc = f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance:.2f}/{self.fake_distance:.2f}"
+            data_iter.desc = f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance:.2f}/{self.fake_distance:.2f} g_loss {g_loss:.1g} d_loss {d_loss:.1g}"
             
         print(f"Generator loss: {running_g_loss / len(self.loader)}, discriminator loss: {running_d_loss / len(self.loader)}")
         self.generate_images(current_step, device, level, alpha)
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha, device)
 
-    def perform_train_step(self, real_imgs, device, current_level, alpha):
+    def perform_train_step(self, real_imgs, device, current_level, alpha, c):
         """
         Perform a single training step, including forward and backward passes for both
         the generator and discriminator.
@@ -163,6 +164,8 @@ class StyleGAN(AbstractModel):
             Current resolution level of the model.
         alpha : float
             Blending factor for the progressive growing.
+        c : float
+            Weight clipping value for the discriminator.
 
         Returns
         -------
@@ -188,8 +191,12 @@ class StyleGAN(AbstractModel):
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         self.optimizer_G.zero_grad()
         g_loss.backward()
-        nn.utils.clip_grad_norm_(self.generator.parameters(), max_norm=10.)
         self.optimizer_G.step()
+        
+        # Clip discriminator weights
+        for p in self.discriminator.parameters():
+            p.data.clamp_(-c, c)
+
 
         self.real_distance = pairwise_euclidean_distance(real_imgs)
         self.fake_distance = pairwise_euclidean_distance(fake_imgs)

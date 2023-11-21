@@ -16,6 +16,23 @@ class GANLoss(ABC):
     def g_loss(self, real_images, fake_images, level, alpha):
         pass
     
+class WGAN(GANLoss):
+    """Wasserstein GAN (WGAN) loss."""
+    def __init__(self, G, D):
+        super().__init__(G, D)
+        
+    def d_loss(self, real_images, fake_images, level, alpha):
+        """Discriminator loss."""
+        real_scores = self.D(real_images, level, alpha)
+        fake_scores = self.D(fake_images, level, alpha)
+        loss = torch.mean(fake_scores) - torch.mean(real_scores)
+        return loss
+    
+    def g_loss(self, _, fake_images, level, alpha):
+        """Generator loss."""
+        fake_scores = self.D(fake_images, level, alpha)
+        return -torch.mean(fake_scores)
+    
 class WGAN_GP(GANLoss):
     """
     Wasserstein GAN with Gradient Penalty (WGAN-GP) loss.

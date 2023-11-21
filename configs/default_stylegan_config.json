@@ -1,11 +1,11 @@
 {
     "dataset": "ffhq_raw",
-    "lr": 0.0002,
+    "lr": 0.00002,
     "loss": "wgan-gp",
     "latent_dim": 512,
     "w_dim": 512,
     "style_layers": 8,
-    "lambda_gp": 10,
+    "c": 0.5,
     "batch_size": 16,
     "save_interval": 100, 
     "transition_ratio": 0.5,
