@@ -43,7 +43,7 @@ class SLinear(nn.Module):
         linear.weight.data.normal_()
         linear.bias.data.zero_()
         
-        self.linear = scale_module(linear)
+        self.linear = linear
 
     def forward(self, x):
         return self.linear(x)
@@ -57,7 +57,7 @@ class SConv2d(nn.Module):
         conv.weight.data.normal_()
         conv.bias.data.zero_()
         
-        self.conv = scale_module(conv)
+        self.conv = conv
 
     def forward(self, x):
         return self.conv(x)
