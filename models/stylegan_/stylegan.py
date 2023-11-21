@@ -160,7 +160,7 @@ class StyleGAN(AbstractModel):
             data_iter.desc = f"Lvl {level} ({current_resolution}x{current_resolution}) Step {level_step+1}/{level_steps} ({current_step}/{total_steps}), α={alpha:.2f}, d={self.real_distance:.2f}/{self.fake_distance:.2f}, GL={g_loss:.5f} DL={d_loss:.5f}"
             if i % image_interval == 0:
                 iter_ = (current_step - 1) * len(self.loader) + i
-                self.generate_images(iter_, current_step, device, level, alpha)        
+                self.generate_images(iter_, current_step, device, level, alpha, latent_vector=self.latent_vector)
         
         if current_step % save_interval == 0:
             self.save_checkpoint(current_step, level, alpha)
