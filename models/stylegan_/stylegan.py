@@ -67,7 +67,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, lr, batch_size, device, save_interval, level_epochs, transition_ratio, loss):
+    def train(self, lr, batch_size, device, save_interval, level_epochs, transition_ratio, loss, c):
         """
         Main training loop for StyleGAN.
         
