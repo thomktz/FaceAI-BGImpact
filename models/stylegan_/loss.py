@@ -57,10 +57,7 @@ class WGAN_GP(GANLoss):
         """Discriminator loss."""
         real_scores = self.D(real_images, level, alpha)
         fake_scores = self.D(fake_images, level, alpha)
-        # print("real_images:", real_images.std(), real_images.mean(), real_images.max(), real_images.min())
-        # print("fake_images:", fake_images.std(), fake_images.mean(), fake_images.max(), fake_images.min())
-        # print("real_scores:", real_scores)
-        # print("fake_scores:", fake_scores)
+
         loss = (
             torch.mean(fake_scores)
             - torch.mean(real_scores)

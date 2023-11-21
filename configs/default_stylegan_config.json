@@ -7,16 +7,16 @@
     "latent_dim": 256,
     "w_dim": 256,
     "style_layers": 8,
-    "c": 0.5,
-    "batch_size": 16,
-    "save_interval": 100, 
+    "batch_size": 32,
+    "save_interval": 5, 
+    "image_interval": 20,
     "transition_ratio": 0.5,
     "level_epochs": {
-        "0": 2,           
+        "0": 1,           
         "1": 2,
-        "2": 3,
-        "3": 4,
-        "4": 5,
+        "2": 5,
+        "3": 7,
+        "4": 10,
         "5": 100     
     }
 }

@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 from torchvision.utils import save_image
+from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
 
 from models.abstract_model import AbstractModel
@@ -40,6 +41,8 @@ class StyleGAN(AbstractModel):
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
+        
+        self.latent_vector = torch.randn(64, self.latent_dim)
 
     def train_init(self, glr, mlr, dlr):
         """
@@ -81,7 +84,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, glr, mlr, dlr, batch_size, device, save_interval, level_epochs, transition_ratio, loss, c):
+    def train(self, glr, mlr, dlr, batch_size, device, save_interval, image_interval, level_epochs, transition_ratio, loss):
         """
         Main training loop for StyleGAN.
         
@@ -101,9 +104,7 @@ class StyleGAN(AbstractModel):
             Ratio of the total number of epochs to use for the transition phase.
         loss : str
             Loss function to use for training.
-            ["wgan-gp"]
-        c : float
-            Weight clipping value for the discriminator.
+            ["wgan-gp", "wgan", "basic"]
         """
         self.loss = {
             "wgan": WGAN,
@@ -129,8 +130,6 @@ class StyleGAN(AbstractModel):
             
             transition_steps = int(level_steps * transition_ratio)
             
-            print(f"Training level {level} with resolution {current_resolution} for {level_steps} steps")
-            
             
             for level_step in range(level_steps):
                 current_step += 1
@@ -143,31 +142,31 @@ class StyleGAN(AbstractModel):
                 
                 self.loader = get_dataloader(self.dataset_name, batch_size, resolution=current_resolution, alpha=alpha)
                 
-                self._train_one_epoch(level_step, level_steps, current_step, total_steps, level, alpha, c, device, save_interval)
+                self._train_one_epoch(level_step, level_steps, current_step, total_steps, current_resolution, level, alpha, device, save_interval, image_interval)
+                
+                
 
-    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, level, alpha, c, device, save_interval):
-        # Training loop for one epoch
+    def _train_one_epoch(self, level_step, level_steps, current_step, total_steps, current_resolution, level, alpha, device, save_interval, image_interval):
+        """Training loop for one epoch."""
         self.generator.train()
-        running_g_loss = 0.0
-        running_d_loss = 0.0
-
-        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance}/{self.fake_distance}")
+        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Lvl {level} ({current_resolution}x{current_resolution}) Step {level_step+1}/{level_steps} ({current_step}/{total_steps}), α={alpha:.2f}, d={self.real_distance:.2f}/{self.fake_distance:.2f}, GL=inf DL=inf")
 
         for i, imgs in data_iter:
             imgs = imgs.to(device)
 
-            g_loss, d_loss = self.perform_train_step(imgs, device, level, alpha, c)
-            running_g_loss += g_loss
-            running_d_loss += d_loss
-            
-            data_iter.desc = f"Level {level} Epoch {level_step+1}/{level_steps} total {current_step}/{total_steps} alpha {alpha:.2f} distances {self.real_distance:.2f}/{self.fake_distance:.2f} g_loss {g_loss:.1e} d_loss {d_loss:.1e}"
-            
-        print(f"Generator loss: {running_g_loss / len(self.loader)}, discriminator loss: {running_d_loss / len(self.loader)}")
-        self.generate_images(current_step, device, level, alpha)
-        if current_step % save_interval == 0:
-            self.save_checkpoint(current_step, level, alpha, device)
+            g_loss, d_loss = self.perform_train_step(imgs, device, level, alpha)
 
-    def perform_train_step(self, real_imgs, device, current_level, alpha, c):
+            
+            data_iter.desc = f"Lvl {level} ({current_resolution}x{current_resolution}) Step {level_step+1}/{level_steps} ({current_step}/{total_steps}), α={alpha:.2f}, d={self.real_distance:.2f}/{self.fake_distance:.2f}, GL={g_loss:.5f} DL={d_loss:.5f}"
+            if i % image_interval == 0:
+                iter_ = (current_step - 1) * len(self.loader) + i
+                self.generate_images(iter_, current_step, device, level, alpha)        
+        
+        if current_step % save_interval == 0:
+            self.save_checkpoint(current_step, level, alpha)
+            
+
+    def perform_train_step(self, real_imgs, device, current_level, alpha):
         """
         Perform a single training step, including forward and backward passes for both
         the generator and discriminator.
@@ -182,8 +181,6 @@ class StyleGAN(AbstractModel):
             Current resolution level of the model.
         alpha : float
             Blending factor for the progressive growing.
-        c : float
-            Weight clipping value for the discriminator.
 
         Returns
         -------
@@ -199,27 +196,24 @@ class StyleGAN(AbstractModel):
         self.optimizer_D.zero_grad()
         self.optimizer_G.zero_grad()
         
-        
-        # Calculate discriminator loss
+        # Train discriminator
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
         d_loss.backward()
         self.optimizer_D.step()
 
-        # Calculate generator loss
+        # Train generator
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         g_loss.backward()
         self.optimizer_G.step()
-        
-        # # Clip discriminator weights
-        # for p in self.discriminator.parameters():
-        #     p.data.clamp_(-c, c)
 
+        # Compute distances
         self.real_distance = pairwise_euclidean_distance(real_imgs)
         self.fake_distance = pairwise_euclidean_distance(fake_imgs)
+        
         return g_loss.item(), d_loss.item()
     
     
@@ -303,14 +297,14 @@ class StyleGAN(AbstractModel):
 
         return instance
 
-    def generate_images(self, epoch, device, level, alpha, save_dir="outputs/StyleGAN_images"):
+    def generate_images(self, iter_, epoch, device, level, alpha, save_dir="outputs/StyleGAN_images", latent_vector=None):
         """
         Save generated images.
         
         Parameters
         ----------
-        epoch : int
-            Current epoch.
+        iter_ : int
+            Current iteration.
         device : torch.device
             Device to use for training.
         level : int
@@ -319,13 +313,28 @@ class StyleGAN(AbstractModel):
             Current alpha value for blending resolutions.
         save_dir : str
             Directory to save the images to.
+        latent_vector : torch.Tensor, optional
+            Latent vector to generate images from. If None, generates a random vector.
         """
         with torch.no_grad():
             save_folder = self.get_save_dir(save_dir)
             os.makedirs(save_folder, exist_ok=True)
             
-            z = torch.randn(64, self.latent_dim).to(device)
-            
+            # Use provided latent vector or generate a new one
+            if latent_vector is None:
+                z = torch.randn(64, self.latent_dim).to(device)
+            else:
+                z = latent_vector.to(device)
+
+            # Generate images
             fake_images = self.generator(z, level, alpha).detach().cpu()
+
+            # Check if upscaling is needed
+            current_size = fake_images.size(-1)
+            if current_size != 128:
+                upscaler = Resize((128, 128), interpolation=0)  # 0 corresponds to nearest-neighbor
+                fake_images = upscaler(fake_images)
+
+            # Denormalize and save images
             denormalized_images = denormalize_imagenet(fake_images)
-            save_image(denormalized_images, f"{save_folder}/epoch_{epoch}.png", nrow=8, normalize=False)
+            save_image(denormalized_images, f"{save_folder}/iter_{iter_}_{epoch}.png", nrow=8, normalize=False)

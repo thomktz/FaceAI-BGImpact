@@ -63,12 +63,6 @@ class SynthesisBlock(nn.Module):
     """
     def __init__(self, in_channel, out_channel, w_dim, size, is_first_block=False):
         super().__init__()
-        print("Synthesis Block")
-        print(f"{is_first_block = }")
-        print(f"{in_channel = }")
-        print(f"{out_channel = }")
-        print(f"{w_dim = }")
-        print(f"{size = }")
         self.is_first_block = is_first_block
         
         self.noise1 = NoiseLayer(out_channel, size)

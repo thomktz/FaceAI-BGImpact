@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument("--batch-size", type=int, help="Batch size")
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
+    parser.add_argument("--image-interval", type=int, help="Number of iterations to wait before saving generated images")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
     return parser.parse_args()
@@ -107,12 +108,12 @@ def main(args):
             batch_size=config["batch_size"],
             device=device,
             save_interval=config["save_interval"],
+            image_interval=config["image_interval"],
             level_epochs={
                 int(k): int(v) 
                 for (k, v) in config["level_epochs"].items()
             },
             transition_ratio=config["transition_ratio"],
-            c=config["c"],
         )
 
     else:
