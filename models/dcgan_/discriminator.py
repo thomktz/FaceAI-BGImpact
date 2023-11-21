@@ -3,7 +3,7 @@ import torch.nn as nn
 class Discriminator(nn.Module):
     """Discriminator class for the DCGAN."""
     def __init__(self):
-        super(Discriminator, self).__init__()
+        super().__init__()
         
         def discriminator_block(in_filters, out_filters, bn=True):
             """

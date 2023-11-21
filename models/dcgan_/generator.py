@@ -11,7 +11,7 @@ class Generator(nn.Module):
     """
     
     def __init__(self, latent_dim):
-        super(Generator, self).__init__()
+        super().__init__()
         self.init_size = 128 // 4  # Initial size before upsampling
         
         self.l1 = nn.Sequential(nn.Linear(latent_dim, 128 * self.init_size ** 2))

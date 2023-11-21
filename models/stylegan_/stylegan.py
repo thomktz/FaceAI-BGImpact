@@ -38,25 +38,39 @@ class StyleGAN(AbstractModel):
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
 
-        # self.generator.apply(weights_init(std=0.1))
-        # self.discriminator.apply(weights_init(std=0.1))
-
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
 
-    def train_init(self, lr):
+    def train_init(self, glr, mlr, dlr):
         """
         Initialize the training process.
         
         Parameters
         ----------
-        lr : float
-            Learning rate.
-        batch_size : int
-            Batch size.
+        glr : float
+            Learning rate for the generator.
+        mlr : float
+            Learning rate for the mapping network.
+            The StyleGAN paper uses mlr = 0.01 * glr.
+        dlr : float
+            Learning rate for the discriminator.
         """
-        self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
-        self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+        
+        self.optimizer_G = optim.Adam(
+            [
+                {"params": self.generator.mapping.parameters(), "lr": mlr},
+                {"params": self.generator.synthesis.parameters()}
+            ], 
+            lr=glr, 
+            betas=(0.0, 0.99), 
+            eps=1e-8
+        )
+        self.optimizer_D = optim.Adam(
+            self.discriminator.parameters(),
+            lr=dlr, 
+            betas=(0.0, 0.99), 
+            eps=1e-8
+        )
         
         self.real_distance = 0.0
         self.fake_distance = 0.0
@@ -67,7 +81,7 @@ class StyleGAN(AbstractModel):
         if self.optimizer_G_config:
             self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
-    def train(self, lr, batch_size, device, save_interval, level_epochs, transition_ratio, loss, c):
+    def train(self, glr, mlr, dlr, batch_size, device, save_interval, level_epochs, transition_ratio, loss, c):
         """
         Main training loop for StyleGAN.
         
@@ -102,7 +116,11 @@ class StyleGAN(AbstractModel):
             self.generator, 
             self.discriminator
         )
-        self.train_init(lr)
+        self.train_init(
+            glr=glr, 
+            mlr=mlr, 
+            dlr=dlr
+        )
         total_steps = sum(level_epochs.values())
         current_step = 0
 
@@ -177,26 +195,28 @@ class StyleGAN(AbstractModel):
         # On the last batch of the epoch, the number of images may be less than the batch size
         current_batch_size = real_imgs.size(0)
 
-        z = torch.randn(current_batch_size, self.latent_dim, device=device)
+        # Reset gradients
+        self.optimizer_D.zero_grad()
+        self.optimizer_G.zero_grad()
+        
         
         # Calculate discriminator loss
-        fake_imgs = self.generator(z, current_level, alpha).detach()
-        d_loss = self.loss.d_loss(real_imgs, fake_imgs, current_level, alpha)
-        self.optimizer_D.zero_grad()
+        z = torch.randn(current_batch_size, self.latent_dim, device=device)
+        detached_fake_imgs = self.generator(z, current_level, alpha).detach()
+        d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
         d_loss.backward()
         self.optimizer_D.step()
 
         # Calculate generator loss
+        z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
-        self.optimizer_G.zero_grad()
         g_loss.backward()
         self.optimizer_G.step()
         
-        # Clip discriminator weights
-        for p in self.discriminator.parameters():
-            p.data.clamp_(-c, c)
-
+        # # Clip discriminator weights
+        # for p in self.discriminator.parameters():
+        #     p.data.clamp_(-c, c)
 
         self.real_distance = pairwise_euclidean_distance(real_imgs)
         self.fake_distance = pairwise_euclidean_distance(fake_imgs)

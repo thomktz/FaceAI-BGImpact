@@ -4,8 +4,8 @@ from models.stylegan_ import Generator, SynthesisNetwork, MappingNetwork, Discri
 from models.data_loader import denormalize_imagenet
 
 class TestStyleGAN:
-    latent_dim = 100
-    w_dim = 512
+    latent_dim = 256
+    w_dim = 256
     style_layers = 8
 
     def test_initialization(self):

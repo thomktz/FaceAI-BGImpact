@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.utils import pairwise_euclidean_distance
-from .utils import PixelNorm, AdaIN, FC_A, Scale_B, SConv2d, scale_module
+from .utils import PixelNorm, AdaIN, BlurLayer, NoiseLayer, WSConv2d
 
 class MappingNetwork(nn.Module):
     """
@@ -20,10 +20,10 @@ class MappingNetwork(nn.Module):
     
     def __init__(self, latent_dim, layers, w_dim):
         super(MappingNetwork, self).__init__()
-        
-        model = [nn.Linear(latent_dim, w_dim), PixelNorm(), nn.LeakyReLU(0.2)]
-        for _ in range(layers - 1):
-            model.extend([nn.Linear(w_dim, w_dim), PixelNorm(), nn.LeakyReLU(0.2)])
+        model = [PixelNorm()]
+        for _ in range(layers):
+            model.extend([WSConv2d(latent_dim, latent_dim, 1, 1, 0), nn.LeakyReLU(0.2)])
+        model.extend([WSConv2d(latent_dim, w_dim, 1, 1, 0)])
         self.model = nn.Sequential(*model)
 
     def forward(self, z):
@@ -40,11 +40,13 @@ class MappingNetwork(nn.Module):
         torch.Tensor: Output tensor.
             Shape: (batch_size, w_dim)
         """
+        # Expand the latent vector to a 4D tensor
+        z = z.unsqueeze(2).unsqueeze(3)
+        # Get the intermediate noise vector in W space
         w = self.model(z)
-        # print("PED in the w batch:", pairwise_euclidean_distance(w), "z:", pairwise_euclidean_distance(z))
         return w
 
-class StyledConvBlock(nn.Module):
+class SynthesisBlock(nn.Module):
     """
     StyleGAN convolutional block.
     
@@ -54,29 +56,36 @@ class StyledConvBlock(nn.Module):
         Number of input channels.
     out_channel : int
         Number of output channels.
-    style_dim : int
-        Dimension of the style vector.
+    size : int
+        Resolution size of the input tensor.
+    is_first_block : bool
+        Whether this is the first block in the network.
     """
-    def __init__(self, in_channel, out_channel, style_dim, is_first_block=False):
+    def __init__(self, in_channel, out_channel, w_dim, size, is_first_block=False):
         super().__init__()
+        print("Synthesis Block")
+        print(f"{is_first_block = }")
+        print(f"{in_channel = }")
+        print(f"{out_channel = }")
+        print(f"{w_dim = }")
+        print(f"{size = }")
         self.is_first_block = is_first_block
         
-        self.style1 = FC_A(style_dim, out_channel)
-        self.style2 = FC_A(style_dim, out_channel)
+        self.noise1 = NoiseLayer(out_channel, size)
+        self.noise2 = NoiseLayer(out_channel, size)
         
-        self.noise1 = scale_module(Scale_B(out_channel))
-        self.noise2 = scale_module(Scale_B(out_channel))
+        self.blur = BlurLayer()
         
-        self.adain = AdaIN(out_channel)
+        self.adain = AdaIN(out_channel, w_dim)
         self.act = nn.LeakyReLU(0.2)
         
         if not is_first_block:
-            self.conv1 = SConv2d(in_channel, out_channel, 3, padding=1)
-            self.conv2 = SConv2d(out_channel, out_channel, 3, padding=1)
+            self.conv1 = WSConv2d(in_channel, out_channel, 3, 1, 1)
+            self.conv2 = WSConv2d(out_channel, out_channel, 3, 1, 1)
         else:
-            self.conv = SConv2d(in_channel, out_channel, 3, padding=1)
+            self.conv = WSConv2d(in_channel, out_channel, 3, 1, 1)
 
-    def forward(self, x, w, noise):
+    def forward(self, x, w):
         """
         Forward pass for the StyleGAN convolutional block.
         
@@ -86,29 +95,28 @@ class StyledConvBlock(nn.Module):
             Shape: (batch_size, in_channel, height, width)
         w (torch.Tensor): Style tensor.
             Shape: (batch_size, style_dim)
-        noise (torch.Tensor): Noise tensor.
-            Shape: (batch_size, 1, height, width)
             
         Returns:
         ----------
         torch.Tensor: Output tensor.
             Shape: (batch_size, out_channel, height, width)
         """
+        #TODO: w1 and w2
         if not self.is_first_block:
             x = F.interpolate(x, scale_factor=2, mode='bilinear', antialias=True)
             x = self.conv1(x)
 
-        x = x + self.noise1(noise)
-        x = self.adain(x, self.style1(w))
+        x = x + self.noise1(x.shape[0], x.device)
+        x = self.adain(x, w)
         x = self.act(x)
         
         if not self.is_first_block:
             x = self.conv2(x)
         else:
             x = self.conv(x)
-            
-        x = x + self.noise2(noise)
-        x = self.adain(x, self.style2(w))
+        
+        x = x + self.noise2(x.shape[0], x.device)
+        x = self.adain(x, w)
         x = self.act(x)
 
         return x
@@ -126,26 +134,26 @@ class SynthesisNetwork(nn.Module):
     def __init__(self, w_dim):
         super(SynthesisNetwork, self).__init__()
         self.init_size = 4  # Initial resolution
-        self.learned_constant = nn.Parameter(torch.randn(1, 512, 4, 4)) # 'x' for the init_block, learned constant
-        self.init_block = StyledConvBlock(w_dim, 512, w_dim, is_first_block=True)  # Initial block
+        self.learned_constant = nn.Parameter(torch.randn(1, 256, 4, 4)) # 'x' for the init_block, learned constant
+        self.init_block = SynthesisBlock(w_dim, 256, w_dim, 4, is_first_block=True)  # Initial block
 
         # Sequentially larger blocks for higher resolutions
         self.upscale_blocks = nn.ModuleList([
-            StyledConvBlock(512, 256, w_dim, is_first_block=False),  # 8x8
-            StyledConvBlock(256, 128, w_dim, is_first_block=False),  # 16x16
-            StyledConvBlock(128, 64, w_dim, is_first_block=False),   # 32x32
-            StyledConvBlock(64, 32, w_dim, is_first_block=False),    # 64x64
-            StyledConvBlock(32, 16, w_dim, is_first_block=False)     # 128x128
+            SynthesisBlock(256, 256, w_dim, 8, is_first_block=False),  # 8x8
+            SynthesisBlock(256, 128, w_dim, 16, is_first_block=False), # 16x16
+            SynthesisBlock(128, 64, w_dim, 32, is_first_block=False),  # 32x32
+            SynthesisBlock(64, 32, w_dim, 64, is_first_block=False),   # 64x64
+            SynthesisBlock(32, 16, w_dim, 128, is_first_block=False)   # 128x128
         ])
 
         # To-RGB layers for each resolution
         self.to_rgb_layers = nn.ModuleList([
-            SConv2d(512, 3, 1, stride=1, padding=0),
-            SConv2d(256, 3, 1, stride=1, padding=0),
-            SConv2d(128, 3, 1, stride=1, padding=0),
-            SConv2d(64, 3, 1, stride=1, padding=0),
-            SConv2d(32, 3, 1, stride=1, padding=0),
-            SConv2d(16, 3, 1, stride=1, padding=0)
+            WSConv2d(256, 3, 1, 1, 0, gain=1),
+            WSConv2d(256, 3, 1, 1, 0, gain=1),
+            WSConv2d(128, 3, 1, 1, 0, gain=1),
+            WSConv2d(64, 3, 1, 1, 0, gain=1),
+            WSConv2d(32, 3, 1, 1, 0, gain=1),
+            WSConv2d(16, 3, 1, 1, 0, gain=1)
         ])
 
     def forward(self, w, current_level, alpha):
@@ -168,25 +176,22 @@ class SynthesisNetwork(nn.Module):
         """
 
         x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
-        noise = torch.randn(w.shape[0], 1, self.init_size, self.init_size, device=w.device)
         
-        x = self.init_block(x, w, noise)
-        # print("Pairwise euclidian distance in the x batch:", pairwise_euclidean_distance(x).item())
+        x = self.init_block(x, w)
+        
         # Get the initial RGB image at 4x4 resolution
         if current_level <= 1:
             rgb = self.to_rgb_layers[0](x)
 
         for level in range(1, current_level + 1):
-            level_resolution = 4 * 2 ** level
-            noise = torch.randn(w.shape[0], 1, level_resolution, level_resolution, device=w.device)
             
-            x = self.upscale_blocks[level - 1](x, w, noise)
+            x = self.upscale_blocks[level - 1](x, w)
         
             if alpha < 1.0 and level == current_level:
                 # Interpolate between the new RGB image of the current resolution
                 # and the upscaled RGB image of the previous resolution
                 new_rgb = self.to_rgb_layers[level](x)
-                rgb = F.interpolate(rgb, scale_factor=2, mode='nearest')
+                rgb = F.interpolate(rgb, scale_factor=2, mode='bilinear', antialias=True)
                 rgb = alpha * new_rgb + (1 - alpha) * rgb 
             else:
                 rgb = self.to_rgb_layers[level](x)

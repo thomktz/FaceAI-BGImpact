@@ -15,7 +15,10 @@ def parse_args():
     parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
     
     # Training arguments
-    parser.add_argument("--lr", type=float, help="Learning rate")
+    parser.add_argument("--lr", type=float, help="Learning rate (for DCGAN)")
+    parser.add_argument("--dlr", type=float, help="Discriminator learning rate (for StyleGAN)")
+    parser.add_argument("--glr", type=float, help="Generator learning rate (for StyleGAN)")
+    parser.add_argument("--mlr", type=float, help="W-Mapping learning rate (for StyleGAN)")
     parser.add_argument("--loss", type=str, choices=["wgan", "wgan-gp", "basic"], default="wgan-gp", help="Learning rate decay")
     parser.add_argument("--c", type=float, help="Clipping parameter for Discriminator weights")
     parser.add_argument("--batch-size", type=int, help="Batch size")
@@ -97,7 +100,9 @@ def main(args):
                 device=device,
             )
         train_config = dict(
-            lr=config["lr"],
+            dlr=config["dlr"],
+            glr=config["glr"],
+            mlr=config["mlr"],
             loss=config["loss"],
             batch_size=config["batch_size"],
             device=device,

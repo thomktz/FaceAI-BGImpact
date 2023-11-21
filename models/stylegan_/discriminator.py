@@ -3,26 +3,44 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.stylegan_.utils import SConv2d
+from models.stylegan_.utils import WSConv2d, WSLinear, BlurLayer
 
 class DiscriminatorBlock(nn.Module):
     """
     Discriminator Block for a specific resolution with downscaling.
     """
     
-    def __init__(self, in_channels, out_channels, kernel_size, downsample=True):
-        super(DiscriminatorBlock, self).__init__()
-        self.conv1 = SConv2d(in_channels, in_channels, kernel_size, padding=kernel_size//2)
-        self.conv2 = SConv2d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv1 = WSConv2d(in_channels, in_channels, 3, 1, 1)
+        self.conv2 = WSConv2d(in_channels, out_channels, 3, 1, 1)
+        self.blur = BlurLayer()
         self.activation = nn.LeakyReLU(0.2)
-        self.downsample = nn.AvgPool2d(2) if downsample else nn.Identity()
-        self.scale = nn.Parameter(torch.zeros(1, out_channels, 1, 1))
+        self.downsample = nn.AvgPool2d(2)
+        
+    def forward(self, x):
+        x = self.activation(self.conv1(x))
+        x = self.blur(x)
+        x = self.activation(self.conv2(x))
+        x = self.downsample(x)
+        return x
+
+class LastDiscriminatorBlock(nn.Module):
+    """
+    Last discriminator block
+    """
+    
+    def __init__(self, in_channels):
+        super().__init__()
+        self.conv1 = WSConv2d(in_channels, in_channels, 3, 1, 1)
+        self.conv2 = WSConv2d(in_channels, in_channels, 4, 1, 0)
+        self.conv3 = WSConv2d(in_channels, 1, 1, 1, 0, gain=1)
+        self.activation = nn.LeakyReLU(negative_slope=0.2)
         
     def forward(self, x):
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))
-        x = self.downsample(x)
-        x = self.scale * x
+        x = self.conv3(x)
         return x
     
 class Discriminator(nn.Module):
@@ -31,36 +49,29 @@ class Discriminator(nn.Module):
     """
     
     def __init__(self):
-        super(Discriminator, self).__init__()
+        super().__init__()
         
         # Assuming the highest resolution is 128x128, we define the from_rgb_layers
         self.from_rgb_layers = nn.ModuleList([
-            SConv2d(3, 16, 1),  # For 128x128 resolution
-            SConv2d(3, 32, 1),  # For 64x64 resolution
-            SConv2d(3, 64, 1),  # For 32x32 resolution
-            SConv2d(3, 128, 1),  # For 16x16 resolution
-            SConv2d(3, 256, 1),  # For 8x8 resolution
-            SConv2d(3, 512, 1)  # For 4x4 resolution
+            WSConv2d(3, 16, 1, 1, 0),   # For 128x128 resolution
+            WSConv2d(3, 32, 1, 1, 0),   # For 64x64 resolution
+            WSConv2d(3, 64, 1, 1, 0),   # For 32x32 resolution
+            WSConv2d(3, 128, 1, 1, 0),  # For 16x16 resolution
+            WSConv2d(3, 256, 1, 1, 0),  # For 8x8 resolution
+            WSConv2d(3, 256, 1, 1, 0)   # For 4x4 resolution
         ])
         
         # Assuming the highest resolution is 128x128, we define the downscale_blocks
         self.downscale_blocks = nn.ModuleList([
-            DiscriminatorBlock(16, 32, 3, downsample=True),  # For 128x128 to 64x64
-            DiscriminatorBlock(32, 64, 3, downsample=True),  # For 64x64 to 32x32
-            DiscriminatorBlock(64, 128, 3, downsample=True),  # For 32x32 to 16x16
-            DiscriminatorBlock(128, 256, 3, downsample=True),  # For 16x16 to 8x8
-            DiscriminatorBlock(256, 512, 3, downsample=True),  # For 8x8 to 4x4
-            DiscriminatorBlock(512, 512, 3, downsample=False)  # For 4x4 resolution
+            DiscriminatorBlock(16, 32),    # For 128x128 to 64x64
+            DiscriminatorBlock(32, 64),    # For 64x64 to 32x32
+            DiscriminatorBlock(64, 128),   # For 32x32 to 16x16
+            DiscriminatorBlock(128, 256),  # For 16x16 to 8x8
+            DiscriminatorBlock(256, 256),  # For 8x8 to 4x4
+            LastDiscriminatorBlock(256)    # For 4x4 to 1
         ])
         
-        self.len_layers = len(self.from_rgb_layers)
-        
-        self.final_block = nn.Sequential(
-            nn.LeakyReLU(0.2),
-            nn.AdaptiveAvgPool2d(1)  # Global average pooling to 1x1 resolution
-        )
-
-        self.fc = nn.Linear(512, 1)  # Output a single scalar value
+        self.len_layers = len(self.downscale_blocks)
         
     def forward(self, img, current_level, alpha):
         """
@@ -104,11 +115,7 @@ class Discriminator(nn.Module):
         for level in range(first_layer + 1, self.len_layers):
             x = self.downscale_blocks[level](x)
         
-        x = self.final_block(x)
-        # Flatten for fully connected layer
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-
-        return x
+        # Flatten the output
+        return x.view(x.shape[0], -1)
         
         
