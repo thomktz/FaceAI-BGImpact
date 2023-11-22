@@ -26,8 +26,8 @@ def load_model_config(model, dataset):
 def add_text_to_image(image, text):
     """Add text to an image."""
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("Nirmala.ttf", 20)
-    text_position = (20, image.height - 30)  # adjust based on your image size
+    font = ImageFont.truetype("Nirmala.ttf", 40)
+    text_position = (40, image.height - 50)  # adjust based on your image size
     draw.text(text_position, text, font=font, fill=(255, 255, 255))  # white text
     return image
 
@@ -46,7 +46,7 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
     video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
 
     for image_name in tqdm(images):
-        iter_, level, epoch, alpha = map(float, image_name.split('.')[0].split('_')[1:]) 
+        iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
         resolution = 4 * 2 ** int(level)
         img_path = os.path.join(image_folder, image_name)
 
