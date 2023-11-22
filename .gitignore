@@ -1,15 +1,11 @@
 # Ignore image files in data_processing folder and subfolders
-data_processing/**/*.jpg
-data_processing/**/*.jpeg
-data_processing/**/*.png
-data_processing/**/*.gif
+faceai_bgimpact/data_processing/**/*.jpg
+faceai_bgimpact/data_processing/**/*.jpeg
+faceai_bgimpact/data_processing/**/*.png
+faceai_bgimpact/data_processing/**/*.gif
 *.png
 *.mp4
 *.pyc
-drive_key.json
-token.json
-# VSCode settings
-.vscode/settings.json
 
 # DS_Store files
 **/.DS_Store
@@ -20,5 +16,5 @@ token.json
 *.ipynb_checkpoints
 *.ipynb
 
-outputs/
+faceai_bgimpact/outputs/
 webapp/
