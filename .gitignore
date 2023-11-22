@@ -6,7 +6,8 @@ data_processing/**/*.gif
 *.png
 *.mp4
 *.pyc
-
+drive_key.json
+token.json
 # VSCode settings
 .vscode/settings.json
 
