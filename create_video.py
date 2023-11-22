@@ -3,6 +3,7 @@ import json
 import os
 import cv2
 from PIL import Image, ImageDraw, ImageFont
+from tqdm import tqdm
 
 def parse_args():
     """Parse command-line arguments for video creation."""
@@ -56,7 +57,7 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
     height, width, layers = frame.shape
     video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
 
-    for image_name in images:
+    for image_name in tqdm(images):
         batch, epoch = map(int, image_name.split('.')[0].split('_')[1:])  # Split filename to get epoch
         alpha = infer_alpha(epoch, level_epochs, transition_ratio)
         img_path = os.path.join(image_folder, image_name)
