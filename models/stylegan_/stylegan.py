@@ -161,7 +161,13 @@ class StyleGAN(AbstractModel):
         """Training loop for one epoch."""
         
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
-            return f"Lvl {self.level} ({self.resolution}x{self.resolution}) Epoch {epoch+1}/{total_epochs} α={self.alpha:.2f} GL={g_loss:.3f} DL={d_loss:.3f} d={self.real_distance:.1f}/{self.fake_distance:.1f}"
+            return (
+                f"Lvl {' ' * (len(str(self.level)) - 1) * 2}{self.level} ({self.resolution}x{self.resolution}) "
+                + f"Epoch {epoch+1}/{total_epochs} "
+                + f"α={self.alpha:.2f} "
+                + f"GL={g_loss:.3f} DL={d_loss:.3f} "
+                + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
+            )
     
         epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_level_epochs))
         for i, imgs in epoch_iter:
