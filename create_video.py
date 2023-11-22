@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("--compress", action="store_true", help="Enable lossless compression for the video")
     return parser.parse_args()
 
-def load_model_config(model, dataset):
+def load_model_config(model):
     """Load the configuration JSON for the specified model and dataset."""
     config_path = os.path.join("configs", f"default_{model.lower()}_config.json")
     with open(config_path, "r") as config_file:
@@ -40,8 +40,7 @@ def create_video(image_folder, output_video, frame_rate, compress):
     if not images:
         raise ValueError("No images found in the specified folder.")
 
-    # Determine output format based on compression flag
-    output_format = 'mp4'  # Use 'FFMPEG' for more advanced format control
+    output_format = 'mp4'
 
     with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx265', quality=10) as writer:
         for image_name in tqdm(images):
@@ -59,7 +58,7 @@ def create_video(image_folder, output_video, frame_rate, compress):
 
 if __name__ == "__main__":
     args = parse_args()
-    config = load_model_config(args.model, args.dataset)
+    config = load_model_config(args.model)
 
     image_folder = f"outputs/{args.model}_images_{args.dataset}"
     create_video(
