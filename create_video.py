@@ -46,10 +46,11 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
     video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
 
     for image_name in tqdm(images):
-        batch, epoch, alpha = map(int, image_name.split('.')[0].split('_')[2:]) 
+        iter_, level, epoch, alpha = map(float, image_name.split('.')[0].split('_')) 
+        resolution = 4 * 2 ** int(level)
         img_path = os.path.join(image_folder, image_name)
 
-        text = f"Epoch: {epoch}, Batch: {batch}, Alpha: {alpha:.2f}"
+        text = f"Level: {int(level)} ({resolution}x{resolution}), Epoch: {int(epoch)}, Alpha: {alpha:.2f}"
         img = Image.open(img_path)
         img_with_text = add_text_to_image(img, text)
         img_with_text.save(img_path)
