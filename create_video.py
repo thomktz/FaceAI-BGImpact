@@ -70,7 +70,6 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
         video_frame = cv2.imread(img_path)
         video.write(video_frame)
 
-    cv2.destroyAllWindows()
     video.release()
 
 if __name__ == "__main__":
