@@ -26,26 +26,10 @@ def load_model_config(model, dataset):
 def add_text_to_image(image, text):
     """Add text to an image."""
     draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()  # or specify a font file
+    font = ImageFont.truetype("Nirmala.ttf", 20)
     text_position = (10, image.height - 20)  # adjust based on your image size
     draw.text(text_position, text, font=font, fill=(255, 255, 255))  # white text
     return image
-
-def infer_alpha(epoch, level_epochs, transition_ratio):
-    """Infer alpha value based on the current epoch."""
-    accumulated_epochs = 0
-    for level, level_steps in level_epochs.items():
-        if accumulated_epochs + level_steps > epoch:
-            # Current level is found
-            transition_steps = int(level_steps * transition_ratio)
-            epoch_in_level = epoch - accumulated_epochs
-            if epoch_in_level < transition_steps and int(level) > 0:
-                alpha = (epoch_in_level + 0.5) / (transition_steps + 0.5)
-            else:
-                alpha = 1.0
-            return alpha
-        accumulated_epochs += level_steps
-    return 1.0  # Default alpha for epochs beyond the specified levels
 
 def get_iter(path):
     """Gets the integer after "iter" in the path."""
@@ -62,8 +46,7 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
     video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
 
     for image_name in tqdm(images):
-        batch, epoch = map(int, image_name.split('.')[0].split('_')[1:])  # Split filename to get epoch
-        alpha = infer_alpha(epoch, level_epochs, transition_ratio)
+        batch, epoch, alpha = map(int, image_name.split('.')[0].split('_')[1:])  # Split filename to get epoch
         img_path = os.path.join(image_folder, image_name)
 
         text = f"Epoch: {epoch}, Batch: {batch}, Alpha: {alpha:.2f}"
