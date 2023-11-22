@@ -162,7 +162,7 @@ class StyleGAN(AbstractModel):
         
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
             return (
-                f"Lvl {' ' * (len(str(self.level)) - 1) * 2}{self.level} ({self.resolution}x{self.resolution}) "
+                f"Lvl {' ' * (len(str(self.resolution)) - 1) * 2}{self.level} ({self.resolution}x{self.resolution}) "
                 + f"Epoch {epoch+1}/{total_epochs} "
                 + f"α={self.alpha:.2f} "
                 + f"GL={g_loss:.3f} DL={d_loss:.3f} "
