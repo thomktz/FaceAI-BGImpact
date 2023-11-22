@@ -1,9 +1,11 @@
-import argparse
-import json
 import os
+import json
+import argparse
+import imageio
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
-import imageio
+
 
 def parse_args():
     """Parse command-line arguments for video creation."""
@@ -52,7 +54,8 @@ def create_video(image_folder, output_video, frame_rate):
             img_with_text = add_text_to_image(img, text)
 
             # Convert PIL Image to numpy array
-            img_array = imageio.imread(img_path)
+            img_array = np.array(img_with_text)
+            
             writer.append_data(img_array)
 
 if __name__ == "__main__":
@@ -64,5 +67,4 @@ if __name__ == "__main__":
         image_folder=image_folder,
         output_video=f"outputs/{args.model}_video_{args.dataset}.mp4",
         frame_rate=args.frame_rate,
-        compress=args.compress,
     )
