@@ -27,7 +27,7 @@ def add_text_to_image(image, text):
     """Add text to an image."""
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype("Nirmala.ttf", 20)
-    text_position = (10, image.height - 20)  # adjust based on your image size
+    text_position = (20, image.height - 30)  # adjust based on your image size
     draw.text(text_position, text, font=font, fill=(255, 255, 255))  # white text
     return image
 
