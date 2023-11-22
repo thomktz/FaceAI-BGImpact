@@ -19,13 +19,9 @@ def authenticate_gdrive():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = Flow.from_client_secrets_file(
-                CREDENTIALS_FILE, SCOPES, redirect_uri='urn:ietf:wg:oauth:2.0:oob')
-            auth_url, _ = flow.authorization_url(prompt='consent')
-
-            print('Please go to this URL and finish the authentication process: {}'.format(auth_url))
-            code = input('Enter the authorization code: ')
-            flow.fetch_token(code=code)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CREDENTIALS_FILE, SCOPES)
+            flow.run_local_server()
             creds = flow.credentials
 
             # Save the credentials for the next run
