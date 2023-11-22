@@ -12,7 +12,6 @@ def parse_args():
     parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
     parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
     parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate for the video")
-    parser.add_argument("--compress", action="store_true", help="Enable lossless compression for the video")
     return parser.parse_args()
 
 def load_model_config(model):
@@ -34,15 +33,15 @@ def get_iter(path):
     """Gets the integer after "iter" in the path."""
     return int(path.split("iter_")[1].split("_")[0])
 
-def create_video(image_folder, output_video, frame_rate, compress):
+def create_video(image_folder, output_video, frame_rate):
     """Create a video from images using imageio."""
     images = [img for img in sorted(os.listdir(image_folder), key=get_iter) if img.endswith(".png")]
     if not images:
         raise ValueError("No images found in the specified folder.")
 
-    output_format = 'mp4'
+    output_format = output_video.split(".")[-1]
 
-    with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx265', quality=10) as writer:
+    with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx264', quality=10) as writer:
         for image_name in tqdm(images):
             iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
             resolution = 4 * 2 ** int(level)
