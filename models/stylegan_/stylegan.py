@@ -86,6 +86,7 @@ class StyleGAN(AbstractModel):
         self.resolution = 4
         self.alpha = 1
         self.is_initialized = True
+        self.epoch_total = None
 
 
     def train(self, glr, mlr, dlr, batch_size, device, save_interval, image_interval, level_epochs, loss):
@@ -139,7 +140,7 @@ class StyleGAN(AbstractModel):
 
             # Calculate the number of epochs completed at this level and before
             epochs_before = sum([cfg["transition"] + cfg["training"] for (lvl, cfg) in level_epochs.items() if lvl < level])
-            epochs_completed = self.calculate_completed_epochs(self.alpha, level_config)
+            epochs_completed = self.calculate_completed_epochs(self.alpha, level_config, epochs_before)
             total_level_epochs = level_config["transition"] + level_config["training"]
 
             # Update resolution for the level
@@ -245,7 +246,7 @@ class StyleGAN(AbstractModel):
         
         return g_loss.item(), d_loss.item()
     
-    def calculate_completed_epochs(self, alpha, level_config):
+    def calculate_completed_epochs(self, alpha, level_config, epochs_before):
         """
         Calculate the number of epochs completed at the current level based on alpha.
 
@@ -255,12 +256,19 @@ class StyleGAN(AbstractModel):
             Current value of alpha.
         level_config : dict
             Configuration for the current level.
+        epochs_before : int
+            Number of epochs completed before the current level.
 
         Returns:
         -------
         int
             Number of completed epochs at the current level.
         """
+        if self.epoch_total is not None:
+            print(f"Resuming training from epoch {self.epoch_total}")
+            print(self.epoch_total, epochs_before)
+            print(self.epoch_total - epochs_before)
+            
         if alpha < 1.0:
             # If alpha is not yet 1, we are still in the transition phase
             completed_fraction = alpha * level_config["transition"]
@@ -329,6 +337,7 @@ class StyleGAN(AbstractModel):
         # Extract necessary components from checkpoint
         level = checkpoint["level"]
         alpha = checkpoint["alpha"]
+        epoch_total = checkpoint["epoch_total"]
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
@@ -346,6 +355,7 @@ class StyleGAN(AbstractModel):
         instance.level = level
         instance.alpha = alpha
         instance.resolution = 4 * (2 ** level)
+        instance.epoch_total = epoch_total
 
         return instance
 
