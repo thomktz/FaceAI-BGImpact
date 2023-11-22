@@ -11,9 +11,8 @@ def parse_args():
 
     parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
     parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
-    parser.add_argument("--output-video", type=str, default="training_video.mp4", help="Path for the output video file")
     parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate for the video")
-    parser.add_argument("--transition-ratio", type=float, default=0.1, help="Transition ratio used during training")
+    parser.add_argument("--compress", action="store_true", help="Enable lossless compression for the video")
     return parser.parse_args()
 
 def load_model_config(model, dataset):
@@ -35,7 +34,7 @@ def get_iter(path):
     """Gets the integer after "iter" in the path."""
     return int(path.split("iter_")[1].split("_")[0])
 
-def create_video(image_folder, output_video, frame_rate, level_epochs, transition_ratio):
+def create_video(image_folder, output_video, frame_rate, compress):
     """Create a video from images."""
     images = [img for img in sorted(os.listdir(image_folder), key=get_iter) if img.endswith(".png")]
     if not images:
@@ -43,7 +42,9 @@ def create_video(image_folder, output_video, frame_rate, level_epochs, transitio
 
     frame = cv2.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
-    video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
+    
+    codec = 'XVID' if compress else 'mp4v'
+    video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*codec), frame_rate, (width, height))
 
     for image_name in tqdm(images):
         iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
@@ -67,8 +68,7 @@ if __name__ == "__main__":
     image_folder = f"outputs/{args.model}_images_{args.dataset}"
     create_video(
         image_folder=image_folder,
-        output_video=args.output_video,
+        output_video=f"outputs/{args.model}_video_{args.dataset}.mp4",
         frame_rate=args.frame_rate,
-        level_epochs=config["level_epochs"],
-        transition_ratio=args.transition_ratio
+        compress=args.compress,
     )
