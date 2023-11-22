@@ -20,18 +20,8 @@ def authenticate_gdrive():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.bind(('localhost', 0))
-            port = sock.getsockname()[1]
-            sock.close()
-
-            # Start the flow
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'drive_key.json',
-                scopes=['https://www.googleapis.com/auth/drive'],
-                redirect_uri=f'http://localhost:{port}/')
-
-            flow.run_local_server(port=port)
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+            flow.run_local_server(port=0)
             creds = flow.credentials
 
             # Save the credentials for the next run
