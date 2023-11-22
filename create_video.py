@@ -43,7 +43,7 @@ def create_video(image_folder, output_video, frame_rate):
 
     output_format = output_video.split(".")[-1]
 
-    with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx264', quality=10) as writer:
+    with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx265', quality=10) as writer:
         for image_name in tqdm(images):
             iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
             resolution = 4 * 2 ** int(level)
