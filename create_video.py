@@ -1,9 +1,9 @@
 import argparse
 import json
 import os
-import cv2
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
+import imageio
 
 def parse_args():
     """Parse command-line arguments for video creation."""
@@ -35,31 +35,27 @@ def get_iter(path):
     return int(path.split("iter_")[1].split("_")[0])
 
 def create_video(image_folder, output_video, frame_rate, compress):
-    """Create a video from images."""
+    """Create a video from images using imageio."""
     images = [img for img in sorted(os.listdir(image_folder), key=get_iter) if img.endswith(".png")]
     if not images:
         raise ValueError("No images found in the specified folder.")
 
-    frame = cv2.imread(os.path.join(image_folder, images[0]))
-    height, width, layers = frame.shape
-    
-    codec = 'XVID' if compress else 'mp4v'
-    video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*codec), frame_rate, (width, height))
+    # Determine output format based on compression flag
+    output_format = 'mp4'  # Use 'FFMPEG' for more advanced format control
 
-    for image_name in tqdm(images):
-        iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
-        resolution = 4 * 2 ** int(level)
-        img_path = os.path.join(image_folder, image_name)
+    with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx265', quality=10) as writer:
+        for image_name in tqdm(images):
+            iter_, level, epoch, alpha = map(float, image_name[:-4].split('_')[1:]) 
+            resolution = 4 * 2 ** int(level)
+            img_path = os.path.join(image_folder, image_name)
 
-        text = f"Level: {int(level)} ({resolution}x{resolution}), Epoch: {int(epoch)}, Alpha: {alpha:.2f}"
-        img = Image.open(img_path)
-        img_with_text = add_text_to_image(img, text)
-        img_with_text.save(img_path)
+            text = f"Level: {int(level)} ({resolution}x{resolution}), Epoch: {int(epoch)}, Alpha: {alpha:.2f}"
+            img = Image.open(img_path)
+            img_with_text = add_text_to_image(img, text)
 
-        video_frame = cv2.imread(img_path)
-        video.write(video_frame)
-
-    video.release()
+            # Convert PIL Image to numpy array
+            img_array = imageio.imread(img_path)
+            writer.append_data(img_array)
 
 if __name__ == "__main__":
     args = parse_args()
