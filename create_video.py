@@ -47,9 +47,13 @@ def infer_alpha(epoch, level_epochs, transition_ratio):
         accumulated_epochs += level_steps
     return 1.0  # Default alpha for epochs beyond the specified levels
 
+def get_iter(path):
+    """Gets the integer after "iter" in the path."""
+    return int(path.split("iter_")[1].split("_")[0])
+
 def create_video(image_folder, output_video, frame_rate, level_epochs, transition_ratio):
     """Create a video from images."""
-    images = [img for img in sorted(os.listdir(image_folder)) if img.endswith(".png")]
+    images = [img for img in sorted(os.listdir(image_folder), key=get_iter) if img.endswith(".png")]
     if not images:
         raise ValueError("No images found in the specified folder.")
 
