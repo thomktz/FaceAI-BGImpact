@@ -265,9 +265,7 @@ class StyleGAN(AbstractModel):
             Number of completed epochs at the current level.
         """
         if self.epoch_total is not None:
-            print(f"Resuming training from epoch {self.epoch_total}")
-            print(self.epoch_total, epochs_before)
-            print(self.epoch_total - epochs_before)
+            return self.epoch_total - epochs_before
             
         if alpha < 1.0:
             # If alpha is not yet 1, we are still in the transition phase
