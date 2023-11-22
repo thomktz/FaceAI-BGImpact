@@ -140,12 +140,12 @@ class StyleGAN(AbstractModel):
             alpha_step = 1.0 / (level_config["transition"] * n_batches) if level_config["transition"] > 0 else 0
 
             for epoch in range(total_level_epochs):
-                self._train_one_epoch(alpha_step, epoch, total_level_epochs, device, image_interval)
+                epoch_total = epochs_before + epoch
+                self._train_one_epoch(alpha_step, epoch, epoch_total, total_level_epochs, device, image_interval)
 
                 # Save checkpoint
-                epoch_total = epochs_before + epoch + 1
-                if epoch_total % save_interval == 0:
-                    self.save_checkpoint(epoch_total)
+                if (epoch_total + 1) % save_interval == 0:
+                    self.save_checkpoint(epoch_total + 1)
             
             # Move to the next level
             if self.level < max(level_epochs.keys()):
@@ -157,13 +157,13 @@ class StyleGAN(AbstractModel):
                   
                 
 
-    def _train_one_epoch(self, alpha_step, epoch, total_epochs, device, image_interval):
+    def _train_one_epoch(self, alpha_step, epoch, epoch_total, total_level_epochs, device, image_interval):
         """Training loop for one epoch."""
         
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
             return f"Lvl {self.level} ({self.resolution}x{self.resolution}) Epoch {epoch+1}/{total_epochs} α={self.alpha:.2f} GL={g_loss:.3f} DL={d_loss:.3f} d={self.real_distance:.1f}/{self.fake_distance:.1f}"
     
-        epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_epochs))
+        epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_level_epochs))
         for i, imgs in epoch_iter:
             # Update alpha
             self.alpha = min(self.alpha + alpha_step, 1.0)
@@ -174,10 +174,10 @@ class StyleGAN(AbstractModel):
             g_loss, d_loss = self.perform_train_step(imgs, device, self.level, self.alpha)
 
             # Update tqdm description
-            epoch_iter.desc = tqdm_description(self, epoch, total_epochs, g_loss, d_loss)
+            epoch_iter.desc = tqdm_description(self, epoch, total_level_epochs, g_loss, d_loss)
             
             if i % image_interval == 0:
-                iter_ = (epoch * len(self.dataset)) + i
+                iter_ = (epoch_total * len(self.loader)) + i
                 self.generate_images(iter_, epoch, device, latent_vector=self.latent_vector)
             
 
