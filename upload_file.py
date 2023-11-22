@@ -45,4 +45,4 @@ def upload_file(file_name, file_path, creds):
 
 # Authenticate and upload a file
 creds = authenticate_gdrive()
-upload_file('training_video.mp4', 'training_video.mp4', creds)
+upload_file('compressed_video.mp4', 'compressed_video.mp4', creds)
