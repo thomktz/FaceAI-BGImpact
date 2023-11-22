@@ -1,3 +1,4 @@
+import httplib2
 import socket
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
@@ -5,6 +6,9 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 import os.path
+
+httplib2.Http(timeout=360)  # Set a higher timeout, e.g., 360 seconds
+
 
 # Define the scopes and the credentials file
 SCOPES = ['https://www.googleapis.com/auth/drive']
