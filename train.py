@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
     parser.add_argument("--image-interval", type=int, help="Number of iterations to wait before saving generated images")
+    parser.add_argument("--list", action="store_true", help="List available checkpoints")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Path to a checkpoint file to resume training. Has priority over --checkpoint-epoch")
     parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
     return parser.parse_args()
@@ -35,9 +36,27 @@ def load_default_config(model):
         default_config = json.load(default_config_file)
     return default_config
 
+def list_checkpoints(checkpoint_dir):
+    """List available checkpoints in the directory."""
+    checkpoints = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pth')]
+    print("\nAvailable checkpoints:")
+    epoch = lambda path: int(path.split("_")[1])
+    for checkpoint in checkpoints:
+        print(f"- Epoch {epoch(checkpoint)}: {checkpoint}")
+    print()
+
+def find_checkpoint_path(checkpoint_dir, epoch):
+    """Find the checkpoint path for a given epoch."""
+    for file in os.listdir(checkpoint_dir):
+        if file.startswith(f"step_{epoch}_"):
+            return os.path.join(checkpoint_dir, file)
+    raise FileNotFoundError(f"No checkpoint found for epoch {epoch} in {checkpoint_dir}")
+
 def main(args):
     """Main parsing script."""
-    
+    print(f"\n##############" + "#"*len(f" {args.model} - {args.dataset} ") +"##################")
+    print(f"################ {args.model} - {args.dataset} ################")
+    print(f"##############" + "#"*len(f" {args.model} - {args.dataset} ") +"##################\n")
     default_config = load_default_config(args.model)
     
     if args.config_path:
@@ -55,17 +74,21 @@ def main(args):
             config[key] = value
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    print(f"Using {str(device).upper()}.")
     
     # Set checkpoint path if resuming from a checkpoint
     checkpoint_path = None
+    checkpoint_dir = f"outputs/{args.model}_checkpoints_{args.dataset}"
         
-    if args.checkpoint_epoch is not None:
-        checkpoint_dir = f"outputs/checkpoints_{args.dataset}"
-        checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{args.checkpoint_epoch}.pth")
-        
+    if args.list:
+        list_checkpoints(checkpoint_dir)
+        chosen_epoch = int(input("Enter the epoch number to resume from: "))
+        checkpoint_path = find_checkpoint_path(checkpoint_dir, chosen_epoch)
+    elif args.checkpoint_epoch is not None:
+        checkpoint_path = find_checkpoint_path(checkpoint_dir, args.checkpoint_epoch)
     elif args.checkpoint_path is not None:
         checkpoint_path = args.checkpoint_path
+        
     if args.model.lower() == "dcgan":
         if checkpoint_path is None:
             model = DCGAN(
@@ -96,7 +119,11 @@ def main(args):
             )
         else:
             model = StyleGAN.from_checkpoint(
+                dataset_name=args.dataset,
                 checkpoint_path=checkpoint_path,
+                latent_dim=config["latent_dim"],
+                w_dim=config["w_dim"],
+                style_layers=config["style_layers"],
                 device=device,
             )
         train_config = dict(

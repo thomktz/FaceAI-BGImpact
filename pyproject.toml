@@ -1,8 +1,7 @@
 [tool.poetry]
-name = "aml-vae"
+name = "faceai-bgimpact"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

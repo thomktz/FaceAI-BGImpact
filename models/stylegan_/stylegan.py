@@ -38,6 +38,7 @@ class StyleGAN(AbstractModel):
         self.generator = Generator(latent_dim, w_dim, style_layers).to(device)
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
+        self.is_initialized = False
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
@@ -58,6 +59,9 @@ class StyleGAN(AbstractModel):
         dlr : float
             Learning rate for the discriminator.
         """
+        # If already initialized, do nothing
+        if self.is_initialized:
+            return
         
         self.optimizer_G = optim.Adam(
             [
@@ -77,12 +81,12 @@ class StyleGAN(AbstractModel):
         
         self.real_distance = 0.0
         self.fake_distance = 0.0
+        
+        self.level = 0
+        self.resolution = 4
+        self.alpha = 1
+        self.is_initialized = True
 
-        # Load optimizer states if available
-        if self.optimizer_D_config:
-            self.optimizer_D.load_state_dict(self.optimizer_D_config)
-        if self.optimizer_G_config:
-            self.optimizer_G.load_state_dict(self.optimizer_G_config)
 
     def train(self, glr, mlr, dlr, batch_size, device, save_interval, image_interval, level_epochs, loss):
         """
@@ -123,23 +127,30 @@ class StyleGAN(AbstractModel):
             dlr=dlr
         )
         
-        self.level = 0
-        self.resolution = 4
-        self.alpha = 1
         self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
         n_batches = len(self.loader)
         
         for level, level_config in level_epochs.items():
-            self.level = level
-            epochs_before = sum([cfg["transition"] + cfg["training"] for (lvl, cfg) in level_epochs.items() if lvl < level])
+            # Skip levels that have already been trained
+            if level < self.level:
+                continue
             
+            self.level = level
+
+            # Calculate the number of epochs completed at this level and before
+            epochs_before = sum([cfg["transition"] + cfg["training"] for (lvl, cfg) in level_epochs.items() if lvl < level])
+            epochs_completed = self.calculate_completed_epochs(self.alpha, level_config)
+            total_level_epochs = level_config["transition"] + level_config["training"]
+
             # Update resolution for the level
             self.dataset.update_resolution(self.resolution)
 
-            total_level_epochs = level_config["transition"] + level_config["training"]
-            alpha_step = 1.0 / (level_config["transition"] * n_batches) if level_config["transition"] > 0 else 0
+            # Compute alpha step based on remaining transition epochs
+            remaining_transition_epochs = level_config["transition"] - epochs_completed
+            alpha_step = 1.0 / (remaining_transition_epochs * n_batches) if remaining_transition_epochs > 0 else 0
 
-            for epoch in range(total_level_epochs):
+            # Adjusted range for the loop to start from the next epoch after the last completed epoch
+            for epoch in range(epochs_completed, total_level_epochs):
                 epoch_total = epochs_before + epoch
                 self._train_one_epoch(alpha_step, epoch, epoch_total, total_level_epochs, device, image_interval)
 
@@ -154,9 +165,6 @@ class StyleGAN(AbstractModel):
                 self.alpha = 0.0
             
             
-                  
-                
-
     def _train_one_epoch(self, alpha_step, epoch, epoch_total, total_level_epochs, device, image_interval):
         """Training loop for one epoch."""
         
@@ -237,6 +245,30 @@ class StyleGAN(AbstractModel):
         
         return g_loss.item(), d_loss.item()
     
+    def calculate_completed_epochs(self, alpha, level_config):
+        """
+        Calculate the number of epochs completed at the current level based on alpha.
+
+        Parameters:
+        ----------
+        alpha : float
+            Current value of alpha.
+        level_config : dict
+            Configuration for the current level.
+
+        Returns:
+        -------
+        int
+            Number of completed epochs at the current level.
+        """
+        if alpha < 1.0:
+            # If alpha is not yet 1, we are still in the transition phase
+            completed_fraction = alpha * level_config["transition"]
+        else:
+            # If alpha is 1, the transition phase is complete
+            completed_fraction = level_config["transition"]
+
+        return int(completed_fraction)
     
     def save_checkpoint(self, epoch_total, save_dir="outputs/StyleGAN_checkpoints"):
         """
@@ -268,20 +300,24 @@ class StyleGAN(AbstractModel):
         print(f"Checkpoint saved at {checkpoint_path}")
 
     @classmethod
-    def from_checkpoint(cls, checkpoint_path, device, w_dim, style_layers):
+    def from_checkpoint(cls, dataset_name, checkpoint_path, latent_dim, w_dim, style_layers, device):
         """
         Create a StyleGAN instance from a checkpoint file.
 
         Parameters
         ----------
+        dataset_name : str
+            Name of the dataset to use.
         checkpoint_path : str
             Path to the checkpoint file.
-        device : torch.device
-            Device to use for training.
+        latent_dim : int
+            Dimension of the latent space in StyleGAN.
         w_dim : int
             Dimension of the W space in StyleGAN.
         style_layers : int
             Number of layers in the style mapping network.
+        device : torch.device
+            Device to use for training.
 
         Returns
         -------
@@ -291,25 +327,25 @@ class StyleGAN(AbstractModel):
         checkpoint = torch.load(checkpoint_path, map_location=device)
 
         # Extract necessary components from checkpoint
-        dataset_name = checkpoint.get("dataset_name", "default_dataset")
-        latent_dim = checkpoint.get("latent_dim", 100)  # Default value if not in checkpoint
         level = checkpoint["level"]
         alpha = checkpoint["alpha"]
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
+        
+        # Initialize the instance with 0 learning rates
+        instance.train_init(0, 0, 0)
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])
         instance.discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
-        instance.optimizer_G = optim.Adam(instance.generator.parameters())
-        instance.optimizer_D = optim.Adam(instance.discriminator.parameters())
         instance.optimizer_G.load_state_dict(checkpoint["optimizer_G_state_dict"])
         instance.optimizer_D.load_state_dict(checkpoint["optimizer_D_state_dict"])
 
         # Set current step and level
         instance.level = level
         instance.alpha = alpha
+        instance.resolution = 4 * (2 ** level)
 
         return instance
 
