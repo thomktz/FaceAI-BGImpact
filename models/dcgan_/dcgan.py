@@ -55,7 +55,7 @@ class DCGAN(AbstractModel):
     def train_init(self, lr, batch_size):
         """Initialize the training parameters and optimizer."""
         
-        self.loader = get_dataloader(self.dataset_name, batch_size)
+        _, self.loader = get_dataloader(self.dataset_name, batch_size)
         self.optimizer_G = optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
         self.adversarial_loss = nn.BCELoss()

@@ -20,7 +20,6 @@ def parse_args():
     parser.add_argument("--glr", type=float, help="Generator learning rate (for StyleGAN)")
     parser.add_argument("--mlr", type=float, help="W-Mapping learning rate (for StyleGAN)")
     parser.add_argument("--loss", type=str, choices=["wgan", "wgan-gp", "basic"], default="wgan-gp", help="Learning rate decay")
-    parser.add_argument("--c", type=float, help="Clipping parameter for Discriminator weights")
     parser.add_argument("--batch-size", type=int, help="Batch size")
     parser.add_argument("--num-epochs", type=int, help="Number of epochs to train")
     parser.add_argument("--save-interval", type=int, help="Number of epochs to wait before saving models and images")
@@ -110,10 +109,9 @@ def main(args):
             save_interval=config["save_interval"],
             image_interval=config["image_interval"],
             level_epochs={
-                int(k): int(v) 
+                int(k): v
                 for (k, v) in config["level_epochs"].items()
             },
-            transition_ratio=config["transition_ratio"],
         )
 
     else:
