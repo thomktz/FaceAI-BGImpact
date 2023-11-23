@@ -153,6 +153,7 @@ class StyleGAN(AbstractModel):
 
                 # Save checkpoint
                 if (self.epoch_total + 1) % save_interval == 0:
+                    self.current_epochs[level] = epoch + 1
                     self.save_checkpoint(self.epoch_total + 1, self.current_epochs)
 
             # Update for next level
