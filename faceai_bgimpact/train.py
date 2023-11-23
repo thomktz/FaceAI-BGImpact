@@ -31,7 +31,7 @@ def parse_args():
 
 def load_default_config(model):
     """Load the default configuration JSON for the specified model type."""
-    default_config_path = os.path.join("configs", f"default_{model.lower()}_config.json")
+    default_config_path = os.path.join("faceai_bgimpact/configs", f"default_{model.lower()}_config.json")
     with open(default_config_path, "r") as default_config_file:
         default_config = json.load(default_config_file)
     return default_config

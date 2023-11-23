@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.stylegan_.utils import WSConv2d, WSLinear, BlurLayer
+from faceai_bgimpact.models.stylegan_.utils import WSConv2d, WSLinear, BlurLayer
 
 class DiscriminatorBlock(nn.Module):
     """

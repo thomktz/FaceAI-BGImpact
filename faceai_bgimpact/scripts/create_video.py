@@ -18,7 +18,7 @@ def parse_args():
 
 def load_model_config(model):
     """Load the configuration JSON for the specified model and dataset."""
-    config_path = os.path.join("configs", f"default_{model.lower()}_config.json")
+    config_path = os.path.join("faceai_bgimpact/configs", f"default_{model.lower()}_config.json")
     with open(config_path, "r") as config_file:
         config = json.load(config_file)
     return config
@@ -26,9 +26,9 @@ def load_model_config(model):
 def add_text_to_image(image, text):
     """Add text to an image."""
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("Nirmala.ttf", 40)
-    text_position = (30, image.height - 60)  # adjust based on your image size
-    draw.text(text_position, text, font=font, fill=(255, 255, 255))  # white text
+    font = ImageFont.truetype("faceai_bgimpact/Nirmala.ttf", 40)
+    text_position = (30, image.height - 60) 
+    draw.text(text_position, text, font=font, fill=(255, 255, 255))
     return image
 
 def get_iter(path):
@@ -58,13 +58,8 @@ def create_video(image_folder, output_video, frame_rate):
             
             writer.append_data(img_array)
 
-if __name__ == "__main__":
-    args = parse_args()
-    config = load_model_config(args.model)
-
-    image_folder = f"outputs/{args.model}_images_{args.dataset}"
-    create_video(
-        image_folder=image_folder,
-        output_video=f"outputs/{args.model}_video_{args.dataset}.mp4",
-        frame_rate=args.frame_rate,
-    )
+def create_video_function(model, dataset, frame_rate):
+    """Create a video from images using imageio."""
+    image_folder = f"outputs/{model}_images_{dataset}"
+    output_video = f"outputs/{model}_video_{dataset}.mp4"
+    create_video(image_folder, output_video, frame_rate)
