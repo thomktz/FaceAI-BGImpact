@@ -120,8 +120,6 @@ class StyleGAN(AbstractModel):
             Loss function to use for training.
             ["wgan-gp", "wgan", "basic"]
         """
-        
-        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
             
         # Check if loading from a checkpoint
         if hasattr(self, 'current_epochs'):
@@ -146,6 +144,8 @@ class StyleGAN(AbstractModel):
                 dlr=dlr,
                 loss=loss
             )
+        
+        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
         
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
@@ -390,9 +390,24 @@ class StyleGAN(AbstractModel):
             else:
                 z = latent_vector.to(device)
 
+            real_images = []
+            for _ in range(min(len(self.dataset), 64)):
+                real_images.append(self.dataset[_])
+            real_images = torch.stack(real_images).to(device)
+            
+            # Resize if necessary
+            if real_images.size(-1) != 128:
+                upscaler = Resize((128, 128), interpolation=0)  # 0 corresponds to nearest-neighbor
+                real_images = upscaler(real_images)
+            
+            # Denormalize and save real images
+            real_images = denormalize_imagenet(real_images.cpu())
+            save_image(real_images, f"{save_folder}/real_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
+
+
             # Generate images
             fake_images = self.generator(z, self.level, self.alpha).detach().cpu()
-
+            
             # Check if upscaling is needed
             current_size = fake_images.size(-1)
             if current_size != 128:
@@ -401,4 +416,4 @@ class StyleGAN(AbstractModel):
 
             # Denormalize and save images
             denormalized_images = denormalize_imagenet(fake_images)
-            save_image(denormalized_images, f"{save_folder}/iter_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
+            save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)

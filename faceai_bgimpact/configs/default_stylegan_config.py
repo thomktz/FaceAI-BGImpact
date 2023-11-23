@@ -1,13 +1,13 @@
 config = {
     "dataset": "ffhq_raw",
-    "dlr": 0.001,
+    "dlr": 0.0005,
     "glr": 0.001,
     "mlr": 0.00001,
     "loss": "wgan-gp",
     "latent_dim": 256,
     "w_dim": 256,
     "style_layers": 8,
-    "batch_size": 32,
+    "batch_size": 16,
     "save_interval": 5, 
     "image_interval": 100,
     "level_epochs": {
