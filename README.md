@@ -11,6 +11,14 @@ The projects also implements two new versions of the [Flicker-Face-HQ (FFHQ)](ht
 
 The motivation stemmed from the fact that a lot of the variance in VAEs seemed to be wasted on the background of the image. There are no existing large-scale faces datasets with uniform background (the ORL dataset only has 400 images), so we decided to create our own.
 
+## Installation
+
+### Pip
+
+We published the models and dataset transformations as a pip package. To install, run:
+
+`pip install faceai-bgimpact`
+
 ## Folder structure
 ```
 faceai-bgimpact
@@ -56,9 +64,9 @@ The `train.py` script is an entry point to train a model. It includes command-li
 
 ## How to Use
 
-0. Ensure you have the required dependencies installed (see Dependencies section below).
+0. Ensure you have the package installed, or the required dependencies for dev installed (see Dependencies section below).
 
-1. To train a model, you need to specify the model type using the `--model` flag, and the dataset with the `--dataset` flag. 
+1. To train a model, you call `faceai-bgimpact train` and specify the model type using the `--model` flag, and the dataset with the `--dataset` flag. 
 
 2. Additional command-line arguments allow for fine-tuning the training process:
 
@@ -87,9 +95,11 @@ Checkpoint arguments:
 
 3. Example usage:
 
-`python train.py --model StyleGAN --dataset ffhq_raw`
+`faceai-bgimpact download-all-ffhq`
 
-You can also provide additional arguments as needed.
+`faceai-bgimpact train --model StyleGAN --dataset ffhq_raw`
+
+`faceai-bgimpact create-video --model StyleGAN --dataset ffhq_raw`
 
 ## Dependencies
 
