@@ -138,9 +138,9 @@ class StyleGAN(AbstractModel):
                 self.resolution = 4 * (2 ** self.level)
                 self.dataset.update_resolution(self.resolution)
                 self.current_epochs[self.level] = 0
-            else:
-                start_level = self.level
-                start_epoch = self.current_epochs[self.level]
+            
+            start_level = self.level
+            start_epoch = self.current_epochs[self.level]
         else:
             start_level = 0
             start_epoch = 0
