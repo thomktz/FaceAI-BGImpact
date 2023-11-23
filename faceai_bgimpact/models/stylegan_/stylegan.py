@@ -318,7 +318,7 @@ class StyleGAN(AbstractModel):
 
 
     @classmethod
-    def from_checkpoint(cls, dataset_name, checkpoint_path, latent_dim, w_dim, style_layers, device):
+    def from_checkpoint(cls, dataset_name, checkpoint_path, latent_dim, w_dim, style_layers, loss, device):
         checkpoint = torch.load(checkpoint_path, map_location=device)
 
         # Extract necessary components from checkpoint
@@ -331,7 +331,7 @@ class StyleGAN(AbstractModel):
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
         
         # Initialize the instance with 0 learning rates
-        instance.train_init(0, 0, 0)
+        instance.train_init(0, 0, 0, loss)
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])
@@ -345,6 +345,12 @@ class StyleGAN(AbstractModel):
         instance.resolution = 4 * (2 ** level)
         instance.epoch_total = epoch_total
         instance.current_epochs = current_epochs
+        
+        print("Loaded state:")
+        print(f"  Level: {level}")
+        print(f"  Alpha: {alpha}")
+        print(f"  Epoch total: {epoch_total}")
+        print(f"  Current epochs: {current_epochs}")
 
         return instance
 

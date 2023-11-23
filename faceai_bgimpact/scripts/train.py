@@ -95,6 +95,7 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
                 latent_dim=config["latent_dim"],
                 w_dim=config["w_dim"],
                 style_layers=config["style_layers"],
+                loss=config["loss"],
                 device=device,
             )
         train_config = dict(
