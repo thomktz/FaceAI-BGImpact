@@ -1,4 +1,4 @@
-{
+config = {
     "dataset": "ffhq_raw",
     "dlr": 0.001,
     "glr": 0.001,
@@ -11,27 +11,27 @@
     "save_interval": 5, 
     "image_interval": 100,
     "level_epochs": {
-        "0": {
+        0: {
             "transition": 0,
             "training": 4
         },           
-        "1": {
+        1: {
             "transition": 3,
             "training": 5
         },
-        "2": {
+        2: {
             "transition": 5,
             "training": 5
         },
-        "3": {
+        3: {
             "transition": 6,
             "training": 10
         },
-        "4": {
+        4: {
             "transition": 10,
             "training": 20
         },
-        "5": {
+        5: {
             "transition": 15,
             "training": 50
         }

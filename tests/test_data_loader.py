@@ -1,5 +1,5 @@
 import pytest
-from models.data_loader import get_dataloader
+from faceai_bgimpact.models.data_loader import get_dataloader
 
 @pytest.mark.parametrize("dataset_name", ["ffhq_raw", "ffhq_blur", "ffhq_grey"])
 def test_dataset_loading(dataset_name):

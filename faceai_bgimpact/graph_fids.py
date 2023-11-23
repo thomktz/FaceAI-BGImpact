@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.dcgan import DCGAN
+from faceai_bgimpact.models.dcgan import DCGAN
 
 def graph_fids(checkpoint_path, save_dir):
     

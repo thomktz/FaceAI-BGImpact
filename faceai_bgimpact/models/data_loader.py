@@ -2,13 +2,7 @@ import os
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import torch
-
-import os
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-from PIL import Image
-import torch
+from faceai_bgimpact.data_processing.paths import data_folder
 
 class FFHQDataset(Dataset):
     """
@@ -16,7 +10,10 @@ class FFHQDataset(Dataset):
     """
     def __init__(self, root_dir, resolution, alpha=1.0):
         self.root_dir = root_dir
-        self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+        try:
+            self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Please download the data first, using the download-all-ffhq command.")
         self.resolution = resolution
         self.alpha = alpha
         self._update_transforms()
@@ -75,7 +72,7 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
     print(f"Loading dataset: {dataset_name} with resolution {resolution} and alpha {alpha}")        
 
     # Load the dataset with blended images
-    root_dir = f"data_processing/{dataset_name}"
+    root_dir = f"{data_folder}/{dataset_name}"
     dataset = FFHQDataset(root_dir=root_dir, resolution=resolution, alpha=alpha)
 
     # Create DataLoader

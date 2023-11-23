@@ -1,6 +1,6 @@
 import os
 import kaggle
-from data_processing.paths import (
+from faceai_bgimpact.data_processing.paths import (
     data_folder,
     ffhq_raw_kaggle_path,
     raw_folder_name,
