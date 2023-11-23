@@ -132,7 +132,7 @@ class StyleGAN(AbstractModel):
         # Check if loading from a checkpoint
         if hasattr(self, 'current_epochs'):
             # Check if checkpoint was the last epoch of the level
-            if self.current_epochs[self.level] == level_epochs[self.level]["training"]:
+            if self.current_epochs[self.level] == (level_epochs[self.level]["training"] + level_epochs[self.level]["transition"]):
                 # If so, move to the next level
                 self.level += 1
                 self.resolution = 4 * (2 ** self.level)
