@@ -1,4 +1,4 @@
-{
+config = {
     "dataset_name": "ffhq_raw",
     "lr": 0.0002,
     "latent_dim": 100,

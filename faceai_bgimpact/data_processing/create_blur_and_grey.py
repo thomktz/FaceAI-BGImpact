@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
-from data_processing.paths import raw_folder_name, mask_folder_name, blur_folder_name, grey_folder_name
+from faceai_bgimpact.data_processing.paths import raw_folder_name, mask_folder_name, blur_folder_name, grey_folder_name
 
 # Ensure the output directories exist
 Path(blur_folder_name).mkdir(parents=True, exist_ok=True)

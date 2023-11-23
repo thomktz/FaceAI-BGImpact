@@ -7,12 +7,12 @@ from torchvision.utils import save_image
 from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
 
-from models.abstract_model import AbstractModel
-from models.data_loader import get_dataloader, denormalize_imagenet
-from models.utils import pairwise_euclidean_distance
-from models.stylegan_.generator import Generator
-from models.stylegan_.discriminator import Discriminator
-from models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN
+from faceai_bgimpact.models.abstract_model import AbstractModel
+from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_imagenet
+from faceai_bgimpact.models.utils import pairwise_euclidean_distance
+from faceai_bgimpact.models.stylegan_.generator import Generator
+from faceai_bgimpact.models.stylegan_.discriminator import Discriminator
+from faceai_bgimpact.models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN
 
 class StyleGAN(AbstractModel):
     """
@@ -171,7 +171,7 @@ class StyleGAN(AbstractModel):
         
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
             return (
-                f"Lvl {' ' * (len(str(self.resolution)) - 1) * 2}{self.level} ({self.resolution}x{self.resolution}) "
+                f"Lvl {' ' * (3 - len(str(self.resolution))) * 2}{self.level} ({self.resolution}x{self.resolution}) "
                 + f"Epoch {epoch+1}/{total_epochs} "
                 + f"α={self.alpha:.2f} "
                 + f"GL={g_loss:.3f} DL={d_loss:.3f} "
@@ -266,7 +266,6 @@ class StyleGAN(AbstractModel):
         """
         if self.epoch_total is not None:
             return self.epoch_total - epochs_before
-            
         if alpha < 1.0:
             # If alpha is not yet 1, we are still in the transition phase
             completed_fraction = alpha * level_config["transition"]

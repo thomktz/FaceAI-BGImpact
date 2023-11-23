@@ -1,7 +1,7 @@
 from pathlib import Path
 from tqdm import tqdm
 from rembg import remove, new_session
-from data_processing.paths import raw_folder_name, mask_folder_name
+from faceai_bgimpact.data_processing.paths import raw_folder_name, mask_folder_name
 
 session = new_session()
 

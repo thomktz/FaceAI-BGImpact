@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.utils import pairwise_euclidean_distance
-from .utils import PixelNorm, AdaIN, BlurLayer, NoiseLayer, WSConv2d
+from faceai_bgimpact.models.utils import pairwise_euclidean_distance
+from faceai_bgimpact.models.stylegan_.utils import PixelNorm, AdaIN, BlurLayer, NoiseLayer, WSConv2d
 
 class MappingNetwork(nn.Module):
     """

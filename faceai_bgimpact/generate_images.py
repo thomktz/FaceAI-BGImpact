@@ -3,7 +3,7 @@ import json
 import argparse
 import torch
 import time
-from models.dcgan import DCGAN
+from faceai_bgimpact.models.dcgan import DCGAN
 
 def parse_args():
     """Parse command-line arguments for image generation."""

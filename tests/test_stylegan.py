@@ -1,7 +1,7 @@
 import torch
 import pytest
-from models.stylegan_ import Generator, SynthesisNetwork, MappingNetwork, Discriminator
-from models.data_loader import denormalize_imagenet
+from faceai_bgimpact.models.stylegan_ import Generator, SynthesisNetwork, MappingNetwork, Discriminator
+from faceai_bgimpact.models.data_loader import denormalize_imagenet
 
 class TestStyleGAN:
     latent_dim = 256

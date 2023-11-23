@@ -1,7 +1,7 @@
 # test_gan.py
 import pytest
 import torch
-from models import DCGAN
+from faceai_bgimpact.models import DCGAN
 
 @pytest.fixture
 def sample_gan():

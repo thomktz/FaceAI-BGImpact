@@ -13,12 +13,13 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 from pytorch_gan_metrics import get_fid
 
-from models.abstract_model import AbstractModel
-from models.data_loader import get_dataloader, denormalize_imagenet
-from models.utils import weights_init
+from faceai_bgimpact.data_processing.paths import data_folder
+from faceai_bgimpact.models.abstract_model import AbstractModel
+from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_imagenet
+from faceai_bgimpact.models.utils import weights_init
 
-from models.dcgan_.generator import Generator
-from models.dcgan_.discriminator import Discriminator
+from faceai_bgimpact.models.dcgan_.generator import Generator
+from faceai_bgimpact.models.dcgan_.discriminator import Discriminator
 
 
 class DCGAN(AbstractModel):
@@ -197,7 +198,7 @@ class DCGAN(AbstractModel):
         imgs = torch.cat(images, dim=0) 
         denormalized_imgs = denormalize_imagenet(imgs)
         
-        stats_path = f"data_processing/{self.dataset_name}_statistics.npz"
+        stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
 
     def generate_images(self, epoch, device, save_dir="outputs/generated_images"):
