@@ -14,7 +14,6 @@ def main():
     train_parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model to train")
     train_parser.add_argument("--dataset", type=str, required=True, choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"], help="Name of the dataset to use")
     train_parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
-    train_parser.add_argument("--config-path", type=str, default=None, help="Path to a custom JSON configuration file")
     train_parser.add_argument("--lr", type=float, help="Learning rate (for DCGAN)")
     train_parser.add_argument("--dlr", type=float, help="Discriminator learning rate (for StyleGAN)")
     train_parser.add_argument("--glr", type=float, help="Generator learning rate (for StyleGAN)")
@@ -48,7 +47,6 @@ def main():
             model=args.model,
             dataset=args.dataset,
             latent_dim=args.latent_dim,
-            config_path=args.config_path,
             lr=args.lr,
             dlr=args.dlr,
             glr=args.glr,

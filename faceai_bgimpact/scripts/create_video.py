@@ -5,7 +5,11 @@ import imageio
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
+from importlib import resources
 
+
+with resources.path('faceai_bgimpact', 'Nirmala.ttf') as font_path:
+    font = ImageFont.truetype(str(font_path), size=40) 
 
 def parse_args():
     """Parse command-line arguments for video creation."""
@@ -16,17 +20,10 @@ def parse_args():
     parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate for the video")
     return parser.parse_args()
 
-def load_model_config(model):
-    """Load the configuration JSON for the specified model and dataset."""
-    config_path = os.path.join("faceai_bgimpact/configs", f"default_{model.lower()}_config.json")
-    with open(config_path, "r") as config_file:
-        config = json.load(config_file)
-    return config
-
 def add_text_to_image(image, text):
     """Add text to an image."""
+    
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("faceai_bgimpact/Nirmala.ttf", 40)
     text_position = (30, image.height - 60) 
     draw.text(text_position, text, font=font, fill=(255, 255, 255))
     return image

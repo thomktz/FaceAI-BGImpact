@@ -4,6 +4,7 @@ import os
 import json
 import torch
 from faceai_bgimpact.models import DCGAN, StyleGAN
+from faceai_bgimpact.configs import configs
 
 def list_checkpoints(checkpoint_dir):
     """List available checkpoints in the directory."""
@@ -21,20 +22,9 @@ def find_checkpoint_path(checkpoint_dir, epoch):
             return os.path.join(checkpoint_dir, file)
     raise FileNotFoundError(f"No checkpoint found for epoch {epoch} in {checkpoint_dir}")
 
-def train_function(model, dataset, latent_dim, config_path, lr, dlr, glr, mlr, loss, batch_size, num_epochs, save_interval, image_interval, list_checkpoints_flag, checkpoint_path, checkpoint_epoch):
+def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_size, num_epochs, save_interval, image_interval, list_checkpoints_flag, checkpoint_path, checkpoint_epoch):
     # Load the default configuration
-    default_config_path = os.path.join("../configs", f"default_{model.lower()}_config.json")
-    default_config_path = os.path.abspath(default_config_path)
-    with open(default_config_path, "r") as default_config_file:
-        default_config = json.load(default_config_file)
-
-    # If a custom config path is provided, load it
-    if config_path:
-        with open(config_path, "r") as custom_config_file:
-            custom_config = json.load(custom_config_file)
-        config = {**default_config, **custom_config}
-    else:
-        config = default_config
+    config = configs[model.lower()]
 
     # Override specific settings with provided arguments
     if latent_dim:
@@ -55,8 +45,6 @@ def train_function(model, dataset, latent_dim, config_path, lr, dlr, glr, mlr, l
         config['save_interval'] = save_interval
     if image_interval:
         config['image_interval'] = image_interval
-        
-    config["level_epochs"] = {int(k): v for k, v in config["level_epochs"].items()}
 
     # Determine the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -10,7 +10,10 @@ class FFHQDataset(Dataset):
     """
     def __init__(self, root_dir, resolution, alpha=1.0):
         self.root_dir = root_dir
-        self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+        try:
+            self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Please download the data first, using the download-all-ffhq command.")
         self.resolution = resolution
         self.alpha = alpha
         self._update_transforms()
