@@ -28,8 +28,6 @@ google-auth-oauthlib = "^1.1.0"
 imageio = "2.19.3"
 imageio-ffmpeg = "0.4.7"
 
-[tool.poetry.include]
-"faceai_bgimpact/Nirmala.ttf"
 
 [tool.poetry.scripts]
 faceai-bgimpact = "faceai_bgimpact.main:main"
