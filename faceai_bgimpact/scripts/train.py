@@ -14,7 +14,7 @@ def list_checkpoints(checkpoint_dir):
     for checkpoint in checkpoints:
         print(f"- Epoch {epoch(checkpoint)}: {checkpoint}")
     print()
-    return input("Enter the epoch to resume from: ")
+    return int(input("Enter the epoch to resume from: "))
 
 def find_checkpoint_path(checkpoint_dir, epoch):
     """Find the checkpoint path for a given epoch."""
