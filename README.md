@@ -34,12 +34,10 @@ faceai-bgimpact
 │   └── download_all_ffhq.py    # Script to download our pre-processed datasets
 ├── models
 │   ├── dcgan_                  # DCGAN model implementation
-│   │   ├── __init__.py         
 │   │   ├── dcgan.py            # DCGAN model definition
 │   │   ├── discriminator.py    # Discriminator part of DCGAN
 │   │   └── generator.py        # Generator part of DCGAN
 │   ├── stylegan_               # StyleGAN model implementation
-│   │   ├── __init__.py         
 │   │   ├── discriminator.py    # Discriminator part of StyleGAN
 │   │   ├── generator.py        # Generator part of StyleGAN
 │   │   ├── loss.py             # Loss functions for StyleGAN
