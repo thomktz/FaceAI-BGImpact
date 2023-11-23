@@ -24,15 +24,15 @@ config = {
             "training": 5
         },
         3: {
-            "transition": 6,
+            "transition": 10,
             "training": 10
         },
         4: {
-            "transition": 10,
+            "transition": 20,
             "training": 20
         },
         5: {
-            "transition": 15,
+            "transition": 20,
             "training": 50
         }
     }
