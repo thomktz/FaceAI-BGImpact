@@ -115,6 +115,11 @@ And activate the environment using:
 
 `poetry shell`
 
+To install the package locally, you can run 
+
+`poetry install`
+
+
 Since these packages are heavy (especially PyTorch), you may use your own environment if you wish, but it might not work as expected.
 
 Training on GPU is highly recommended. If you have a CUDA-enabled GPU, you should install the CUDA version of PyTorch.
