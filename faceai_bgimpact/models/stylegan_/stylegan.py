@@ -120,18 +120,11 @@ class StyleGAN(AbstractModel):
             Loss function to use for training.
             ["wgan-gp", "wgan", "basic"]
         """
-        self.train_init(
-            glr=glr, 
-            mlr=mlr, 
-            dlr=dlr,
-            loss=loss
-        )
         
         self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
             
         # Check if loading from a checkpoint
         if hasattr(self, 'current_epochs'):
-            print(f"From 'train', {self.current_epochs}, {self.level}, {self.resolution}")
             # Check if checkpoint was the last epoch of the level
             if self.current_epochs[self.level] == (level_epochs[self.level]["training"] + level_epochs[self.level]["transition"]):
                 # If so, move to the next level
@@ -139,15 +132,19 @@ class StyleGAN(AbstractModel):
                 self.resolution = 4 * (2 ** self.level)
                 self.dataset.update_resolution(self.resolution)
                 self.current_epochs[self.level] = 0
-                print(f"Moving to level {self.level} ({self.resolution}x{self.resolution})")
             
             start_level = self.level
             start_epoch = self.current_epochs[self.level]
         else:
-            print("Starting from scratch")
             start_level = 0
             start_epoch = 0
             self.current_epochs = {level: 0 for level in level_epochs.keys()}
+            self.train_init(
+                glr=glr, 
+                mlr=mlr, 
+                dlr=dlr,
+                loss=loss
+            )
         
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
