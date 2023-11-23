@@ -13,43 +13,42 @@ The motivation stemmed from the fact that a lot of the variance in VAEs seemed t
 
 ## Folder structure
 ```
-faceai-bgimpact
-├── configs                     # Configuration files for models
-├── data_processing             # Scripts and notebooks for data preprocessing   
-│   ├── paths.py                # Script to define data paths
-│   ├── download_raw_ffhq.py    # Script to download raw FFHQ images
-│   ├── create_masks.py         # Script to create image masks
-│   ├── create_blur_and_grey.py # Script to create blurred and greyscale images
-│   └── download_all_ffhq.py    # Script to download our pre-processed datasets
-├── models
-│   ├── dcgan_                  # DCGAN model implementation
-│   │   ├── __init__.py         
-│   │   ├── dcgan.py            # DCGAN model definition
-│   │   ├── discriminator.py    # Discriminator part of DCGAN
-│   │   └── generator.py        # Generator part of DCGAN
-│   ├── stylegan_               # StyleGAN model implementation
-│   │   ├── __init__.py         
-│   │   ├── discriminator.py    # Discriminator part of StyleGAN
-│   │   ├── generator.py        # Generator part of StyleGAN
-│   │   ├── loss.py             # Loss functions for StyleGAN
-│   │   ├── stylegan.py         # StyleGAN model definition
-│   │   └── utils.py            # Utility functions for StyleGAN   
-│   ├── abstract_model.py       # Abstract model class for common functionalities
-│   ├── data_loader.py          # Data loading utilities
-│   └── utils.py                # General utility functions
-├── tests
-│   ├── test_data_loader.py     # Pytests for data loading utilities
-│   ├── test_dcgan.py           # Pytests for DCGAN model
-│   └── test_stylegan.py        # Pytests for StyleGAN model
-├── create_video.py             # Utility script to create videos
-├── generate_images.py          # Script to generate images using models
-├── graph_fids.py               # Script to graph FID scores
-├── train.py                    # Script to train models
-├── pyproject.toml              # Poetry package management configuration file
-└── README.md
-
-
+FaceAI-BGImpact
+├── faceai_bgimpact             
+│   ├── configs                         # Configuration files for models
+│   │   ├── default_dcgan_config.py
+│   │   └── default_stylegan_config.py
+│   ├── data_processing                 # Scripts and notebooks for data preprocessing
+│   │   ├── paths.py                    # Data paths
+│   │   ├── download_raw_ffhq.py        # Functions to download raw FFHQ dataset
+│   │   ├── create_masks.py             # Functions to create masks for FFHQ dataset
+│   │   ├── create_blur_and_grey.py     # Functions to create blurred and greyed-out FFHQ datasets
+│   │   └── download_all_ffhq.py        # Functions to download all FFHQ datasets
+│   ├── models                          
+│   │   ├── dcgan_                      # DCGAN model implementation 
+│   │   │   ├── dcgan.py                
+│   │   │   ├── discriminator.py
+│   │   │   └── generator.py
+│   │   ├── stylegan_                   # StyleGAN model implementation
+│   │   │   ├── discriminator.py
+│   │   │   ├── generator.py
+│   │   │   ├── loss.py                 # Loss functions for StyleGAN
+│   │   │   └── stylegan.py
+│   │   ├── abstract_model.py           # Abstract model class for common functionalities
+│   │   ├── data_loader.py              # Data loading utilities
+│   │   └── utils.py
+│   ├── scripts
+│   │   ├── train.py                    # Script to train models
+│   │   ├── create_video.py             # Script to create videos from generated images
+│   │   ├── generate_images.py    
+│   │   └── graph_fids.py
+│   ├── main.py                         # Entry point for the package
+│   └── Nirmala.ttf                     # Font file used in the project
+├── tests                               # Pytests
+├── README.md
+└── pyproject.toml                      # Poetry package management configuration file
 ```
+
 ## Training Script (train.py)
 
 The `train.py` script is an entry point to train a model. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for saving.
