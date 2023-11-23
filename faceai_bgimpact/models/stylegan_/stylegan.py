@@ -141,6 +141,7 @@ class StyleGAN(AbstractModel):
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
             self.resolution = 4 * (2 ** level)
+            self.dataset.update_resolution(self.resolution)
 
             # Calculate total epochs for this level from configuration
             total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["training"]
@@ -148,7 +149,7 @@ class StyleGAN(AbstractModel):
 
             for epoch in range(start_epoch_for_level, total_level_epochs):
                 self.current_epochs[level] = epoch
-                self.epoch_total = sum([cfg["transition"] + cfg["training"] for lvl, cfg in level_epochs.items() if lvl < level]) + epoch
+                self.epoch_total = sum(self.current_epochs.values())
                 self._train_one_epoch(level_epochs[level], epoch, image_interval, device)
 
                 # Save checkpoint
