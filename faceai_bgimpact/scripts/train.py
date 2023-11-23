@@ -23,7 +23,8 @@ def find_checkpoint_path(checkpoint_dir, epoch):
 
 def train_function(model, dataset, latent_dim, config_path, lr, dlr, glr, mlr, loss, batch_size, num_epochs, save_interval, image_interval, list_checkpoints_flag, checkpoint_path, checkpoint_epoch):
     # Load the default configuration
-    default_config_path = os.path.join("faceai_bgimpact/configs", f"default_{model.lower()}_config.json")
+    default_config_path = os.path.join("../configs", f"default_{model.lower()}_config.json")
+    default_config_path = os.path.abspath(default_config_path)
     with open(default_config_path, "r") as default_config_file:
         default_config = json.load(default_config_file)
 
