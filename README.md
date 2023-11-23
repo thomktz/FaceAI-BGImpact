@@ -6,8 +6,11 @@ This project implements various Generative AI models to generate faces:
 - Variational Autoencoder (VAE)
 
 The projects also implements two new versions of the [Flicker-Face-HQ (FFHQ)](https://github.com)
-- ffhq_blur (Where the background is blurred)
-- ffhq_grey (Where the background is greyed-out)
+- [FFHQ-Blur](https://www.kaggle.com/datasets/thomaskientz/ffhq-blur) (Where the background is blurred)
+- [FFHQ-Grey](https://www.kaggle.com/datasets/thomaskientz/ffhq-grey) (Where the background is greyed-out)
+
+![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
+
 
 The motivation stemmed from the fact that a lot of the variance in VAEs seemed to be wasted on the background of the image. There are no existing large-scale faces datasets with uniform background (the ORL dataset only has 400 images), so we decided to create our own.
 
