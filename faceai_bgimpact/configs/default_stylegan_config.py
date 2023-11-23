@@ -8,7 +8,7 @@ config = {
     "w_dim": 256,
     "style_layers": 8,
     "batch_size": 16,
-    "save_interval": 5, 
+    "save_interval": 1, 
     "image_interval": 100,
     "level_epochs": {
         0: {
