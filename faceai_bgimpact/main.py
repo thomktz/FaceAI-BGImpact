@@ -3,6 +3,7 @@
 import argparse
 from faceai_bgimpact.scripts.train import train_function
 from faceai_bgimpact.scripts.create_video import create_video_function
+from faceai_bgimpact.scripts.download_all_ffhq import download_all_ffhq
 
 def main():
     parser = argparse.ArgumentParser(description="FaceAI-BGImpact command-line tool")
@@ -32,6 +33,9 @@ def main():
     create_video_parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
     create_video_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
     create_video_parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate for the video")
+    
+    # Subparser for the 'download-all-ffhq' command
+    download_all_ffhq_parser = subparsers.add_parser('download-all-ffhq', help='Download all FFHQ images')
 
     args = parser.parse_args()
 
@@ -67,6 +71,10 @@ def main():
             dataset=args.dataset,
             frame_rate=args.frame_rate
         )
+    elif args.command == 'download-all-ffhq':
+        print("We stored our data on Kaggle.")
+        print("Please make sure that you have set up your Kaggle credentials.")
+        download_all_ffhq()
     else:
         parser.print_help()
 
