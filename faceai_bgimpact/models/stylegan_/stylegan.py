@@ -38,6 +38,8 @@ class StyleGAN(AbstractModel):
         self.generator = Generator(latent_dim, w_dim, style_layers).to(device)
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
+        self.w_dim = w_dim
+        self.style_layers = style_layers
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
@@ -323,13 +325,16 @@ class StyleGAN(AbstractModel):
             "discriminator_state_dict": self.discriminator.state_dict(),
             "optimizer_G_state_dict": self.optimizer_G.state_dict(),
             "optimizer_D_state_dict": self.optimizer_D.state_dict(),
+            "w_dim": self.w_dim,
+            "latent_dim": self.latent_dim,
+            "style_layers": self.style_layers,
         }
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved at {checkpoint_path}")
 
 
     @classmethod
-    def from_checkpoint(cls, dataset_name, checkpoint_path, latent_dim, w_dim, style_layers, loss, device):
+    def from_checkpoint(cls, dataset_name, checkpoint_path, loss, device, latent_dim=None, w_dim=None, style_layers=None):
         checkpoint = torch.load(checkpoint_path, map_location=device)
 
         # Extract necessary components from checkpoint
@@ -337,6 +342,9 @@ class StyleGAN(AbstractModel):
         alpha = checkpoint["alpha"]
         epoch_total = checkpoint["epoch_total"]
         current_epochs = checkpoint["current_epochs"]
+        w_dim = checkpoint.get("w_dim", w_dim)
+        latent_dim = checkpoint.get("latent_dim", latent_dim)
+        style_layers = checkpoint.get("style_layers", style_layers)
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)

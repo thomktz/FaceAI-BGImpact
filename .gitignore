@@ -17,6 +17,5 @@ faceai_bgimpact/data_processing/**/*.gif
 *.ipynb
 
 faceai_bgimpact/outputs/
-webapp/
 
 dist/

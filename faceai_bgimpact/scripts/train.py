@@ -92,11 +92,12 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
             model = StyleGAN.from_checkpoint(
                 dataset_name=dataset,
                 checkpoint_path=checkpoint_path,
+                loss=config["loss"],
+                device=device,
+                # TODO: remove the below arguments
                 latent_dim=config["latent_dim"],
                 w_dim=config["w_dim"],
                 style_layers=config["style_layers"],
-                loss=config["loss"],
-                device=device,
             )
         train_config = dict(
             dlr=config["dlr"],
