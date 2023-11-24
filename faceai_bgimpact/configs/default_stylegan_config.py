@@ -21,18 +21,18 @@ config = {
         },
         2: {
             "transition": 5,
-            "training": 5
-        },
-        3: {
-            "transition": 10,
             "training": 10
         },
+        3: {
+            "transition": 15,
+            "training": 15
+        },
         4: {
-            "transition": 20,
+            "transition": 30,
             "training": 20
         },
         5: {
-            "transition": 20,
+            "transition": 30,
             "training": 50
         }
     }
