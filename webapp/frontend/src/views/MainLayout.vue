@@ -1,19 +1,17 @@
 <template>
-    <div class="min-h-screen bg-gray-900 text-gray-300">
-      <header class="header flex items-center justify-between p-4">
-        <h1 class="text-xl font-bold ml-8">{{ headerTitle }}</h1>
-        <nav class="right-section">
-          <!-- Navigation links here -->
-          <router-link to="/" class="hover:text-gray-100 px-2">Home</router-link>
-          <router-link to="/live-demo" class="hover:text-gray-100 px-2">Live Demo</router-link>
-          <!-- Add more tabs here -->
-        </nav>
-      </header>
-      <main class="fill-height">
-        <router-view @updateTitle="setTitle" />
-      </main>
-    </div>
-  </template>
+  <header class="header flex items-center justify-between p-4">
+    <h1 class="text-xl font-bold ml-8">{{ headerTitle }}</h1>
+    <nav class="right-section">
+      <!-- Navigation links here -->
+      <router-link to="/" class="hover:text-gray-100 px-2">Home</router-link>
+      <router-link to="/live-demo" class="hover:text-gray-100 px-2">Live Demo</router-link>
+      <!-- Add more tabs here -->
+    </nav>
+  </header>
+  <main class="fill-height">
+    <router-view @updateTitle="setTitle" />
+  </main>
+</template>
   
   <script>
   import { ref } from 'vue';
@@ -43,21 +41,12 @@
   
   .right-section {
     display: flex;
-    align-items: center;
     gap: 10px;
   }
   
   h1 {
     font-size: 2rem;
     font-weight: 700; 
-  }
-  
-  .fill-height {
-    min-height: calc(100vh - 150px);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
   }
   </style>
   

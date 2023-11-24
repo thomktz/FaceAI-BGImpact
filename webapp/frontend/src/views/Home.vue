@@ -1,56 +1,53 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row>
+  <v-container fluid>
+    <v-row class="container">
 
-      <!-- Project Description -->
-      <v-col cols="12" md="6">
-        <div class="project-description">
-          <h2>FaceAI - Background Impact</h2>
-          <p>This project implements various Generative AI models to generate faces:</p>
-          <ul>
-            <li>Deep Convolutional Generative Adversarial Network (DCGAN)</li>
-            <li>Progressive-growing StyleGAN</li>
-            <li>Variational Autoencoder (VAE)</li>
-          </ul>
-          <p>The projects also implements two new versions of the Flicker-Face-HQ (FFHQ)...</p>
-          <!-- Add more content as needed -->
-        </div>
-      </v-col>
+      <!-- Project Description with a larger width -->
+      <div class="project-description">
+        <h2>FaceAI - Background Impact</h2>
+        <p>Evaluating the effect of removing an image's background on the training of facial generation AIs.</p>
+        <p>This project implements various Generative AI models to generate faces:</p>
+        <ul>
+          <li>Deep Convolutional Generative Adversarial Network (DCGAN)</li>
+          <li>Progressive-growing StyleGAN</li>
+          <li>Variational Autoencoder (VAE)</li>
+        </ul>
+        <p>The projects also implements two new versions of the Flicker-Face-HQ (FFHQ)...</p>
+        <div class="image-placeholder">Image Placeholder</div>
+      </div>
 
-      <!-- Team Members List -->
-      <v-col cols="12" md="6">
-        <div class="team-members">
-          <div class="member">
-            <span>Thomas Kientz</span>
-            <a href="https://linkedin.com/in/member1" target="_blank">
-              <Icon icon="mdi:linkedin" color="#4361ee" />
-            </a>
-            <a href="https://github.com/member1" target="_blank">
-              <Icon icon="mdi:github" color="#333" />
-            </a>
-          </div>
-          <hr class="separator" />
-          <div class="member">
-            <span>Elena Loumagne</span>
-            <a href="https://linkedin.com/in/member2" target="_blank">
-              <Icon icon="mdi:linkedin" color="#4361ee" />
-            </a>
-            <a href="https://github.com/member2" target="_blank">
-              <Icon icon="mdi:github" color="#333" />
-            </a>
-          </div>
-          <hr class="separator" />
-          <div class="member">
-            <span>Adèle Moreau</span>
-            <a href="https://linkedin.com/in/member3" target="_blank">
-              <Icon icon="mdi:linkedin" color="#4361ee" />
-            </a>
-            <a href="https://github.com/member3" target="_blank">
-              <Icon icon="mdi:github" color="#333" />
-            </a>
-          </div>
+      <!-- Team Members List with a smaller width -->
+      <div class="team-members">
+        <div class="member">
+          <span>Thomas Kientz</span>
+          <a href="https://linkedin.com/in/thomaskientz" target="_blank">
+            <Icon icon="mdi:linkedin" color="#4361ee" />
+          </a>
+          <a href="https://github.com/thomaskientz" target="_blank">
+            <Icon icon="mdi:github" color="#333" />
+          </a>
         </div>
-      </v-col>
+        <hr class="separator" />
+        <div class="member">
+          <span>Elena Loumagne</span>
+          <a href="https://linkedin.com/in/elenaloumagne" target="_blank">
+            <Icon icon="mdi:linkedin" color="#4361ee" />
+          </a>
+          <a href="https://github.com/elenaloumagne" target="_blank">
+            <Icon icon="mdi:github" color="#333" />
+          </a>
+        </div>
+        <hr class="separator" />
+        <div class="member">
+          <span>Adèle Moreau</span>
+          <a href="https://linkedin.com/in/adèlemoreau" target="_blank">
+            <Icon icon="mdi:linkedin" color="#4361ee" />
+          </a>
+          <a href="https://github.com/adèlemoreau" target="_blank">
+            <Icon icon="mdi:github" color="#333" />
+          </a>
+        </div>
+      </div>
 
     </v-row>
   </v-container>
@@ -70,18 +67,40 @@ export default {
 </script>
 
 <style scoped>
+.v-container {
+  margin-top: 20px;
+  margin-left: 20px;
+}
+
 .project-description {
-  
+  padding-right: 24px;
+  width: 66vw;
+  min-width: 66vw;
+  padding-left: 0;
+  margin-left: 0;
+  list-style-position: inside;
+}
+
+.image-placeholder {
+  background-color: #eee;
+  height: 200px;
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  font-style: italic;
 }
 
 .team-members {
-  /* Styles for team members list */
+  padding-left: 24px;
+  width: 33vw;
+  min-width: 33vw;
 }
 
 .member {
   display: flex;
   align-items: center;
-  margin-bottom: 20px; /* Adjust the spacing as needed */
+  margin-bottom: 20px;
 }
 
 .member span {
@@ -92,14 +111,15 @@ a {
   margin-right: 10px;
 }
 
-a:last-child {
-  margin-right: 0;
+.v-col {
+  padding-left: 0px !important; /* Remove padding from columns */
+  padding-right: 0px !important; /* Remove padding from columns */
 }
 
 .separator {
   border: none;
   height: 1px;
-  background-color: #ddd; /* Light gray color; adjust as needed */
-  margin: 20px 0; /* Spacing above and below the separator */
+  background-color: #ddd;
+  margin: 20px 0;
 }
 </style>
