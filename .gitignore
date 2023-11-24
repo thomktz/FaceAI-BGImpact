@@ -19,3 +19,4 @@ faceai_bgimpact/data_processing/**/*.gif
 faceai_bgimpact/outputs/
 
 dist/
+webapp/models/
