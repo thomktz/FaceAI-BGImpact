@@ -9,7 +9,7 @@ config = {
     "style_layers": 8,
     "batch_size": 128,
     "save_interval": 1, 
-    "image_interval": 100,
+    "image_interval": 20,
     "level_epochs": {
         0: {
             "transition": 0,
