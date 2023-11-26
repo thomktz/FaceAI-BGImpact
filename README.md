@@ -141,3 +141,4 @@ Alternatively, with poetry, you can run:
 ## TODO:
 - VAE
 - BMSG-GAN (https://github.com/akanimax/BMSG-GAN)
+- GANSpace (https://proceedings.neurips.cc/paper/2020/file/6fe43269967adbb64ec6149852b5cc3e-Paper.pdf)
