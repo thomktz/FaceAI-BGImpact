@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "faceai-bgimpact"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Thomas Kientz", "Adèle Moreau", "Elena Loumagne"]
 description = "FaceAI-BGImpact implements various generative methods and studies the impact of altering the background on the generated images and the training of the models."
 readme = "README.md"

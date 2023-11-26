@@ -15,7 +15,7 @@ class MappingNetwork(nn.Module):
     layers : int
         Number of layers in the mapping network.
     w_dim : int
-        Dimension of the intermediate noise vector in W space.    
+        Dimension of the intermediate style vector in W space.    
     """
     
     def __init__(self, latent_dim, layers, w_dim):
@@ -42,7 +42,7 @@ class MappingNetwork(nn.Module):
         """
         # Expand the latent vector to a 4D tensor
         z = z.unsqueeze(2).unsqueeze(3)
-        # Get the intermediate noise vector in W space
+        # Get the intermediate style vector in W space
         w = self.model(z)
         return w
 
@@ -79,7 +79,7 @@ class SynthesisBlock(nn.Module):
         else:
             self.conv = WSConv2d(in_channel, out_channel, 3, 1, 1)
 
-    def forward(self, x, w):
+    def forward(self, x, w, apply_noise):
         """
         Forward pass for the StyleGAN convolutional block.
         
@@ -89,7 +89,8 @@ class SynthesisBlock(nn.Module):
             Shape: (batch_size, in_channel, height, width)
         w (torch.Tensor): Style tensor.
             Shape: (batch_size, style_dim)
-            
+        apply_noise (bool): Whether to add noise to the input tensor.    
+        
         Returns:
         ----------
         torch.Tensor: Output tensor.
@@ -100,7 +101,8 @@ class SynthesisBlock(nn.Module):
             x = F.interpolate(x, scale_factor=2, mode='bilinear', antialias=True)
             x = self.conv1(x)
 
-        x = x + self.noise1(x.shape[0], x.device)
+        if apply_noise:
+            x = x + self.noise1(x.shape[0], x.device)
         x = self.adain(x, w)
         x = self.act(x)
         
@@ -108,8 +110,8 @@ class SynthesisBlock(nn.Module):
             x = self.conv2(x)
         else:
             x = self.conv(x)
-        
-        x = x + self.noise2(x.shape[0], x.device)
+        if apply_noise:
+            x = x + self.noise2(x.shape[0], x.device)
         x = self.adain(x, w)
         x = self.act(x)
 
@@ -122,7 +124,7 @@ class SynthesisNetwork(nn.Module):
     Parameters:
     ----------
     w_dim : int
-        Dimension of the intermediate noise vector in W space.
+        Dimension of the intermediate style vector in W space.
     """
     
     def __init__(self, w_dim):
@@ -150,7 +152,7 @@ class SynthesisNetwork(nn.Module):
             WSConv2d(16, 3, 1, 1, 0, gain=1)
         ])
 
-    def forward(self, w, current_level, alpha):
+    def forward(self, w, current_level, alpha, apply_noise=True):
         """
         Forward pass with progressive growing.
 
@@ -163,6 +165,8 @@ class SynthesisNetwork(nn.Module):
             Current resolution level for progressive growing.
         alpha : float
             Blending factor for progressive growing.
+        apply_noise : bool
+            Whether to add noise to the input tensor.
         
         Returns:
         ----------
@@ -179,7 +183,7 @@ class SynthesisNetwork(nn.Module):
 
         for level in range(1, current_level + 1):
             
-            x = self.upscale_blocks[level - 1](x, w)
+            x = self.upscale_blocks[level - 1](x, w, apply_noise=apply_noise)
         
             if alpha < 1.0 and level == current_level:
                 # Interpolate between the new RGB image of the current resolution
@@ -201,7 +205,7 @@ class Generator(nn.Module):
         self.mapping = MappingNetwork(latent_dim, style_layers, w_dim)
         self.synthesis = SynthesisNetwork(w_dim)
 
-    def forward(self, z, current_level, alpha):
+    def forward(self, z, current_level, alpha, apply_noise=True):
         """
         Forward pass for the StyleGAN generator.
 
@@ -213,6 +217,8 @@ class Generator(nn.Module):
             Current resolution level for progressive growing.
         alpha : float
             Blending factor for progressive growing.
+        apply_noise : bool
+            Whether to add noise to the input tensor.
 
         Returns:
         ----------
@@ -220,5 +226,27 @@ class Generator(nn.Module):
         """
     
         w = self.mapping(z)
-        image = self.synthesis(w, current_level, alpha)
+        image = self.synthesis(w, current_level, alpha, apply_noise)
+        return image
+
+    def predict_from_style(self, w, current_level, alpha, apply_noise=None):
+        """
+        Generate images from a given style vector 'w' and optional noise.
+        
+        Parameters:
+        ----------
+        w : torch.Tensor
+            A batch of style vectors.
+        current_level : int
+            Current resolution level for progressive growing.
+        alpha : float
+            Blending factor for progressive growing.
+        apply_noise : bool
+            Whether to add noise to the input tensor.
+
+        Returns:
+        ----------
+        torch.Tensor: Generated image tensor.
+        """
+        image = self.synthesis(w, current_level, alpha, apply_noise)
         return image

@@ -116,16 +116,11 @@ class NoiseLayer(nn.Module):
     def __init__(self, n_channel, size):
         super().__init__()
 
-        self.fixed = False
-
         self.size = size
         self.register_buffer("fixed_noise", torch.randn([1, 1, size, size]))
 
         self.noise_scale = nn.Parameter(torch.zeros(1, n_channel, 1, 1))
 
     def forward(self, batch_size, device):
-        if self.fixed:
-            noise = self.fixed_noise.expand(batch_size, -1, -1, -1)
-        else:
-            noise = torch.randn([batch_size, 1, self.size, self.size], device=device)
+        noise = torch.randn([batch_size, 1, self.size, self.size], device=device)
         return noise * self.noise_scale

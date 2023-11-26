@@ -55,7 +55,7 @@ export default {
       const payload = {
         latent_vector: this.latentVector,
       };
-      apiClient.post('/stylegan/from-latent', payload)
+      apiClient.post('/stylegan/from-style', payload)
         .then(response => {
           const base64Image = response.data.image;
           this.imageUrl = `data:image/jpeg;base64,${base64Image}`;
