@@ -8,7 +8,7 @@ from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
 
 from faceai_bgimpact.models.abstract_model import AbstractModel
-from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_imagenet
+from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
 from faceai_bgimpact.models.utils import pairwise_euclidean_distance
 from faceai_bgimpact.models.stylegan_.generator import Generator
 from faceai_bgimpact.models.stylegan_.discriminator import Discriminator
@@ -409,7 +409,7 @@ class StyleGAN(AbstractModel):
                 real_images = upscaler(real_images)
             
             # Denormalize and save real images
-            real_images = denormalize_imagenet(real_images.cpu())
+            real_images = denormalize_image(real_images.cpu())
             save_image(real_images, f"{save_folder}/real_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
 
 
@@ -423,5 +423,5 @@ class StyleGAN(AbstractModel):
                 fake_images = upscaler(fake_images)
 
             # Denormalize and save images
-            denormalized_images = denormalize_imagenet(fake_images)
+            denormalized_images = denormalize_image(fake_images)
             save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)

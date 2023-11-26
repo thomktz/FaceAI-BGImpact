@@ -15,7 +15,7 @@ from pytorch_gan_metrics import get_fid
 
 from faceai_bgimpact.data_processing.paths import data_folder
 from faceai_bgimpact.models.abstract_model import AbstractModel
-from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_imagenet
+from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
 from faceai_bgimpact.models.utils import weights_init
 
 from faceai_bgimpact.models.dcgan_.generator import Generator
@@ -196,7 +196,7 @@ class DCGAN(AbstractModel):
         
         self.generator.train()
         imgs = torch.cat(images, dim=0) 
-        denormalized_imgs = denormalize_imagenet(imgs)
+        denormalized_imgs = denormalize_image(imgs)
         
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
@@ -221,7 +221,7 @@ class DCGAN(AbstractModel):
         z = torch.randn(64, self.latent_dim).to(device)
         
         fake_images = self.generator(z).detach().cpu()
-        denormalized_images = denormalize_imagenet(fake_images)
+        denormalized_images = denormalize_image(fake_images)
         save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
         
     def generate_one_image(self, device, save_folder, filename):
@@ -232,7 +232,7 @@ class DCGAN(AbstractModel):
         z = torch.randn(1, self.latent_dim).to(device)
         
         fake_image = self.generator(z).detach().cpu()
-        denormalized_image = denormalize_imagenet(fake_image)
+        denormalized_image = denormalize_image(fake_image)
         save_image(denormalized_image, os.path.join(save_folder, filename), normalize=False)
         
         

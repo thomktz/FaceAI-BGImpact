@@ -4,17 +4,12 @@ from flask import Flask
 from flask_cors import CORS
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_restx import Api
-
-from app.api import (
-    auth_ns, 
+from backend.extensions import api
+from backend.api import (
+    stylegan_ns, 
 )
 
-api = Api(
-    version='2.1', 
-    title='Betterave API',
-    description='Flask-RestX API for the AML project.',
-)
+
 
 def create_app():
     """Function to create app instance"""
@@ -49,7 +44,7 @@ def create_app():
     api.init_app(app)
     
     # Initialize the Flask-RestX Api and register the namespaces
-    api.add_namespace(auth_ns, path='/auth')
+    api.add_namespace(stylegan_ns, path='/stylegan')
     
     # For testing purposes
     @app.route("/hello")

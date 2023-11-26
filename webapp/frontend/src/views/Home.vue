@@ -12,8 +12,13 @@
           <li>Progressive-growing StyleGAN</li>
           <li>Variational Autoencoder (VAE)</li>
         </ul>
-        <p>The projects also implements two new versions of the Flicker-Face-HQ (FFHQ)...</p>
-        <div class="image-placeholder">Image Placeholder</div>
+        <p>The projects also implements two new versions of the Flicker-Face-HQ (FFHQ)</p>
+        <ul>
+          <li><a href="https://www.kaggle.com/datasets/thomaskientz/ffhq-blur" target="_blank">FFHQ-Blur</a></li>
+          <li><a href="https://www.kaggle.com/datasets/thomaskientz/ffhq-grey" target="_blank">FFHQ-Grey</a></li>
+        </ul>
+        <!-- Insert image from github link -->
+        <img src="/datasets.png" alt="Datasets" class="image" />
       </div>
 
       <!-- Team Members List with a smaller width -->
@@ -81,10 +86,8 @@ export default {
   list-style-position: inside;
 }
 
-.image-placeholder {
-  background-color: #eee;
-  height: 200px;
-  width: 100%;
+.image {
+  width: 80%;
   margin-top: 20px;
   display: flex;
   justify-content: center;

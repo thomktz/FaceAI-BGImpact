@@ -1,8 +1,8 @@
 from faceai_bgimpact.models import StyleGAN
 
 stylegan = StyleGAN.from_checkpoint(
-    "ffhq_raw",
-    "models/StyleGAN.pth",
-    "loss"
-    "cpu"
+    dataset_name="ffhq_raw",
+    checkpoint_path="models/StyleGAN.pth",
+    loss="wgan-gp",
+    device="cpu",
 )

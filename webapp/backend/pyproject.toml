@@ -8,8 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 flask-restx = "^1.2.0"
-faceai-bgimpact = "0.2.0"
+faceai-bgimpact = "0.2.1"
 scipy = "^1.11.4"
+flask-cors = "^4.0.0"
 
 
 [build-system]

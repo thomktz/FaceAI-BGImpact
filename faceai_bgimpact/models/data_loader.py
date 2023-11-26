@@ -85,7 +85,7 @@ inv_normalize = transforms.Compose([
     transforms.Normalize(mean=[-0.5, -0.5, -0.5], std=[1.0, 1.0, 1.0])
 ])
 
-def denormalize_imagenet(tensor):
+def denormalize_image(tensor):
     """
     Reverses the ImageNet normalization applied to images.
 
