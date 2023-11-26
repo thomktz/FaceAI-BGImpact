@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from faceai_bgimpact.models.utils import pairwise_euclidean_distance
 from faceai_bgimpact.models.stylegan_.utils import PixelNorm, AdaIN, BlurLayer, NoiseLayer, WSConv2d
 
 class MappingNetwork(nn.Module):
@@ -152,7 +151,7 @@ class SynthesisNetwork(nn.Module):
             WSConv2d(16, 3, 1, 1, 0, gain=1)
         ])
 
-    def forward(self, w, current_level, alpha, apply_noise=True):
+    def forward(self, w, current_level, alpha, apply_noise):
         """
         Forward pass with progressive growing.
 
@@ -175,7 +174,7 @@ class SynthesisNetwork(nn.Module):
 
         x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
         
-        x = self.init_block(x, w)
+        x = self.init_block(x, w, apply_noise=apply_noise)
         
         # Get the initial RGB image at 4x4 resolution
         if current_level <= 1:
@@ -229,7 +228,7 @@ class Generator(nn.Module):
         image = self.synthesis(w, current_level, alpha, apply_noise)
         return image
 
-    def predict_from_style(self, w, current_level, alpha, apply_noise=None):
+    def predict_from_style(self, w, current_level, alpha, apply_noise):
         """
         Generate images from a given style vector 'w' and optional noise.
         

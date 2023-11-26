@@ -91,11 +91,11 @@ class GenerateFromStyle(Resource):
         padded_vector = input_vector + [0] * (w_dim - len(input_vector))
         
         # Ensure the vector is not longer than w_dim
-        latent_vector = torch.tensor(padded_vector[:w_dim], dtype=torch.float32).unsqueeze(0).to("cpu")
+        latent_vector = torch.tensor(padded_vector[:w_dim], dtype=torch.float32).unsqueeze(0).unsqueeze(2).unsqueeze(3).to("cpu")
         
         # Generate image and denormalize
         with torch.no_grad():  # Ensure no gradients are calculated
-            tensor, time = time_function(stylegan.generator.predict_from_style, latent_vector, stylegan.level, stylegan.alpha)
+            tensor, time = time_function(stylegan.generator.predict_from_style, latent_vector, stylegan.level, stylegan.alpha, False)
             
         img_str = normalized_tensor_to_b64(tensor)
         
