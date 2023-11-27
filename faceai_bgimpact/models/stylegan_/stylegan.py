@@ -6,6 +6,7 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
+from sklearn.decomposition import PCA
 
 from faceai_bgimpact.models.abstract_model import AbstractModel
 from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
@@ -45,6 +46,7 @@ class StyleGAN(AbstractModel):
         self.optimizer_D_config = {}
         
         self.latent_vector = torch.randn(64, self.latent_dim)
+        self.pca = None
 
     def train_init(self, glr, mlr, dlr, loss):
         """
@@ -364,12 +366,6 @@ class StyleGAN(AbstractModel):
         instance.resolution = 4 * (2 ** level)
         instance.epoch_total = epoch_total
         instance.current_epochs = current_epochs
-        
-        print("Loaded state:")
-        print(f"  Level: {instance.level}")
-        print(f"  Alpha: {instance.alpha}")
-        print(f"  Epoch total: {instance.epoch_total}")
-        print(f"  Current epochs: {instance.current_epochs}")
 
         return instance
 
@@ -425,3 +421,68 @@ class StyleGAN(AbstractModel):
             # Denormalize and save images
             denormalized_images = denormalize_image(fake_images)
             save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
+            
+    def fit_pca(self, num_samples=10000, batch_size=100, n_components=50):
+        """
+        Fit PCA on the W space of the StyleGAN model.
+
+        Parameters:
+        ----------
+        num_samples : int
+            Number of samples to use for PCA.
+        batch_size : int
+            Batch size for processing.
+        n_components : int
+            Number of components for PCA.
+        """
+        self.generator.eval()
+        all_w = []
+
+        # Process in batches
+        for _ in tqdm(range(0, num_samples, batch_size), desc='Generating W vectors'):
+            z = torch.randn(batch_size, self.latent_dim, device="cpu")
+            with torch.no_grad():
+                w = self.generator.mapping(z).cpu()  # Get W vectors
+            all_w.append(w)
+
+        all_w = torch.cat(all_w, dim=0)[:num_samples]  # Ensure exact number of samples
+        all_w_flat = all_w.view(num_samples, -1)  # Flatten for PCA
+
+        # Fit PCA
+        self.pca = PCA(n_components=n_components)
+        self.pca.fit(all_w_flat.numpy())
+
+    def manipulate_w(self, adjustment_factors, w_vectors):
+        """
+        Manipulate a batch of W vectors using specific principal components.
+
+        Parameters:
+        ----------
+        adjustment_factors : list of float
+            List of factors by which to adjust the components. Length must be <= n_components.
+        w_vectors : torch.Tensor
+            Batch of style vectors in W space to be manipulated.
+
+        Returns:
+        ----------
+        torch.Tensor
+            Batch of adjusted W vectors.
+        """
+        if not self.pca:
+            raise ValueError("PCA not fitted. Call fit_pca first.")
+        if len(adjustment_factors) > self.pca.n_components_:
+            raise ValueError("Length of adjustment_factors exceeds the number of PCA components.")
+
+        # Reshape and process the batch of W vectors
+        original_w_flat = w_vectors.view(w_vectors.size(0), -1).cpu().numpy()  # Flatten for PCA
+        w_pca = self.pca.transform(original_w_flat)
+
+        # Manipulate specified components for all vectors in the batch
+        for i, factor in enumerate(adjustment_factors):
+            w_pca[:, i] += factor
+
+        # Inverse PCA transformation and reshape back to original W vector shape
+        adjusted_w_flat = self.pca.inverse_transform(w_pca)
+        adjusted_w = torch.tensor(adjusted_w_flat, dtype=torch.float32).view_as(w_vectors).to(w_vectors.device)
+
+        return adjusted_w

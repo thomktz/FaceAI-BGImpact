@@ -2,7 +2,7 @@ from flask_restx import fields
 from .namespace import api
 
 image_model = api.model("Image", {
-    "image": fields.String(description="A base64 encoded string of the generated image."),
+    "images": fields.List(fields.String, description="A base64 encoded string of the generated image."),
     "time": fields.Float(description="The time it took to generate the image."),
 })
 
