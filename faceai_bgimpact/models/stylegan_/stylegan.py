@@ -6,11 +6,13 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
+from pytorch_gan_metrics.utils import calc_and_save_stats
 from sklearn.decomposition import PCA
 
-from faceai_bgimpact.models.abstract_model import AbstractModel
-from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
+from faceai_bgimpact.data_processing.paths import data_folder
 from faceai_bgimpact.models.utils import pairwise_euclidean_distance
+from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
+from faceai_bgimpact.models.abstract_model import AbstractModel
 from faceai_bgimpact.models.stylegan_.generator import Generator
 from faceai_bgimpact.models.stylegan_.discriminator import Discriminator
 from faceai_bgimpact.models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN
@@ -47,6 +49,11 @@ class StyleGAN(AbstractModel):
         
         self.latent_vector = torch.randn(64, self.latent_dim)
         self.pca = None
+        self.fids = {
+            "level": [],
+            "epoch": [],
+            "fid": []
+        }
 
     def train_init(self, glr, mlr, dlr, loss):
         """
@@ -159,12 +166,20 @@ class StyleGAN(AbstractModel):
             # Calculate total epochs for this level from configuration
             total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["training"]
             start_epoch_for_level = start_epoch if level == start_level else 0
-
+            
+            # Computing FID stats for current level
+            self.make_fid_stats()
+            
+            # Epoch loop for current level
             for epoch in range(start_epoch_for_level, total_level_epochs):
                 self.current_epochs[level] = epoch
                 self.epoch_total = sum(self.current_epochs.values())
                 self._train_one_epoch(level_epochs[level], epoch, image_interval, device)
 
+                # Calculate FID score of epoch
+                if self.alpha == 1.0:
+                    self.calculate_fid(2048 + batch_size, batch_size, device)
+                
                 # Save checkpoint
                 if (self.epoch_total + 1) % save_interval == 0:
                     self.current_epochs[level] = epoch + 1
@@ -174,7 +189,63 @@ class StyleGAN(AbstractModel):
             if level < max(level_epochs.keys()):
                 self.alpha = 0.0  # Reset alpha for the next level
 
-                
+    def make_fid_stats(self, save_dir="outputs/StyleGAN_fid_stats"):
+        """
+        Calculate and save FID stats for the dataset.
+        
+        Parameters
+        ----------
+        save_dir : str
+            Directory to save the stats to.
+        """
+        data_folder = f"{data_folder}/{self.dataset_name}"
+        save_file = self.get_save_dir(save_dir) + f"{self.resolution}.npz"
+        
+        # If the stats file already exists, skip
+        if os.path.exists(save_file):
+            return
+        
+        print("Generating FID stats for resolution", self.resolution, "...")
+        calc_and_save_stats(
+            data_folder,
+            save_file,
+            batch_size=100,
+            img_size=self.resolution,
+            use_torch=(self.device == torch.device("cuda")),
+            num_workers=os.cpu_count(),
+        )
+        
+    def calculate_fid(self, num_images, batch_size, device, stats_dir="outputs/StyleGAN_fid_stats"):
+        """
+        Calculate the FID score.
+        
+        Parameters
+        ----------
+        device : torch.device
+            Device to use for calculation.
+        
+        Returns
+        -------
+        fid_score : float
+            Computed FID score.
+        """
+        self.generator.eval()
+        images = []
+        with torch.no_grad():
+            for _ in range(num_images // batch_size):
+                z = torch.randn(batch_size, self.latent_dim).to(device)
+                images.append(self.generator(z, self.level, self.alpha).detach().cpu())
+        
+        self.generator.train()
+        imgs = torch.cat(images, dim=0) 
+        denormalized_imgs = denormalize_image(imgs)
+        
+        stats_file = self.get_save_dir(stats_dir) + f"{self.resolution}.npz"
+        fid = get_fid(denormalized_imgs, stats_file)
+        self.fids["level"].append(self.level)
+        self.fids["epoch"].append(self.epoch_total)
+        self.fids["fid"].append(fid)
+        print("Level", self.level, "Epoch", self.epoch_total, "FID", fid)
             
     def _train_one_epoch(self, level_config, epoch, image_interval, device):
         """Training loop for one epoch."""
@@ -330,6 +401,7 @@ class StyleGAN(AbstractModel):
             "w_dim": self.w_dim,
             "latent_dim": self.latent_dim,
             "style_layers": self.style_layers,
+            "fids": self.fids,
         }
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved at {checkpoint_path}")
@@ -347,6 +419,7 @@ class StyleGAN(AbstractModel):
         w_dim = checkpoint.get("w_dim", w_dim)
         latent_dim = checkpoint.get("latent_dim", latent_dim)
         style_layers = checkpoint.get("style_layers", style_layers)
+        fids = checkpoint.get("fids", {"level": [], "epoch": [], "fid": []})
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
@@ -366,6 +439,7 @@ class StyleGAN(AbstractModel):
         instance.resolution = 4 * (2 ** level)
         instance.epoch_total = epoch_total
         instance.current_epochs = current_epochs
+        instance.fids = fids
 
         return instance
 
