@@ -211,7 +211,7 @@ class StyleGAN(AbstractModel):
             save_file,
             batch_size=100,
             img_size=self.resolution,
-            use_torch=(self.device == torch.device("cuda")),
+            use_torch=True,
             num_workers=os.cpu_count(),
         )
         
