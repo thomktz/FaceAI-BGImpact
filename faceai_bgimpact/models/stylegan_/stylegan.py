@@ -198,7 +198,7 @@ class StyleGAN(AbstractModel):
         save_dir : str
             Directory to save the stats to.
         """
-        data_folder = f"{data_folder}/{self.dataset_name}"
+        dataset_folder = f"{data_folder}/{self.dataset_name}"
         save_file = self.get_save_dir(save_dir) + f"{self.resolution}.npz"
         
         # If the stats file already exists, skip
@@ -207,7 +207,7 @@ class StyleGAN(AbstractModel):
         
         print("Generating FID stats for resolution", self.resolution, "...")
         calc_and_save_stats(
-            data_folder,
+            dataset_folder,
             save_file,
             batch_size=100,
             img_size=self.resolution,
