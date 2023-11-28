@@ -7,7 +7,7 @@ config = {
     "latent_dim": 256,
     "w_dim": 256,
     "style_layers": 8,
-    "batch_size": 128,
+    "batch_size": 256,
     "save_interval": 1, 
     "image_interval": 20,
     "level_epochs": {
@@ -20,12 +20,12 @@ config = {
             "training": 5
         },
         2: {
-            "transition": 5,
-            "training": 10
+            "transition": 10,
+            "training": 15
         },
         3: {
             "transition": 15,
-            "training": 20
+            "training": 30
         },
         4: {
             "transition": 25,
