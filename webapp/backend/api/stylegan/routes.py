@@ -30,10 +30,6 @@ def normalized_tensor_to_b64(tensor):
     # Generate image and denormalize
     dn_tensor = denormalize_image(tensor.clamp(-1, 1))
     
-    filename = "temp/" + str(time()) + ".jpg"
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    save_image(dn_tensor, filename, nrow=4, normalize=False)
-    
     # Convert to PIL Image
     image = to_pil_image(dn_tensor.squeeze(0))
     

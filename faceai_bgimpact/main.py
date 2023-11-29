@@ -1,5 +1,3 @@
-# main.py within the faceai_bgimpact package
-
 import argparse
 from faceai_bgimpact.scripts.train import train_function
 from faceai_bgimpact.scripts.create_video import create_video_function

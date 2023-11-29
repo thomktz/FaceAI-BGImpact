@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from faceai_bgimpact.models.stylegan_.utils import WSConv2d, WSLinear, BlurLayer
+from faceai_bgimpact.models.stylegan_.utils import WSConv2d, MinibatchStdDev, BlurLayer
 
 class DiscriminatorBlock(nn.Module):
     """
@@ -32,12 +32,14 @@ class LastDiscriminatorBlock(nn.Module):
     
     def __init__(self, in_channels):
         super().__init__()
-        self.conv1 = WSConv2d(in_channels, in_channels, 3, 1, 1)
+        self.minibatch_stddev = MinibatchStdDev()
+        self.conv1 = WSConv2d(in_channels + 1, in_channels, 3, 1, 1)  # +1 for the added stddev feature map
         self.conv2 = WSConv2d(in_channels, in_channels, 4, 1, 0)
         self.conv3 = WSConv2d(in_channels, 1, 1, 1, 0, gain=1)
         self.activation = nn.LeakyReLU(negative_slope=0.2)
         
     def forward(self, x):
+        x = self.minibatch_stddev(x)
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))
         x = self.conv3(x)

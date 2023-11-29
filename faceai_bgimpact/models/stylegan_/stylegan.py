@@ -2,12 +2,14 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import plotly.graph_objects as go
 from tqdm import tqdm
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
 from pytorch_gan_metrics.utils import calc_and_save_stats
 from sklearn.decomposition import PCA
+from plotly.subplots import make_subplots
 
 from faceai_bgimpact.data_processing.paths import data_folder
 from faceai_bgimpact.models.utils import pairwise_euclidean_distance
@@ -560,3 +562,41 @@ class StyleGAN(AbstractModel):
         adjusted_w = torch.tensor(adjusted_w_flat, dtype=torch.float32).view_as(w_vectors).to(w_vectors.device)
 
         return adjusted_w
+    
+    def graph_fid(self, save_path="outputs/StyleGAN_fid_plots"):
+        """
+        Generate a subplot of FID scores for each trained level.
+
+        Parameters
+        ----------
+        save_path : str
+            Path to save the generated plot.
+        """
+        # Find the unique levels
+        levels = sorted(set(self.fids["level"]))
+
+        # Create subplots
+        fig = make_subplots(rows=len(levels), cols=1, subplot_titles=[f"Level {level}" for level in levels])
+
+        # Add traces
+        for i, level in enumerate(levels):
+            level_data = [(epoch, fid) for l, epoch, fid in zip(self.fids["level"], self.fids["epoch"], self.fids["fid"]) if l == level]
+            epochs, fids = zip(*level_data)
+            
+            fig.add_trace(
+                go.Scatter(x=epochs, y=fids, mode='lines+markers', name=f"Level {level}"),
+                row=i+1, col=1
+            )
+
+        # Update layout
+        fig.update_layout(height=400*len(levels), width=800, title_text="FID Scores per Training Level")
+        fig.update_xaxes(title_text="Epoch")
+        fig.update_yaxes(title_text="FID Score")
+
+        # Save the plot
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        fig.write_image(f"{save_path}/fid_plot.png")
+        # Optionally, save as interactive HTML
+        # fig.write_html(f"{save_path}/fid_plot.html")
+
+        print(f"FID plots saved at {save_path}")

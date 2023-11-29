@@ -29,7 +29,7 @@ config = {
         },
         4: {
             "transition": 25,
-            "training": 30
+            "training": 40
         },
         5: {
             "transition": 30,
