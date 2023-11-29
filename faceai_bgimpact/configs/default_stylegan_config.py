@@ -6,7 +6,7 @@ config = {
     "loss": "wgan-gp",
     "latent_dim": 256,
     "w_dim": 256,
-    "style_layers": 8,
+    "style_layers": 6,
     "batch_size": 256,
     "save_interval": 1, 
     "image_interval": 20,
@@ -17,19 +17,19 @@ config = {
         },           
         1: {
             "transition": 3,
-            "training": 7
+            "training": 10
         },
         2: {
             "transition": 10,
-            "training": 15
+            "training": 20
         },
         3: {
             "transition": 15,
-            "training": 30
+            "training": 40
         },
         4: {
             "transition": 25,
-            "training": 40
+            "training": 50
         },
         5: {
             "transition": 30,

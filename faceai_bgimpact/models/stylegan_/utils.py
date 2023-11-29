@@ -22,24 +22,6 @@ class WSConv2d(nn.Module):
     def forward(self, x):
         scaled_weight = self.weight * self.scale
         return F.conv2d(x, scaled_weight, self.bias, self.stride, self.padding)
-
-
-class WSLinear(nn.Module):
-    def __init__(
-        self, in_features, out_features, gain=2,
-    ):
-        super().__init__()
-        self.linear = nn.Linear(in_features, out_features)
-        self.scale = (gain / in_features)**0.5
-        self.bias = self.linear.bias
-        self.linear.bias = None
-
-        # initialize linear layer
-        nn.init.normal_(self.linear.weight)
-        nn.init.zeros_(self.bias)
-
-    def forward(self, x):
-        return self.linear(x * self.scale) + self.bias
     
 class WSConvTranspose2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding, gain=np.sqrt(2)):
@@ -78,22 +60,6 @@ class BlurLayer(nn.Module):
     def forward(self, x):
         ch = x.size(1)
         return F.conv2d(x, self.filter.expand(ch, -1, -1, -1), padding=1, groups=ch)
-
-class FC_A(nn.Module):
-    '''
-    Learned affine transform "A" to transform the latent vector w into a style vector y
-    '''
-    def __init__(self, dim_latent, n_channel):
-        super().__init__()
-        self.transform = WSLinear(dim_latent, n_channel * 2)
-        # "the biases associated with ys that we initialize to one"
-        self.transform.bias.data[:n_channel] = 1
-        self.transform.bias.data[n_channel:] = 0
-
-    def forward(self, w):
-        # Gain scale factor and bias with:
-        style = self.transform(w).unsqueeze(2).unsqueeze(3)
-        return style
     
 class AdaIN(nn.Module):
     def __init__(self, dim, w_dim):
@@ -124,3 +90,18 @@ class NoiseLayer(nn.Module):
     def forward(self, batch_size, device):
         noise = torch.randn([batch_size, 1, self.size, self.size], device=device)
         return noise * self.noise_scale
+
+class MinibatchStdDev(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, group_size=4):
+        batch_size, _, height, width = x.size()
+        group_size = min(group_size, batch_size)  # Ensure group size is less than or equal to batch size
+        if batch_size % group_size != 0:
+            group_size = batch_size  # If batch size is not divisible by group_size, use the batch size
+        stddev = x.view(group_size, -1, x.shape[1], x.shape[2], x.shape[3])
+        stddev = torch.sqrt(stddev.var(0, unbiased=False) + 1e-8)
+        stddev = stddev.mean([1, 2, 3], keepdim=True).squeeze(0)
+        stddev = stddev.repeat(group_size, 1, height, width)
+        return torch.cat([x, stddev], 1)

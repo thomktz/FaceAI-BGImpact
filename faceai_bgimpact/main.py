@@ -33,6 +33,9 @@ def main():
     
     # Subparser for the 'download-all-ffhq' command
     download_all_ffhq_parser = subparsers.add_parser('download-all-ffhq', help='Download all FFHQ images')
+    download_all_ffhq_parser.add_argument("--raw", action="store_true", help="Download raw images")
+    download_all_ffhq_parser.add_argument("--blur", action="store_true", help="Download blurred images")
+    download_all_ffhq_parser.add_argument("--grey", action="store_true", help="Download grayscale images")
 
     args = parser.parse_args()
 
@@ -70,7 +73,21 @@ def main():
     elif args.command == 'download-all-ffhq':
         print("We stored our data on Kaggle.")
         print("Please make sure that you have set up your Kaggle credentials.")
-        download_all_ffhq()
+        
+        # If no flag was set, download all three datasets
+        if not args.raw and not args.blur and not args.grey:
+            print("You are about to download all three datasets.")
+            if input("Do you wish to continue (y), or see help on the arguments (n)? (y/n): ").lower() == "y":
+                download_all_ffhq(raw=True, blur=True, grey=True)
+            else:
+                # Print help on the arguments of this command
+                parser.parse_args(["download-all-ffhq", "-h"])
+        else:
+            download_all_ffhq(
+                raw=args.raw,
+                blur=args.blur,
+                grey=args.grey
+            )
     else:
         parser.print_help()
 
