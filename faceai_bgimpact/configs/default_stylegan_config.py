@@ -1,8 +1,8 @@
 config = {
     "dataset": "ffhq_raw",
-    "dlr": 0.0005,
-    "glr": 0.0007,
-    "mlr": 0.000007,
+    "dlr": 0.0006,
+    "glr": 0.0008,
+    "mlr": 0.000008,
     "loss": "wgan-gp",
     "latent_dim": 256,
     "w_dim": 256,
