@@ -50,14 +50,15 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
     # Determine the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
+    checkpoint_dir = f"outputs/{model}_checkpoints_{dataset}"
+    
     # Handle the checkpoint listing
     if list_checkpoints_flag:
-        checkpoint_dir = f"outputs/{model}_checkpoints_{dataset}"
         checkpoint_epoch = list_checkpoints(checkpoint_dir)
 
     # Find the checkpoint path if an epoch is provided
     if checkpoint_epoch is not None:
-        checkpoint_path = find_checkpoint_path(d, checkpoint_epoch)
+        checkpoint_path = find_checkpoint_path(checkpoint_dir, int(checkpoint_epoch))
     
     # Initialize the model
     if model.lower() == "dcgan":
