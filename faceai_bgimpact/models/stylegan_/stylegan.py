@@ -266,7 +266,7 @@ class StyleGAN(AbstractModel):
                 + f"Epoch {epoch+1}/{total_epochs} "
                 + f"α={self.alpha:.2f} "
                 + f"GL={g_loss:.3f} DL={d_loss:.3f} "
-                + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
+                # + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
             )
             
         total_epochs = level_config["transition"] + level_config["training"]
@@ -337,8 +337,8 @@ class StyleGAN(AbstractModel):
         self.optimizer_G.step()
 
         # Compute distances
-        self.real_distance = pairwise_euclidean_distance(real_imgs)
-        self.fake_distance = pairwise_euclidean_distance(fake_imgs)
+        # self.real_distance = pairwise_euclidean_distance(real_imgs)
+        # self.fake_distance = pairwise_euclidean_distance(fake_imgs)
         
         return g_loss.item(), d_loss.item()
     
