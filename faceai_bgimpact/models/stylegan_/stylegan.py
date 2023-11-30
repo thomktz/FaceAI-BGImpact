@@ -595,8 +595,8 @@ class StyleGAN(AbstractModel):
 
         # Save the plot
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        fig.write_image(f"{save_path}/fid_plot.png")
+        fig.write_image(f"{save_path}/fid_plot_{self.epoch_total}.png")
         # Optionally, save as interactive HTML
-        # fig.write_html(f"{save_path}/fid_plot.html")
+        fig.write_html(f"{save_path}/fid_plot_{self.epoch_total}.html")
 
         print(f"FID plots saved at {save_path}")

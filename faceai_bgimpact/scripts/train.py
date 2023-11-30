@@ -57,7 +57,7 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
 
     # Find the checkpoint path if an epoch is provided
     if checkpoint_epoch is not None:
-        checkpoint_path = find_checkpoint_path(checkpoint_dir, checkpoint_epoch)
+        checkpoint_path = find_checkpoint_path(d, checkpoint_epoch)
     
     # Initialize the model
     if model.lower() == "dcgan":
