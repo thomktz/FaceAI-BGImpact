@@ -563,15 +563,19 @@ class StyleGAN(AbstractModel):
 
         return adjusted_w
     
-    def graph_fid(self, save_path="outputs/StyleGAN_fid_plots"):
+    def graph_fid(self, save_dir="outputs/StyleGAN_fid_plots"):
         """
         Generate a subplot of FID scores for each trained level.
 
         Parameters
         ----------
-        save_path : str
-            Path to save the generated plot.
+        save_dir : str
+            Directory to save the generated plot.
         """
+        # Generate path
+        save_folder = self.get_save_dir(save_dir)
+        os.makedirs(save_folder, exist_ok=True)
+            
         # Find the unique levels
         levels = sorted(set(self.fids["level"]))
 
@@ -594,9 +598,9 @@ class StyleGAN(AbstractModel):
         fig.update_yaxes(title_text="FID Score")
 
         # Save the plot
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        fig.write_image(f"{save_path}/fid_plot_{self.epoch_total}.png")
+        os.makedirs(os.path.dirname(save_folder), exist_ok=True)
+        fig.write_image(f"{save_folder}/fid_plot_{self.epoch_total}.png")
         # Optionally, save as interactive HTML
-        fig.write_html(f"{save_path}/fid_plot_{self.epoch_total}.html")
+        fig.write_html(f"{save_folder}/fid_plot_{self.epoch_total}.html")
 
-        print(f"FID plots saved at {save_path}")
+        print(f"FID plots saved at {save_folder}")

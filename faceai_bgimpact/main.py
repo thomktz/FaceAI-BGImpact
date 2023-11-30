@@ -42,7 +42,7 @@ def main():
     graph_fids_parser = subparsers.add_parser('graph-fids', help='Graph FID scores')
     graph_fids_parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
     graph_fids_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
-    graph_fids_parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
+    graph_fids_parser.add_argument("--checkpoint-epoch", type=int, required=True, help="Epoch number of the checkpoint to resume training from")
     
     args = parser.parse_args()
 
