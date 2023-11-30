@@ -404,6 +404,7 @@ class StyleGAN(AbstractModel):
             "latent_dim": self.latent_dim,
             "style_layers": self.style_layers,
             "fids": self.fids,
+            "latent_vector": self.latent_vector,
         }
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved at {checkpoint_path}")
@@ -422,6 +423,7 @@ class StyleGAN(AbstractModel):
         latent_dim = checkpoint.get("latent_dim", latent_dim)
         style_layers = checkpoint.get("style_layers", style_layers)
         fids = checkpoint.get("fids", {"level": [], "epoch": [], "fid": []})
+        latent_vector = checkpoint.get("latent_vector", torch.randn(64, latent_dim))
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
@@ -435,13 +437,14 @@ class StyleGAN(AbstractModel):
         instance.optimizer_G.load_state_dict(checkpoint["optimizer_G_state_dict"])
         instance.optimizer_D.load_state_dict(checkpoint["optimizer_D_state_dict"])
 
-        # Set current step, level, and epoch tracking
+        # Set current step, level, epoch tracking, fids and latent vector
         instance.level = level
         instance.alpha = alpha
         instance.resolution = 4 * (2 ** level)
         instance.epoch_total = epoch_total
         instance.current_epochs = current_epochs
         instance.fids = fids
+        instance.latent_vector = latent_vector
 
         return instance
 
