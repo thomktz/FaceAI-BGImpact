@@ -13,27 +13,27 @@ config = {
     "level_epochs": {
         0: {
             "transition": 0,
-            "training": 5
+            "training": 10
         },           
         1: {
             "transition": 3,
-            "training": 10
+            "training": 20
         },
         2: {
             "transition": 10,
-            "training": 20
+            "training": 40
         },
         3: {
             "transition": 15,
-            "training": 40
+            "training": 70
         },
         4: {
             "transition": 25,
-            "training": 50
+            "training": 80
         },
         5: {
             "transition": 30,
-            "training": 50
+            "training": 100
         }
     }
 }
