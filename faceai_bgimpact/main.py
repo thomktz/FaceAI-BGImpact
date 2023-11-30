@@ -2,6 +2,7 @@ import argparse
 from faceai_bgimpact.scripts.train import train_function
 from faceai_bgimpact.scripts.create_video import create_video_function
 from faceai_bgimpact.scripts.download_all_ffhq import download_all_ffhq
+from faceai_bgimpact.scripts.graph_fids import graph_fids_function
 
 def main():
     parser = argparse.ArgumentParser(description="FaceAI-BGImpact command-line tool")
@@ -37,6 +38,12 @@ def main():
     download_all_ffhq_parser.add_argument("--blur", action="store_true", help="Download blurred images")
     download_all_ffhq_parser.add_argument("--grey", action="store_true", help="Download grayscale images")
 
+    # Subparser for the 'graph-fids' command
+    graph_fids_parser = subparsers.add_parser('graph-fids', help='Graph FID scores')
+    graph_fids_parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
+    graph_fids_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
+    graph_fids_parser.add_argument("--checkpoint-epoch", type=int, default=None, help="Epoch number of the checkpoint to resume training from")
+    
     args = parser.parse_args()
 
     if args.command == 'train':
@@ -88,6 +95,15 @@ def main():
                 blur=args.blur,
                 grey=args.grey
             )
+    elif args.command == 'graph-fids':
+        print(f"\n##############" + "#"*len(f" {args.model} - {args.dataset} ") +"##################")
+        print(f"################ {args.model} - {args.dataset} ################")
+        print(f"##############" + "#"*len(f" {args.model} - {args.dataset} ") +"##################\n")
+        graph_fids_function(
+            model=args.model,
+            dataset=args.dataset,
+            checkpoint_epoch=args.checkpoint_epoch
+        )
     else:
         parser.print_help()
 
