@@ -142,6 +142,7 @@ class StyleGAN(AbstractModel):
                 self.level += 1
                 self.resolution = 4 * (2 ** self.level)
                 self.alpha = 0
+                self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
                 self.dataset.update_resolution(self.resolution)
                 self.current_epochs[self.level] = 0
             
@@ -157,8 +158,7 @@ class StyleGAN(AbstractModel):
                 dlr=dlr,
                 loss=loss
             )
-        
-        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
+            self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
         
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
