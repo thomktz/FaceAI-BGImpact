@@ -31,6 +31,7 @@ def main():
     create_video_parser.add_argument("--model", type=str, required=True, choices=["DCGAN", "StyleGAN"], help="Type of model")
     create_video_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
     create_video_parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate for the video")
+    create_video_parser.add_argument("--skip-frames", type=int, default=0, help="Number of frames to skip between each frame")
     
     # Subparser for the 'download-all-ffhq' command
     download_all_ffhq_parser = subparsers.add_parser('download-all-ffhq', help='Download all FFHQ images')
@@ -75,7 +76,8 @@ def main():
         create_video_function(
             model=args.model,
             dataset=args.dataset,
-            frame_rate=args.frame_rate
+            frame_rate=args.frame_rate,
+            skip_frames=args.skip_frames
         )
     elif args.command == 'download-all-ffhq':
         print("We stored our data on Kaggle.")

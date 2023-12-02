@@ -7,16 +7,16 @@ from importlib import resources
 
 # Assuming the font file is still accessible the same way
 with resources.path('faceai_bgimpact', 'Nirmala.ttf') as font_path:
-    font = ImageFont.truetype(str(font_path), size=40)
+    font = ImageFont.truetype(str(font_path), size=50)
 
 def add_text_to_image(image, text):
     """Add text to an image."""
     draw = ImageDraw.Draw(image)
-    text_position = (30, image.height - 60)
+    text_position = (30, image.height - 70)
     draw.text(text_position, text, font=font, fill=(255, 255, 255))
     return image
 
-def create_video(image_folder, output_video, frame_rate):
+def create_video(image_folder, output_video, frame_rate, skip_frames):
     """Create a video from images using imageio."""
     filenames = sorted([img for img in os.listdir(image_folder) if img.endswith(".png")], 
                         key=lambda x: (int(x.split("_")[1]), x.split("_")[0]))
@@ -27,7 +27,7 @@ def create_video(image_folder, output_video, frame_rate):
     output_format = output_video.split(".")[-1]
 
     with imageio.get_writer(output_video, fps=frame_rate, format=output_format, codec='libx265', quality=10) as writer:
-        for i in range(0, len(filenames), 2): 
+        for i in range(0, len(filenames), 2 * (skip_frames + 1)): 
             real_img_name = filenames[i]
             fake_img_name = filenames[i + 1]
 
@@ -54,9 +54,22 @@ def create_video(image_folder, output_video, frame_rate):
             
             writer.append_data(img_array)
 
-def create_video_function(model, dataset, frame_rate):
-    """Create a video from images using imageio."""
+def create_video_function(model, dataset, frame_rate, skip_frames):
+    """
+    Create a video from images using imageio.
+    
+    Parameters:
+    ----------
+    model : str
+        Type of model.
+    dataset : str
+        Name of the dataset used.
+    frame_rate : int
+        Frame rate for the video.
+    skip_frames : int
+        Number of frames to skip between each frame.
+    """
     image_folder = f"outputs/{model}_images_{dataset}"
     output_video = f"outputs/{model}_video_{dataset}.mp4"
-    create_video(image_folder, output_video, frame_rate)
+    create_video(image_folder, output_video, frame_rate, skip_frames)
 
