@@ -4,7 +4,7 @@
       <!-- Image Grid Display -->
       <v-col cols="6">
         <v-row>
-          <v-col cols="3" v-for="(image, index) in images" :key="index">
+          <v-col cols="4" v-for="(image, index) in images" :key="index">
             <img :src="image" alt="Generated Image" class="resized-image" />
           </v-col>
         </v-row>
@@ -65,6 +65,7 @@ export default {
     randomizeLatents() {
       apiClient.get('stylegan/randomize-latents')
         .then(response => {
+          console.log("Generation took:", response.data.time)
           this.images = response.data.images.map(img => `data:image/jpeg;base64,${img}`);
           console.log("Generation took:", response.data.time)
         })

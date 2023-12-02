@@ -558,7 +558,7 @@ class StyleGAN(AbstractModel):
 
         # Manipulate specified components for all vectors in the batch
         for i, factor in enumerate(adjustment_factors):
-            w_pca[:, i] += factor
+            w_pca[:, i] = factor
 
         # Inverse PCA transformation and reshape back to original W vector shape
         adjusted_w_flat = self.pca.inverse_transform(w_pca)
