@@ -7,33 +7,33 @@ config = {
     "latent_dim": 256,
     "w_dim": 256,
     "style_layers": 6,
-    "save_interval": 1, 
-    "image_interval": 40,
+    "save_interval": 2, 
+    "image_interval": 50,
     "level_epochs": {
         0: {
             "transition": 0,
             "training": 15,
-            "batch_size": 512
+            "batch_size": 128
         },           
         1: {
             "transition": 4,
             "training": 20,
-            "batch_size": 512
+            "batch_size": 128
         },
         2: {
             "transition": 10,
             "training": 75,
-            "batch_size": 256
+            "batch_size": 128
         },
         3: {
             "transition": 20,
             "training": 85,
-            "batch_size": 256
+            "batch_size": 128
         },
         4: {
             "transition": 25,
             "training": 120,
-            "batch_size": 128
+            "batch_size": 64
         },
         5: {
             "transition": 40,
