@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import plotly.graph_objects as go
+from time import time
 from tqdm import tqdm
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
@@ -169,7 +170,7 @@ class StyleGAN(AbstractModel):
             start_epoch_for_level = start_epoch if level == start_level else 0
             
             # Computing FID stats for current level
-            self.make_fid_stats()
+            self.make_fid_stats(device)
             
             # Epoch loop for current level
             for epoch in range(start_epoch_for_level, total_level_epochs):
@@ -190,15 +191,22 @@ class StyleGAN(AbstractModel):
             if level < max(level_epochs.keys()):
                 self.alpha = 0.0  # Reset alpha for the next level
 
-    def make_fid_stats(self, save_dir="outputs/StyleGAN_fid_stats"):
+    def make_fid_stats(self, device, save_dir="outputs/StyleGAN_fid_stats"):
         """
         Calculate and save FID stats for the dataset.
         
         Parameters
         ----------
+        device : torch.device
+            Device to use for calculation.
         save_dir : str
             Directory to save the stats to.
         """
+        # If device is CPU, ignore and skip
+        print(device)
+        if str(device) == "cpu":
+            return
+        
         dataset_folder = f"{data_folder}/{self.dataset_name}"
         save_file = self.get_save_dir(save_dir) + f"{self.resolution}.npz"
         
@@ -230,6 +238,8 @@ class StyleGAN(AbstractModel):
         fid_score : float
             Computed FID score.
         """
+        if str(device) == "cpu":
+            return
         self.generator.eval()
         images = []
         with torch.no_grad():
@@ -270,25 +280,40 @@ class StyleGAN(AbstractModel):
             
         total_epochs = level_config["transition"] + level_config["training"]
         epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_epochs))
-
+        end_of_iter_time = None
+        
         for i, imgs in epoch_iter:
+            print("\nIteration", i)
+            start_of_iter_time = time()
+            if end_of_iter_time is not None:
+                print(f"Time to load image: {start_of_iter_time - end_of_iter_time:.3f}s")
             # Update alpha
             self.alpha = min(self.alpha + alpha_step, 1.0)
             
             # Update dataset alpha
             self.dataset.update_alpha(self.alpha)
+            update_alpha_time = time()
+            print(f"Time to update alpha: {update_alpha_time - start_of_iter_time:.3f}s")
             
             # Train on batch
             imgs = imgs.to(device)
             g_loss, d_loss = self.perform_train_step(imgs, device, self.level, self.alpha)
+            train_step_time = time()
+            print(f"Time to train step: {train_step_time - update_alpha_time:.3f}s")
 
             # Update tqdm description
             epoch_iter.desc = tqdm_description(self, epoch, total_epochs, g_loss, d_loss)
+            update_description_time = time()
+            print(f"Time to update description: {update_description_time - train_step_time:.3f}s")
             
             if i % image_interval == 0:
                 epoch_total = sum(self.current_epochs.values())
                 iter_ = (epoch_total * len(self.loader)) + i
                 self.generate_images(iter_, epoch, device, latent_vector=self.latent_vector)
+                generate_images_time = time()
+                print(f"Time to generate images: {generate_images_time - update_description_time:.3f}s")
+            
+            end_of_iter_time = time()
             
 
     def perform_train_step(self, real_imgs, device, current_level, alpha):
