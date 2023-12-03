@@ -352,7 +352,7 @@ class StyleGAN(AbstractModel):
         self.optimizer_D.step()
         
         d_opt_step_time_ = time()
-        d_opt_step_time = d_opt_step_time_ - d_backward_time
+        d_opt_step_time = d_opt_step_time_ - d_backward_time_
 
         # Train generator
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
