@@ -76,7 +76,7 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
     dataset = FFHQDataset(root_dir=root_dir, resolution=resolution, alpha=alpha)
 
     # Create DataLoader
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=os.cpu_count())
 
     return dataset, loader
 
