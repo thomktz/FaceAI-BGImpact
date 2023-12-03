@@ -335,7 +335,7 @@ class StyleGAN(AbstractModel):
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         create_z_time_d = time() - discriminator_training_start_time
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
-        detach_fake_imgs_time = time() - create_z_time
+        detach_fake_imgs_time = time() - create_z_time_d
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
         d_loss_time = time() - detach_fake_imgs_time
         d_loss.backward()
@@ -348,7 +348,7 @@ class StyleGAN(AbstractModel):
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         create_z_time_g = time() - generator_training_start_time
         fake_imgs = self.generator(z, current_level, alpha)
-        generator_forward_time = time() - create_z_time
+        generator_forward_time = time() - create_z_time_g
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         g_loss_time = time() - generator_forward_time
         g_loss.backward()
