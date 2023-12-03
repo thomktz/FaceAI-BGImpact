@@ -332,63 +332,18 @@ class StyleGAN(AbstractModel):
         self.optimizer_G.zero_grad()
         
         # Train discriminator
-        discriminator_training_start_time = time()
-        
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
-        
-        detach_fake_imgs_time_ = time()
-        detach_fake_imgs_time = detach_fake_imgs_time_ - discriminator_training_start_time
-        
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
-        
-        d_loss_time_ = time()
-        d_loss_time = d_loss_time_ - detach_fake_imgs_time_
-        
         d_loss.backward()
-        
-        d_backward_time_ = time()
-        d_backward_time = d_backward_time_ - d_loss_time_
-        
         self.optimizer_D.step()
-        
-        d_opt_step_time_ = time()
-        d_opt_step_time = d_opt_step_time_ - d_backward_time_
 
         # Train generator
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
-        
-        generator_forward_time_ = time()
-        generator_forward_time = generator_forward_time_ - d_opt_step_time_
-        
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
-        
-        g_loss_time_ = time()
-        g_loss_time = g_loss_time_ - generator_forward_time_
-        
         g_loss.backward()
-        
-        g_backward_time_ = time()
-        g_backward_time = g_backward_time_ - g_loss_time_
-        
         self.optimizer_G.step()
-        
-        g_opt_step_time_ = time()
-        g_opt_step_time = g_opt_step_time_ - g_backward_time_
-        
-        print(
-            f"Discriminator:\n"
-            + f"    detach_fake_imgs_time: {detach_fake_imgs_time:.3f}\n"
-            + f"    d_loss_time: {d_loss_time:.3f}\n"
-            + f"    d_backward_time: {d_backward_time:.3f}\n"
-            + f"    d_opt_step_time: {d_opt_step_time:.3f}\n"
-            + f"Generator:\n"
-            + f"    generator_forward_time: {generator_forward_time:.3f}\n"
-            + f"    g_loss_time: {g_loss_time:.3f}\n"
-            + f"    g_backward_time: {g_backward_time:.3f}\n"
-            + f"    g_opt_step_time: {g_opt_step_time:.3f}\n"
-        )
 
         # Compute distances
         # self.real_distance = pairwise_euclidean_distance(real_imgs)
