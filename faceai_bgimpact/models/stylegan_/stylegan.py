@@ -280,41 +280,25 @@ class StyleGAN(AbstractModel):
             
         total_epochs = level_config["transition"] + level_config["training"]
         epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_epochs))
-        end_of_iter_time = None
         
         for i, imgs in epoch_iter:
-            print("\nIteration", i)
-            start_of_iter_time = time()
-            if end_of_iter_time is not None:
-                print(f"Time to load image: {start_of_iter_time - end_of_iter_time:.3f}s")
             # Update alpha
             self.alpha = min(self.alpha + alpha_step, 1.0)
             
             # Update dataset alpha
             self.dataset.update_alpha(self.alpha)
-            update_alpha_time = time()
-            print(f"Time to update alpha: {update_alpha_time - start_of_iter_time:.3f}s")
             
             # Train on batch
             imgs = imgs.to(device)
             g_loss, d_loss = self.perform_train_step(imgs, device, self.level, self.alpha)
-            train_step_time = time()
-            print(f"Time to train step: {train_step_time - update_alpha_time:.3f}s")
 
             # Update tqdm description
             epoch_iter.desc = tqdm_description(self, epoch, total_epochs, g_loss, d_loss)
-            update_description_time = time()
-            print(f"Time to update description: {update_description_time - train_step_time:.3f}s")
             
             if i % image_interval == 0:
                 epoch_total = sum(self.current_epochs.values())
                 iter_ = (epoch_total * len(self.loader)) + i
                 self.generate_images(iter_, epoch, device, latent_vector=self.latent_vector)
-                generate_images_time = time()
-                print(f"Time to generate images: {generate_images_time - update_description_time:.3f}s")
-            
-            end_of_iter_time = time()
-            
 
     def perform_train_step(self, real_imgs, device, current_level, alpha):
         """
@@ -339,26 +323,42 @@ class StyleGAN(AbstractModel):
         d_loss : torch.Tensor
             Discriminator loss for the step.
         """
+        step_start_time = time()
         # On the last batch of the epoch, the number of images may be less than the batch size
         current_batch_size = real_imgs.size(0)
 
         # Reset gradients
+        reset_gradients_start_time = time()
         self.optimizer_D.zero_grad()
         self.optimizer_G.zero_grad()
+        reset_gradients_time = time() - reset_gradients_start_time
         
         # Train discriminator
+        discriminator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
         d_loss.backward()
         self.optimizer_D.step()
+        discriminator_training_time = time() - discriminator_training_start_time
 
         # Train generator
+        generator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         fake_imgs = self.generator(z, current_level, alpha)
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         g_loss.backward()
         self.optimizer_G.step()
+        generator_training_time = time() - generator_training_start_time
+
+        step_end_time = time()  # End timing
+        total_step_time = step_end_time - step_start_time
+        
+        # Logging the times
+        print(f"Total Step Time: {total_step_time:.4f}s, "
+            f"Reset Gradients: {reset_gradients_time:.4f}s, "
+            f"Discriminator Training: {discriminator_training_time:.4f}s, "
+            f"Generator Training: {generator_training_time:.4f}s")
 
         # Compute distances
         # self.real_distance = pairwise_euclidean_distance(real_imgs)
