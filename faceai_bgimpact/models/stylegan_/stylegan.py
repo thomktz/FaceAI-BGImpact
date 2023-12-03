@@ -113,7 +113,7 @@ class StyleGAN(AbstractModel):
         )
 
 
-    def train(self, glr, mlr, dlr, batch_size, device, save_interval, image_interval, level_epochs, loss):
+    def train(self, glr, mlr, dlr, device, save_interval, image_interval, level_epochs, loss):
         """
         Main training loop for StyleGAN.
         
@@ -121,14 +121,12 @@ class StyleGAN(AbstractModel):
         ----------
         lr : float
             Learning rate.
-        batch_size : int
-            Batch size.
         device : torch.device
             Device to use for training.
         save_interval : int
             Number of epochs to wait before saving models and images.
         level_epochs : dict
-            Dictionary mapping resolution levels to the number of epochs to train at that level.
+            Dictionary mapping resolution levels to the number of epochs to train at that level and the batch size.
         transition_ratio : float
             Ratio of the total number of epochs to use for the transition phase.
         loss : str
@@ -158,13 +156,12 @@ class StyleGAN(AbstractModel):
                 dlr=dlr,
                 loss=loss
             )
-            
-        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, shuffle=True, resolution=self.resolution, alpha=1.0)
         
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
             self.resolution = 4 * (2 ** level)
-            self.dataset.update_resolution(self.resolution)
+            self.batch_size = level_epochs[level]["batch_size"]
+            self.dataset, self.loader = get_dataloader(self.dataset_name, self.batch_size, shuffle=True, resolution=self.resolution, alpha=self.alpha)
 
             # Calculate total epochs for this level from configuration
             total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["training"]
@@ -181,7 +178,7 @@ class StyleGAN(AbstractModel):
 
                 # Calculate FID score of epoch
                 if self.alpha == 1.0:
-                    self.calculate_fid(2048 + batch_size, batch_size, device)
+                    self.calculate_fid(2048 + self.batch_size, self.batch_size, device)
                 
                 # Save checkpoint
                 if (self.epoch_total + 1) % save_interval == 0:
@@ -219,7 +216,7 @@ class StyleGAN(AbstractModel):
         calc_and_save_stats(
             dataset_folder,
             save_file,
-            batch_size=100,
+            batch_size=256,
             img_size=self.resolution,
             use_torch=True,
             num_workers=os.cpu_count(),

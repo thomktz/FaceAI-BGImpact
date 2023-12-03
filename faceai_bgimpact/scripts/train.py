@@ -105,7 +105,6 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
             glr=config["glr"],
             mlr=config["mlr"],
             loss=config["loss"],
-            batch_size=config["batch_size"],
             device=device,
             save_interval=config["save_interval"],
             image_interval=config["image_interval"],
