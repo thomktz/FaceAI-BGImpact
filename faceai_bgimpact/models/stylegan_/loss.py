@@ -104,6 +104,61 @@ class WGAN_GP(GANLoss):
         gradient = gradient.view(gradient.shape[0], -1)
 
         return self.lambda_gp * ((gradient.norm(p=2, dim=1) - 1) ** 2).mean()
+
+class R1Regularization(GANLoss):
+    """
+    R1 Regularization for the Discriminator.
+    
+    Parameters:
+    ----------
+    G : torch.nn.Module
+        Generator network.
+    D : torch.nn.Module
+        Discriminator network.
+    lambda_r1 : float
+        Coefficient for the R1 regularization term.
+    """
+    def __init__(self, G, D, lambda_r1=10):
+        super().__init__(G, D)
+        self.lambda_r1 = lambda_r1
+    
+    def d_loss(self, real_images, fake_images, level, alpha):
+        """Discriminator loss with R1 regularization."""
+        real_scores = self.D(real_images, level, alpha)
+        fake_scores = self.D(fake_images, level, alpha)
+
+        # Standard GAN loss
+        loss = torch.mean(fake_scores) - torch.mean(real_scores)
+
+        # R1 regularization
+        r1_penalty = self._r1_penalty(real_images, level, alpha)
+        loss += r1_penalty
+
+        return loss
+
+    def g_loss(self, _, fake_images, level, alpha):
+        """Generator loss."""
+        fake_scores = self.D(fake_images, level, alpha)
+        return -torch.mean(fake_scores)
+
+    def _r1_penalty(self, real_images, level, alpha):
+        """Calculates the R1 regularization term."""
+        # Requires grad enables automatic differentiation for real_images
+        real_images.requires_grad_(True)
+
+        # Forward pass
+        real_scores = self.D(real_images, level, alpha)
+
+        # Calculate gradients
+        real_gradients = torch.autograd.grad(
+            outputs=real_scores.sum(), inputs=real_images,
+            create_graph=True, retain_graph=True, only_inputs=True
+        )[0]
+
+        # Compute the R1 penalty
+        r1_penalty = self.lambda_r1 * real_gradients.pow(2).view(real_gradients.shape[0], -1).sum(1).mean()
+
+        return r1_penalty
     
 class BasicGANLoss(GANLoss):
     """

@@ -13,11 +13,11 @@ config = {
     "level_epochs": {
         0: {
             "transition": 0,
-            "training": 10,
+            "training": 15,
             "batch_size": 512
         },           
         1: {
-            "transition": 3,
+            "transition": 4,
             "training": 20,
             "batch_size": 512
         },
@@ -37,8 +37,8 @@ config = {
             "batch_size": 128
         },
         5: {
-            "transition": 30,
-            "training": 120,
+            "transition": 40,
+            "training": 100,
             "batch_size": 64
         }
     }

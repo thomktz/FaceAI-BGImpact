@@ -18,7 +18,7 @@ from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
 from faceai_bgimpact.models.abstract_model import AbstractModel
 from faceai_bgimpact.models.stylegan_.generator import Generator
 from faceai_bgimpact.models.stylegan_.discriminator import Discriminator
-from faceai_bgimpact.models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN
+from faceai_bgimpact.models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN, R1Regularization
 
 class StyleGAN(AbstractModel):
     """
@@ -102,7 +102,8 @@ class StyleGAN(AbstractModel):
         self.loss = {
             "wgan": WGAN,
             "wgan-gp": WGAN_GP,
-            "basic": BasicGANLoss
+            "basic": BasicGANLoss,
+            "r1": R1Regularization
         }.get(
             loss.lower().replace("-", "_"),
             WGAN_GP
