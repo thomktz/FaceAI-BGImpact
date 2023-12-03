@@ -333,9 +333,8 @@ class StyleGAN(AbstractModel):
         # Train discriminator
         discriminator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
-        create_z_time_d = time() - discriminator_training_start_time
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
-        detach_fake_imgs_time = time() - create_z_time_d
+        detach_fake_imgs_time = time() - discriminator_training_start_time
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
         d_loss_time = time() - detach_fake_imgs_time
         d_loss.backward()
@@ -346,9 +345,8 @@ class StyleGAN(AbstractModel):
         # Train generator
         generator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
-        create_z_time_g = time() - generator_training_start_time
         fake_imgs = self.generator(z, current_level, alpha)
-        generator_forward_time = time() - create_z_time_g
+        generator_forward_time = time() - generator_training_start_time
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
         g_loss_time = time() - generator_forward_time
         g_loss.backward()
@@ -357,13 +355,11 @@ class StyleGAN(AbstractModel):
         g_opt_step_time = time() - g_backward_time
         
         print(
-            f"\nD:\nCreate Z: {create_z_time_d:.3f} | "
             f"Detach fake imgs: {detach_fake_imgs_time:.3f} | "
             f"D loss: {d_loss_time:.3f} | "
             f"D backward: {d_backward_time:.3f} | "
             f"D opt step: {d_opt_step_time:.3f} | "
-            f"\nG:\nCreate Z: {create_z_time_g:.3f} | "
-            f"Generator forward: {generator_forward_time:.3f} | "
+            f"\nG:\nGenerator forward: {generator_forward_time:.3f} | "
             f"G loss: {g_loss_time:.3f} | "
             f"G backward: {g_backward_time:.3f} | "
             f"G opt step: {g_opt_step_time:.3f}"
