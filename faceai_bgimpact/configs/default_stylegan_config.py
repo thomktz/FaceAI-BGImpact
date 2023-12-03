@@ -1,8 +1,8 @@
 config = {
     "dataset": "ffhq_raw",
-    "dlr": 0.0005,
-    "glr": 0.0007,
-    "mlr": 0.000007,
+    "dlr": 0.0007,
+    "glr": 0.001,
+    "mlr": 0.00001,
     "loss": "wgan-gp",
     "latent_dim": 256,
     "w_dim": 256,
@@ -12,8 +12,8 @@ config = {
     "level_epochs": {
         0: {
             "transition": 0,
-            "training": 5,
-            "batch_size": 1024
+            "training": 15,
+            "batch_size": 512
         },           
         1: {
             "transition": 4,

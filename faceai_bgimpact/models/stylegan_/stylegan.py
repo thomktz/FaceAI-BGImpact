@@ -243,14 +243,13 @@ class StyleGAN(AbstractModel):
         with torch.no_grad():
             for _ in range(num_images // batch_size):
                 z = torch.randn(batch_size, self.latent_dim).to(device)
-                images.append(self.generator(z, self.level, self.alpha).detach().cpu())
+                images.append(denormalize_image(self.generator(z, self.level, self.alpha).detach()).cpu())
         
         self.generator.train()
         imgs = torch.cat(images, dim=0) 
-        denormalized_imgs = denormalize_image(imgs)
         
         stats_file = self.get_save_dir(stats_dir) + f"{self.resolution}.npz"
-        fid = get_fid(denormalized_imgs, stats_file, use_torch=True)
+        fid = get_fid(imgs, stats_file)
         self.fids["level"].append(self.level)
         self.fids["epoch"].append(self.epoch_total)
         self.fids["fid"].append(fid)
