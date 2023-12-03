@@ -435,6 +435,14 @@ class StyleGAN(AbstractModel):
         
         # Initialize the instance with 0 learning rates
         instance.train_init(0, 0, 0, loss)
+        
+        ##### TESTS
+        print("\nLoaded discriminator state dict:")
+        for key, value in checkpoint['discriminator_state_dict'].items():
+            print(key, value.shape)
+        print("\nActual discriminator state dict:")
+        for key, value in instance.discriminator.state_dict().items():
+            print(key, value.shape)
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])
