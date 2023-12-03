@@ -250,7 +250,7 @@ class StyleGAN(AbstractModel):
         denormalized_imgs = denormalize_image(imgs)
         
         stats_file = self.get_save_dir(stats_dir) + f"{self.resolution}.npz"
-        fid = get_fid(denormalized_imgs, stats_file)
+        fid = get_fid(denormalized_imgs, stats_file, use_torch=True)
         self.fids["level"].append(self.level)
         self.fids["epoch"].append(self.epoch_total)
         self.fids["fid"].append(fid)
