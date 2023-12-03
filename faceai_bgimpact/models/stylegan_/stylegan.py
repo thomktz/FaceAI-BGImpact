@@ -323,42 +323,51 @@ class StyleGAN(AbstractModel):
         d_loss : torch.Tensor
             Discriminator loss for the step.
         """
-        step_start_time = time()
         # On the last batch of the epoch, the number of images may be less than the batch size
         current_batch_size = real_imgs.size(0)
 
         # Reset gradients
-        reset_gradients_start_time = time()
         self.optimizer_D.zero_grad()
         self.optimizer_G.zero_grad()
-        reset_gradients_time = time() - reset_gradients_start_time
         
         # Train discriminator
         discriminator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
+        create_z_time_d = time() - discriminator_training_start_time
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
+        detach_fake_imgs_time = time() - create_z_time
         d_loss = self.loss.d_loss(real_imgs, detached_fake_imgs, current_level, alpha)
+        d_loss_time = time() - detach_fake_imgs_time
         d_loss.backward()
+        d_backward_time = time() - d_loss_time
         self.optimizer_D.step()
-        discriminator_training_time = time() - discriminator_training_start_time
+        d_opt_step_time = time() - d_backward_time
 
         # Train generator
         generator_training_start_time = time()
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
+        create_z_time_g = time() - generator_training_start_time
         fake_imgs = self.generator(z, current_level, alpha)
+        generator_forward_time = time() - create_z_time
         g_loss = self.loss.g_loss(None, fake_imgs, current_level, alpha)
+        g_loss_time = time() - generator_forward_time
         g_loss.backward()
+        g_backward_time = time() - g_loss_time
         self.optimizer_G.step()
-        generator_training_time = time() - generator_training_start_time
-
-        step_end_time = time()  # End timing
-        total_step_time = step_end_time - step_start_time
+        g_opt_step_time = time() - g_backward_time
         
-        # Logging the times
-        print(f"Total Step Time: {total_step_time:.4f}s, "
-            f"Reset Gradients: {reset_gradients_time:.4f}s, "
-            f"Discriminator Training: {discriminator_training_time:.4f}s, "
-            f"Generator Training: {generator_training_time:.4f}s")
+        print(
+            f"\nD:\nCreate Z: {create_z_time_d:.3f} | "
+            f"Detach fake imgs: {detach_fake_imgs_time:.3f} | "
+            f"D loss: {d_loss_time:.3f} | "
+            f"D backward: {d_backward_time:.3f} | "
+            f"D opt step: {d_opt_step_time:.3f} | "
+            f"\nG:\nCreate Z: {create_z_time_g:.3f} | "
+            f"Generator forward: {generator_forward_time:.3f} | "
+            f"G loss: {g_loss_time:.3f} | "
+            f"G backward: {g_backward_time:.3f} | "
+            f"G opt step: {g_opt_step_time:.3f}"
+        )
 
         # Compute distances
         # self.real_distance = pairwise_euclidean_distance(real_imgs)
