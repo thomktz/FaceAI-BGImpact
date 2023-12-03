@@ -438,11 +438,16 @@ class StyleGAN(AbstractModel):
         
         ##### TESTS
         print("\nLoaded discriminator state dict:")
-        for key, value in checkpoint['discriminator_state_dict'].items():
-            print(key, value.shape)
+        print(checkpoint["discriminator_state_dict"]["downscale_blocks.5.conv1.weight"])
         print("\nActual discriminator state dict:")
-        for key, value in instance.discriminator.state_dict().items():
-            print(key, value.shape)
+        print(instance.discriminator.state_dict()["downscale_blocks.5.conv1.weight"])
+        # Save the discriminator state dict in a temp file
+        torch.save(instance.discriminator.state_dict(), "temp.pth")
+        # Load the discriminator state dict from the temp file
+        instance.discriminator.load_state_dict(torch.load("temp.pth"))
+        print("\nLoaded discriminator state dict from temp file:")
+        print(instance.discriminator.state_dict()["downscale_blocks.5.conv1.weight"])
+            
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])
