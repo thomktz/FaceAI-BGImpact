@@ -22,11 +22,11 @@ config = {
         },
         2: {
             "transition": 10,
-            "training": 75,
+            "training": 40,
             "batch_size": 128
         },
         3: {
-            "transition": 20,
+            "transition": 15,
             "training": 85,
             "batch_size": 128
         },
