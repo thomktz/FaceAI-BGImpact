@@ -27,18 +27,18 @@ config = {
         },
         3: {
             "transition": 15,
-            "training": 85,
+            "training": 60,
             "batch_size": 128
         },
         4: {
             "transition": 25,
-            "training": 120,
+            "training": 80,
             "batch_size": 64
         },
         5: {
             "transition": 40,
             "training": 100,
-            "batch_size": 64
+            "batch_size": 32
         }
     }
 }
