@@ -434,20 +434,7 @@ class StyleGAN(AbstractModel):
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
         
         # Initialize the instance with 0 learning rates
-        instance.train_init(0, 0, 0, loss)
-        
-        ##### TESTS
-        print("\nLoaded discriminator state dict:")
-        print(checkpoint["discriminator_state_dict"]["downscale_blocks.5.conv1.weight"].shape)
-        print("\nActual discriminator state dict:")
-        print(instance.discriminator.state_dict()["downscale_blocks.5.conv1.weight"].shape)
-        # Save the discriminator state dict in a temp file
-        torch.save(instance.discriminator.state_dict(), "temp.pth")
-        # Load the discriminator state dict from the temp file
-        instance.discriminator.load_state_dict(torch.load("temp.pth"))
-        print("\nLoaded discriminator state dict from temp file:")
-        print(instance.discriminator.state_dict()["downscale_blocks.5.conv1.weight"].shape)
-            
+        instance.train_init(0, 0, 0, loss)            
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])

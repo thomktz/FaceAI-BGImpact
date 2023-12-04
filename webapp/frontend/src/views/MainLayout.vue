@@ -5,6 +5,7 @@
       <!-- Navigation links here -->
       <router-link to="/" class="hover:text-gray-100 px-2">Home</router-link>
       <router-link to="/live-demo" class="hover:text-gray-100 px-2">Live Demo</router-link>
+      <router-link to="/gan-space" class="hover:text-gray-100 px-2">GAN Space</router-link>
       <!-- Add more tabs here -->
     </nav>
   </header>

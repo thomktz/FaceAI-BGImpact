@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import MainLayout from '@/views/MainLayout.vue';
 import LiveDemo from '@/views/LiveDemo.vue';
+import GANSpace from '@/views/GANSpace.vue';
 
 const routes = [
   {
@@ -17,7 +18,12 @@ const routes = [
         path: '/live-demo',
         name: 'LiveDemo',
         component: LiveDemo
-      }
+      },
+      {
+        path: '/gan-space',
+        name: 'GANSpace',
+        component: GANSpace
+      },
     ]
   },
 ]

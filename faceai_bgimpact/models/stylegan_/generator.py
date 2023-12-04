@@ -193,6 +193,52 @@ class SynthesisNetwork(nn.Module):
             else:
                 rgb = self.to_rgb_layers[level](x)
         return rgb
+    
+    def predict_modified_layer(self, original_w, new_w, new_w_layers, current_level, apply_noise):
+        """
+        Generate an image using original_w for all layers except specified layers where new_w is used.
+        
+        Assumes alpha = 1.0.
+
+        Parameters:
+        ----------
+        original_w : torch.Tensor
+            Original style tensor.
+            Shape: (batch_size, w_dim)
+        new_w : torch.Tensor
+            New style tensor to be used in specified layers.
+            Shape: (batch_size, w_dim)
+        new_w_layers : list of int
+            List of layer indices where new_w should be used.
+        current_level : int
+            Current resolution level for progressive growing.
+        apply_noise : bool
+            Whether to add noise to the input tensor.
+        
+        Returns:
+        ----------
+        torch.Tensor: Generated image tensor.
+        """
+
+        x = self.learned_constant.repeat(original_w.shape[0], 1, 1, 1)
+        w = original_w
+
+        # Initial block with potential style mixing
+        if 0 in new_w_layers:
+            w = new_w
+        x = self.init_block(x, w, apply_noise=apply_noise)
+        
+        if current_level <= 1:
+            rgb = self.to_rgb_layers[0](x)
+
+        for level in range(1, current_level + 1):
+            w = new_w if level in new_w_layers else original_w
+            x = self.upscale_blocks[level - 1](x, w, apply_noise=apply_noise)
+            
+            if level == current_level:
+                rgb = self.to_rgb_layers[level](x)
+
+        return rgb
 
 
 class Generator(nn.Module):
