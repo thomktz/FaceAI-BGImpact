@@ -1,18 +1,21 @@
 import torch.nn as nn
 
+
 class Discriminator(nn.Module):
     """Discriminator class for the DCGAN."""
+
     def __init__(self):
         super().__init__()
-        
+
         def discriminator_block(in_filters, out_filters, bn=True):
             """
-            Discriminator block. 
+            Discriminator block.
+
             Consists of a convolutional layer, a leaky ReLU activation, and a dropout layer.
             """
             block = [
-                nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=2, padding=1), 
-                nn.LeakyReLU(0.2, inplace=True), 
+                nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=2, padding=1),
+                nn.LeakyReLU(0.2, inplace=True),
                 nn.Dropout2d(0.25),
             ]
             if bn:
@@ -28,24 +31,22 @@ class Discriminator(nn.Module):
 
         # The height and width of downsampled image
         ds_size = 128 // 2**4
-        self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
-
+        self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size**2, 1), nn.Sigmoid())
 
     def forward(self, img):
         """
         Forward pass for the discriminator.
-        
+
         Parameters
         ----------
         img : torch.Tensor
             Input tensor of shape (batch_size, 3, 128, 128).
-        
+
         Returns
         -------
         validity : torch.Tensor
             Output tensor of shape (batch_size, 1).
         """
-        
         out = self.model(img)
         out = out.view(out.size(0), -1)
         validity = self.adv_layer(out)

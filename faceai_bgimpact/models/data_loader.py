@@ -4,41 +4,48 @@ from torchvision import transforms
 from PIL import Image
 from faceai_bgimpact.data_processing.paths import data_folder
 
+
 class FFHQDataset(Dataset):
-    """
-    FFHQ dataset that returns blended images at two resolutions.
-    """
+    """FFHQ dataset that returns blended images at two resolutions."""
+
     def __init__(self, root_dir, resolution, alpha=1.0):
         self.root_dir = root_dir
         try:
             self.image_files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
         except FileNotFoundError:
-            raise FileNotFoundError(f"Please download the data first, using the download-all-ffhq command.")
+            raise FileNotFoundError("Please download the data first, using the download-all-ffhq command.")
         self.resolution = resolution
         self.alpha = alpha
         self._update_transforms()
 
     def _update_transforms(self):
-        self.transform = transforms.Compose([
-            transforms.Resize((self.resolution, self.resolution), antialias=True),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-        self.low_res_transform = transforms.Compose([
-            transforms.Resize((self.resolution // 2, self.resolution // 2), antialias=True),
-            transforms.Resize((self.resolution, self.resolution), antialias=True),  # Scale back up
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
+        self.transform = transforms.Compose(
+            [
+                transforms.Resize((self.resolution, self.resolution), antialias=True),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
+        self.low_res_transform = transforms.Compose(
+            [
+                transforms.Resize((self.resolution // 2, self.resolution // 2), antialias=True),
+                transforms.Resize((self.resolution, self.resolution), antialias=True),  # Scale back up
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
     def update_alpha(self, new_alpha):
+        """Update the alpha value for progressive growing."""
         self.alpha = new_alpha
 
     def update_resolution(self, new_resolution):
+        """Update the resolution of the images."""
         self.resolution = new_resolution
         self._update_transforms()
 
     def __getitem__(self, idx):
+        """Get the blended image at the specified index."""
         image_path = os.path.join(self.root_dir, self.image_files[idx])
         image = Image.open(image_path)
 
@@ -49,13 +56,14 @@ class FFHQDataset(Dataset):
         return blended_image
 
     def __len__(self):
+        """Length of the dataset."""
         return len(self.image_files)
 
 
 def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha=1.0):
     """
     Create a DataLoader for the specified FFHQ dataset.
-    
+
     Parameters
     ----------
     dataset_name : str
@@ -69,7 +77,7 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
     alpha : float
         The alpha value for progressive growing.
     """
-    print(f"Loading dataset: {dataset_name} with resolution {resolution} and alpha {alpha}")        
+    print(f"Loading dataset: {dataset_name} with resolution {resolution} and alpha {alpha}")
 
     # Load the dataset with blended images
     root_dir = f"{data_folder}/{dataset_name}"
@@ -80,10 +88,14 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
 
     return dataset, loader
 
-inv_normalize = transforms.Compose([
-    transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[2.0, 2.0, 2.0]),
-    transforms.Normalize(mean=[-0.5, -0.5, -0.5], std=[1.0, 1.0, 1.0])
-])
+
+inv_normalize = transforms.Compose(
+    [
+        transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[2.0, 2.0, 2.0]),
+        transforms.Normalize(mean=[-0.5, -0.5, -0.5], std=[1.0, 1.0, 1.0]),
+    ]
+)
+
 
 def denormalize_image(tensor):
     """
@@ -93,11 +105,10 @@ def denormalize_image(tensor):
     ----------
     tensor : torch.Tensor
         The normalized tensor.
-        
+
     Returns:
     -------
     torch.Tensor
         The denormalized tensor.
     """
     return inv_normalize(tensor)
-    

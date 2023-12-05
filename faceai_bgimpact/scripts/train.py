@@ -1,20 +1,24 @@
 # train.py within the faceai_bgimpact package
 
 import os
-import json
 import torch
 from faceai_bgimpact.models import DCGAN, StyleGAN
 from faceai_bgimpact.configs import configs
 
+
 def list_checkpoints(checkpoint_dir):
     """List available checkpoints in the directory."""
-    checkpoints = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pth')]
+    checkpoints = [f for f in os.listdir(checkpoint_dir) if f.endswith(".pth")]
     print("\nAvailable checkpoints:")
-    epoch = lambda path: int(path.split("_")[1])
+
+    def epoch(path):
+        return int(path.split("_")[1])
+
     for checkpoint in checkpoints:
         print(f"- Epoch {epoch(checkpoint)}: {checkpoint}")
     print()
     return int(input("Enter the epoch to resume from: "))
+
 
 def find_checkpoint_path(checkpoint_dir, epoch):
     """Find the checkpoint path for a given epoch."""
@@ -23,35 +27,53 @@ def find_checkpoint_path(checkpoint_dir, epoch):
             return os.path.join(checkpoint_dir, file)
     raise FileNotFoundError(f"No checkpoint found for epoch {epoch} in {checkpoint_dir}")
 
-def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_size, num_epochs, save_interval, image_interval, list_checkpoints_flag, checkpoint_path, checkpoint_epoch):
+
+def train_function(
+    model,
+    dataset,
+    latent_dim,
+    lr,
+    dlr,
+    glr,
+    mlr,
+    loss,
+    batch_size,
+    num_epochs,
+    save_interval,
+    image_interval,
+    list_checkpoints_flag,
+    checkpoint_path,
+    checkpoint_epoch,
+):
+    """Train a model."""
     # Load the default configuration
     config = configs[model.lower()]
 
     # Override specific settings with provided arguments
     if latent_dim:
-        config['latent_dim'] = latent_dim
+        config["latent_dim"] = latent_dim
     if lr:
-        config['lr'] = lr
+        config["lr"] = lr
     if dlr:
-        config['dlr'] = dlr
+        config["dlr"] = dlr
     if glr:
-        config['glr'] = glr
+        config["glr"] = glr
     if mlr:
-        config['mlr'] = mlr
+        config["mlr"] = mlr
     if loss:
-        config['loss'] = loss
+        config["loss"] = loss
     if batch_size:
-        config['batch_size'] = batch_size
+        config["batch_size"] = batch_size
     if save_interval:
-        config['save_interval'] = save_interval
+        config["save_interval"] = save_interval
     if image_interval:
-        config['image_interval'] = image_interval
+        config["image_interval"] = image_interval
 
     # Determine the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     checkpoint_dir = f"outputs/{model}_checkpoints_{dataset}"
-    
+
     # Handle the checkpoint listing
     if list_checkpoints_flag:
         checkpoint_epoch = list_checkpoints(checkpoint_dir)
@@ -59,7 +81,7 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
     # Find the checkpoint path if an epoch is provided
     if checkpoint_epoch is not None:
         checkpoint_path = find_checkpoint_path(checkpoint_dir, int(checkpoint_epoch))
-    
+
     # Initialize the model
     if model.lower() == "dcgan":
         if checkpoint_path is None:
@@ -108,10 +130,7 @@ def train_function(model, dataset, latent_dim, lr, dlr, glr, mlr, loss, batch_si
             device=device,
             save_interval=config["save_interval"],
             image_interval=config["image_interval"],
-            level_epochs={
-                int(k): v
-                for (k, v) in config["level_epochs"].items()
-            },
+            level_epochs={int(k): v for (k, v) in config["level_epochs"].items()},
         )
 
     else:

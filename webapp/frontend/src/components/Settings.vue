@@ -1,24 +1,45 @@
 <template>
-    <v-app-bar app>
-      <v-toolbar-title>GANSpace UI Settings</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-text-field label="Model Name" v-model="modelName" @input="updateSettings"></v-text-field>
-      <v-text-field label="Sliders Range" type="number" v-model.number="slidersRange" @input="updateSettings"></v-text-field>
-      <v-text-field label="Number of New Sliders" type="number" v-model.number="nSlidersNew" @input="updateSettings"></v-text-field>
-      <v-text-field label="Number of Original Sliders" type="number" v-model.number="nSlidersOriginal" @input="updateSettings"></v-text-field>
-    </v-app-bar>
+    <v-footer app padless>
+      <v-container fluid>
+        <v-row align="center" class="settings-footer">
+          <v-col cols="auto">
+            <v-toolbar-title>GANSpace UI Settings</v-toolbar-title>
+          </v-col>
+  
+          <v-spacer></v-spacer>
+  
+          <v-col cols="auto">
+            <v-select label="Model Type" :items="modelTypes" v-model="modelName" @input="updateSettings"></v-select>
+          </v-col>
+          
+          <v-col cols="auto">
+            <v-text-field label="Sliders Range" type="number" v-model.number="slidersRange" @input="updateSettings" class="settings-input"></v-text-field>
+          </v-col>
+          
+          <v-col cols="auto">
+            <v-text-field label="Number of New Sliders" type="number" v-model.number="nSlidersNew" @input="updateSettings" class="settings-input"></v-text-field>
+          </v-col>
+          
+          <v-col cols="auto">
+            <v-text-field label="Number of Original Sliders" type="number" v-model.number="nSlidersOriginal" @input="updateSettings" class="settings-input"></v-text-field>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-footer>
   </template>
   
   <script>
   export default {
     data: () => ({
-      modelName: 'grey',
-      slidersRange: 1.0,
+      modelName: 'Grey',
+      slidersRange: 2.0,
       nSlidersNew: 5,
       nSlidersOriginal: 10,
+      modelTypes: ['Grey', 'Blur', 'Raw'],
     }),
     methods: {
       updateSettings() {
+        console.log('Settings updated');
         this.$emit('updateSettings', {
           modelName: this.modelName,
           slidersRange: this.slidersRange,
@@ -29,4 +50,14 @@
     }
   }
   </script>
+  
+  <style>
+  .settings-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.12); /* Add a top border to the footer */
+  }
+  
+  .settings-input {
+    max-width: 200px; /* Adjust the max width of text fields */
+  }
+  </style>
   

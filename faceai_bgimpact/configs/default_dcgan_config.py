@@ -4,5 +4,5 @@ config = {
     "latent_dim": 100,
     "batch_size": 128,
     "num_epochs": 400,
-    "save_interval": 5
+    "save_interval": 5,
 }

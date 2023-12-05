@@ -5,17 +5,17 @@ from faceai_bgimpact.data_processing.paths import (
     ffhq_raw_kaggle_path,
     ffhq_grey_kaggle_path,
     ffhq_blur_kaggle_path,
-    ffhq_stats_kaggle_path,
     raw_folder_name,
-    original_raw_folder_name
+    original_raw_folder_name,
 )
+
 
 def download_all_ffhq(raw=True, grey=True, blur=True):
     """
     Download raw FFHQ from Kaggle and rename the folder to ffhq_raw.
-    
+
     Then, download our modified versions of the dataset.
-    
+
     Parameters:
     ----------
     raw : bool
@@ -25,7 +25,6 @@ def download_all_ffhq(raw=True, grey=True, blur=True):
     blur : bool
         Whether to download the blurred FFHQ dataset.
     """
-    
     # Download the raw FFHQ dataset
     if raw:
         kaggle.api.dataset_download_files(ffhq_raw_kaggle_path, path=data_folder, unzip=True, quiet=False)
@@ -46,4 +45,3 @@ def download_all_ffhq(raw=True, grey=True, blur=True):
 
 if __name__ == "__main__":
     download_all_ffhq()
-    

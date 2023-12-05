@@ -3,15 +3,16 @@ from tqdm import tqdm
 from rembg import remove, new_session
 from faceai_bgimpact.data_processing.paths import raw_folder_name, mask_folder_name
 
-session = new_session()
 
 def create_masks():
     """Create cutout masks for the images."""
-    
+    # Initialize rembg session
+    session = new_session("u2net_human_seg")
+
     # Ensure the mask_folder_name directory exists
     mask_folder_path = Path(mask_folder_name)
     mask_folder_path.mkdir(parents=True, exist_ok=True)
-    
+
     # Get all the png files from raw_folder_name
     files = list(Path(raw_folder_name).glob("*.png"))
 
@@ -20,11 +21,14 @@ def create_masks():
         input_path = file
         output_path = mask_folder_path / (file.stem + ".png")
 
+        if output_path.exists():
+            continue
         with open(input_path, "rb") as i:
             with open(output_path, "wb") as o:
                 input_data = i.read()
                 output_data = remove(input_data, session=session, only_mask=True)
                 o.write(output_data)
+
 
 if __name__ == "__main__":
     create_masks()

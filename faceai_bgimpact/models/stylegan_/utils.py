@@ -1,13 +1,16 @@
-import math
 import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 
+sqrt_2 = np.sqrt(2)
+
 
 class WSConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, gain=np.sqrt(2)):
+    """Weight scaled convolutional layer."""
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, gain=sqrt_2):
         super().__init__()
         weight = torch.empty(out_channels, in_channels, kernel_size, kernel_size)
         init.normal_(weight)
@@ -20,11 +23,15 @@ class WSConv2d(nn.Module):
         self.padding = padding
 
     def forward(self, x):
+        """Forward pass."""
         scaled_weight = self.weight * self.scale
         return F.conv2d(x, scaled_weight, self.bias, self.stride, self.padding)
-    
+
+
 class WSConvTranspose2d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, gain=np.sqrt(2)):
+    """Weight scaled transposed convolutional layer."""
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, gain=sqrt_2):
         super().__init__()
         weight = torch.empty(in_channels, out_channels, kernel_size, kernel_size)
         init.normal_(weight)
@@ -37,17 +44,25 @@ class WSConvTranspose2d(nn.Module):
         self.padding = padding
 
     def forward(self, x):
+        """Forward pass."""
         scaled_weight = self.weight * self.scale
         return F.conv_transpose2d(x, scaled_weight, self.bias, self.stride, self.padding)
 
+
 class PixelNorm(nn.Module):
     """Pixelwise feature vector normalization."""
+
     def __init__(self):
         super().__init__()
 
     def forward(self, x):
-        return x * torch.rsqrt(torch.mean(x ** 2, dim=1, keepdim=True) + 1e-8)
+        """Forward pass."""
+        return x * torch.rsqrt(torch.mean(x**2, dim=1, keepdim=True) + 1e-8)
+
+
 class BlurLayer(nn.Module):
+    """Blur operation for convolutional layers."""
+
     def __init__(self):
         super().__init__()
 
@@ -58,10 +73,14 @@ class BlurLayer(nn.Module):
         self.register_buffer("filter", torch.from_numpy(f))
 
     def forward(self, x):
+        """Forward pass."""
         ch = x.size(1)
         return F.conv2d(x, self.filter.expand(ch, -1, -1, -1), padding=1, groups=ch)
-    
+
+
 class AdaIN(nn.Module):
+    """Adaptive instance normalization."""
+
     def __init__(self, dim, w_dim):
         super().__init__()
         self.dim = dim
@@ -70,6 +89,7 @@ class AdaIN(nn.Module):
         self.bias_transform = WSConv2d(w_dim, dim, 1, 1, 0, gain=1)
 
     def forward(self, x, w):
+        """Forward pass."""
         x = F.instance_norm(x, eps=self.epsilon)
 
         # scale
@@ -78,7 +98,10 @@ class AdaIN(nn.Module):
 
         return scale * x + bias
 
+
 class NoiseLayer(nn.Module):
+    """Noise layer."""
+
     def __init__(self, n_channel, size):
         super().__init__()
 
@@ -88,14 +111,19 @@ class NoiseLayer(nn.Module):
         self.noise_scale = nn.Parameter(torch.zeros(1, n_channel, 1, 1))
 
     def forward(self, batch_size, device):
+        """Forward pass."""
         noise = torch.randn([batch_size, 1, self.size, self.size], device=device)
         return noise * self.noise_scale
 
+
 class MinibatchStdDev(nn.Module):
+    """Minibatch standard deviation layer."""
+
     def __init__(self):
         super().__init__()
 
     def forward(self, x, group_size=4):
+        """Forward pass."""
         batch_size, _, height, width = x.size()
         group_size = min(group_size, batch_size)  # Ensure group size is less than or equal to batch size
         if batch_size % group_size != 0:

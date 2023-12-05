@@ -2,11 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
+
 def weights_init(std=0.02):
+    """Initialize the weights of a neural network module."""
+
     def f(m):
         """
         Initialize the weights of a neural network module.
-        
+
         Parameters:
         ----------
         m : nn.Module
@@ -23,8 +26,9 @@ def weights_init(std=0.02):
                 init.normal_(m.weight.data, 1.0, std)
             if m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
-        
+
     return f
+
 
 def pairwise_euclidean_distance(batch):
     """

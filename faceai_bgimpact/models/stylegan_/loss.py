@@ -2,41 +2,48 @@ from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 
+
 class GANLoss(ABC):
-    """Abstract base class for GAN Losses"""
+    """Abstract base class for GAN Losses."""
+
     def __init__(self, G, D):
         self.G = G
         self.D = D
 
     @abstractmethod
     def d_loss(self, real_images, fake_images, level, alpha):
+        """Discriminator loss."""
         pass
 
     @abstractmethod
     def g_loss(self, real_images, fake_images, level, alpha):
+        """Generator loss."""
         pass
-    
+
+
 class WGAN(GANLoss):
     """Wasserstein GAN (WGAN) loss."""
+
     def __init__(self, G, D):
         super().__init__(G, D)
-        
+
     def d_loss(self, real_images, fake_images, level, alpha):
         """Discriminator loss."""
         real_scores = self.D(real_images, level, alpha)
         fake_scores = self.D(fake_images, level, alpha)
         loss = torch.mean(fake_scores) - torch.mean(real_scores)
         return loss
-    
+
     def g_loss(self, _, fake_images, level, alpha):
         """Generator loss."""
         fake_scores = self.D(fake_images, level, alpha)
         return -torch.mean(fake_scores)
-    
+
+
 class WGAN_GP(GANLoss):
     """
     Wasserstein GAN with Gradient Penalty (WGAN-GP) loss.
-    
+
     Parameters:
     ----------
     G : torch.nn.Module
@@ -48,37 +55,32 @@ class WGAN_GP(GANLoss):
     drift : float
         Drift coefficient.
     """
+
     def __init__(self, G, D, lambda_gp=10, drift=0.001):
         super().__init__(G, D)
         self.drift = drift
         self.lambda_gp = lambda_gp
-    
+
     def d_loss(self, real_images, fake_images, level, alpha):
         """Discriminator loss."""
         real_scores = self.D(real_images, level, alpha)
         fake_scores = self.D(fake_images, level, alpha)
 
-        loss = (
-            torch.mean(fake_scores)
-            - torch.mean(real_scores)
-            + (self.drift * torch.mean(real_scores ** 2))
-        )
+        loss = torch.mean(fake_scores) - torch.mean(real_scores) + (self.drift * torch.mean(real_scores**2))
 
         # calculate the WGAN-GP (gradient penalty)
-        gp = self._gradient_penalty(
-            real_images, fake_images, level, alpha, real_images.device
-        )
+        gp = self._gradient_penalty(real_images, fake_images, level, alpha, real_images.device)
         loss += gp
 
         return loss
-    
+
     def g_loss(self, _, fake_images, level, alpha):
         """Generator loss."""
         fake_scores = self.D(fake_images, level, alpha)
         return -torch.mean(fake_scores)
-        
+
     def _gradient_penalty(self, real_images, fake_images, level, alpha, device):
-        """Calculates the gradient penalty loss for WGAN GP"""
+        """Calculates the gradient penalty loss for WGAN GP."""
         batch_size = real_images.shape[0]
 
         # generate random epsilon
@@ -105,10 +107,11 @@ class WGAN_GP(GANLoss):
 
         return self.lambda_gp * ((gradient.norm(p=2, dim=1) - 1) ** 2).mean()
 
+
 class R1Regularization(GANLoss):
     """
     R1 Regularization for the Discriminator.
-    
+
     Parameters:
     ----------
     G : torch.nn.Module
@@ -118,10 +121,11 @@ class R1Regularization(GANLoss):
     lambda_r1 : float
         Coefficient for the R1 regularization term.
     """
+
     def __init__(self, G, D, lambda_r1=10):
         super().__init__(G, D)
         self.lambda_r1 = lambda_r1
-    
+
     def d_loss(self, real_images, fake_images, level, alpha):
         """Discriminator loss with R1 regularization."""
         real_scores = self.D(real_images, level, alpha)
@@ -151,19 +155,18 @@ class R1Regularization(GANLoss):
 
         # Calculate gradients
         real_gradients = torch.autograd.grad(
-            outputs=real_scores.sum(), inputs=real_images,
-            create_graph=True, retain_graph=True, only_inputs=True
+            outputs=real_scores.sum(), inputs=real_images, create_graph=True, retain_graph=True, only_inputs=True
         )[0]
 
         # Compute the R1 penalty
         r1_penalty = self.lambda_r1 * real_gradients.pow(2).view(real_gradients.shape[0], -1).sum(1).mean()
 
         return r1_penalty
-    
+
+
 class BasicGANLoss(GANLoss):
-    """
-    Basic GAN Loss using Binary Cross-Entropy (BCE) loss.
-    """
+    """Basic GAN Loss using Binary Cross-Entropy (BCE) loss."""
+
     def __init__(self, G, D):
         super().__init__(G, D)
         self.loss_fn = nn.BCEWithLogitsLoss()
@@ -182,7 +185,7 @@ class BasicGANLoss(GANLoss):
         loss = real_loss + fake_loss
 
         return loss
-    
+
     def g_loss(self, _, fake_images, level, alpha):
         """Generator loss."""
         # Generator aims to have fake images classified as real (label=1)

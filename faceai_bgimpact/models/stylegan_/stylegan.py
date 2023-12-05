@@ -1,9 +1,7 @@
 import os
 import torch
-import torch.nn as nn
 import torch.optim as optim
 import plotly.graph_objects as go
-from time import time
 from tqdm import tqdm
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
@@ -13,12 +11,17 @@ from sklearn.decomposition import PCA
 from plotly.subplots import make_subplots
 
 from faceai_bgimpact.data_processing.paths import data_folder
-from faceai_bgimpact.models.utils import pairwise_euclidean_distance
 from faceai_bgimpact.models.data_loader import get_dataloader, denormalize_image
 from faceai_bgimpact.models.abstract_model import AbstractModel
 from faceai_bgimpact.models.stylegan_.generator import Generator
 from faceai_bgimpact.models.stylegan_.discriminator import Discriminator
-from faceai_bgimpact.models.stylegan_.loss import WGAN_GP, BasicGANLoss, WGAN, R1Regularization
+from faceai_bgimpact.models.stylegan_.loss import (
+    WGAN_GP,
+    BasicGANLoss,
+    WGAN,
+    R1Regularization,
+)
+
 
 class StyleGAN(AbstractModel):
     """
@@ -40,7 +43,7 @@ class StyleGAN(AbstractModel):
 
     def __init__(self, dataset_name, latent_dim, w_dim, style_layers, device):
         super().__init__(dataset_name)
-        
+
         self.generator = Generator(latent_dim, w_dim, style_layers).to(device)
         self.discriminator = Discriminator().to(device)
         self.latent_dim = latent_dim
@@ -49,19 +52,15 @@ class StyleGAN(AbstractModel):
 
         self.optimizer_G_config = {}
         self.optimizer_D_config = {}
-        
+
         self.latent_vector = torch.randn(64, self.latent_dim)
         self.pca = None
-        self.fids = {
-            "level": [],
-            "epoch": [],
-            "fid": []
-        }
+        self.fids = {"level": [], "epoch": [], "fid": []}
 
     def train_init(self, glr, mlr, dlr, loss):
         """
         Initialize the training process.
-        
+
         Parameters
         ----------
         glr : float
@@ -74,49 +73,38 @@ class StyleGAN(AbstractModel):
         loss : str
             Loss function to use for training.
         """
-        
         self.optimizer_G = optim.Adam(
             [
                 {"params": self.generator.mapping.parameters(), "lr": mlr},
-                {"params": self.generator.synthesis.parameters()}
-            ], 
-            lr=glr, 
-            betas=(0.0, 0.99), 
-            eps=1e-8
+                {"params": self.generator.synthesis.parameters()},
+            ],
+            lr=glr,
+            betas=(0.0, 0.99),
+            eps=1e-8,
         )
-        self.optimizer_D = optim.Adam(
-            self.discriminator.parameters(),
-            lr=dlr, 
-            betas=(0.0, 0.99), 
-            eps=1e-8
-        )
-        
+        self.optimizer_D = optim.Adam(self.discriminator.parameters(), lr=dlr, betas=(0.0, 0.99), eps=1e-8)
+
         self.real_distance = 0.0
         self.fake_distance = 0.0
-        
+
         self.level = 0
         self.resolution = 4
         self.alpha = 1
         self.epoch_total = None
-        
+
         self.loss = {
             "wgan": WGAN,
             "wgan-gp": WGAN_GP,
             "basic": BasicGANLoss,
-            "r1": R1Regularization
+            "r1": R1Regularization,
         }.get(
-            loss.lower().replace("-", "_"),
-            WGAN_GP
-        )(
-            self.generator, 
-            self.discriminator
-        )
-
+            loss.lower().replace("-", "_"), WGAN_GP
+        )(self.generator, self.discriminator)
 
     def train(self, glr, mlr, dlr, device, save_interval, image_interval, level_epochs, loss):
         """
         Main training loop for StyleGAN.
-        
+
         Parameters
         ----------
         lr : float
@@ -133,43 +121,45 @@ class StyleGAN(AbstractModel):
             Loss function to use for training.
             ["wgan-gp", "wgan", "basic"]
         """
-            
         # Check if loading from a checkpoint
-        if hasattr(self, 'current_epochs'):
+        if hasattr(self, "current_epochs"):
             # Check if checkpoint was the last epoch of the level
-            if self.current_epochs[self.level] == (level_epochs[self.level]["training"] + level_epochs[self.level]["transition"]):
+            if self.current_epochs[self.level] == (
+                level_epochs[self.level]["training"] + level_epochs[self.level]["transition"]
+            ):
                 # If so, move to the next level
                 self.level += 1
-                self.resolution = 4 * (2 ** self.level)
+                self.resolution = 4 * (2**self.level)
                 self.alpha = 0
                 self.current_epochs[self.level] = 0
-            
+
             start_level = self.level
             start_epoch = self.current_epochs[self.level]
         else:
             start_level = 0
             start_epoch = 0
             self.current_epochs = {level: 0 for level in level_epochs.keys()}
-            self.train_init(
-                glr=glr, 
-                mlr=mlr, 
-                dlr=dlr,
-                loss=loss
-            )
-        
+            self.train_init(glr=glr, mlr=mlr, dlr=dlr, loss=loss)
+
         for level in range(start_level, max(level_epochs.keys()) + 1):
             self.level = level
-            self.resolution = 4 * (2 ** level)
+            self.resolution = 4 * (2**level)
             self.batch_size = level_epochs[level]["batch_size"]
-            self.dataset, self.loader = get_dataloader(self.dataset_name, self.batch_size, shuffle=True, resolution=self.resolution, alpha=self.alpha)
+            self.dataset, self.loader = get_dataloader(
+                self.dataset_name,
+                self.batch_size,
+                shuffle=True,
+                resolution=self.resolution,
+                alpha=self.alpha,
+            )
 
             # Calculate total epochs for this level from configuration
             total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["training"]
             start_epoch_for_level = start_epoch if level == start_level else 0
-            
+
             # Computing FID stats for current level
             self.make_fid_stats(device)
-            
+
             # Epoch loop for current level
             for epoch in range(start_epoch_for_level, total_level_epochs):
                 self.current_epochs[level] = epoch
@@ -179,7 +169,7 @@ class StyleGAN(AbstractModel):
                 # Calculate FID score of epoch
                 if self.alpha == 1.0:
                     self.calculate_fid(2048 + self.batch_size, self.batch_size, device)
-                
+
                 # Save checkpoint
                 if (self.epoch_total + 1) % save_interval == 0:
                     self.current_epochs[level] = epoch + 1
@@ -192,7 +182,7 @@ class StyleGAN(AbstractModel):
     def make_fid_stats(self, device, save_dir="outputs/StyleGAN_fid_stats"):
         """
         Calculate and save FID stats for the dataset.
-        
+
         Parameters
         ----------
         device : torch.device
@@ -204,14 +194,14 @@ class StyleGAN(AbstractModel):
         print(device)
         if str(device) == "cpu":
             return
-        
+
         dataset_folder = f"{data_folder}/{self.dataset_name}"
         save_file = self.get_save_dir(save_dir) + f"{self.resolution}.npz"
-        
+
         # If the stats file already exists, skip
         if os.path.exists(save_file):
             return
-        
+
         print("Generating FID stats for resolution", self.resolution, "...")
         calc_and_save_stats(
             dataset_folder,
@@ -221,16 +211,16 @@ class StyleGAN(AbstractModel):
             use_torch=True,
             num_workers=os.cpu_count(),
         )
-        
+
     def calculate_fid(self, num_images, batch_size, device, stats_dir="outputs/StyleGAN_fid_stats"):
         """
         Calculate the FID score.
-        
+
         Parameters
         ----------
         device : torch.device
             Device to use for calculation.
-        
+
         Returns
         -------
         fid_score : float
@@ -244,29 +234,26 @@ class StyleGAN(AbstractModel):
             for _ in range(num_images // batch_size):
                 z = torch.randn(batch_size, self.latent_dim).to(device)
                 images.append(denormalize_image(self.generator(z, self.level, self.alpha).detach()).cpu())
-        
+
         self.generator.train()
-        imgs = torch.cat(images, dim=0) 
-        
+        imgs = torch.cat(images, dim=0)
+
         stats_file = self.get_save_dir(stats_dir) + f"{self.resolution}.npz"
         fid = get_fid(imgs, stats_file)
         self.fids["level"].append(self.level)
         self.fids["epoch"].append(self.epoch_total)
         self.fids["fid"].append(fid)
         print("Level", self.level, "Epoch", self.epoch_total, "FID", fid)
-            
+
     def _train_one_epoch(self, level_config, epoch, image_interval, device):
         """Training loop for one epoch."""
-        
         # Determine if we are in the transition phase
         is_transition_phase = self.alpha < 1.0
 
         # Calculate alpha step if in transition phase
         alpha_step = 1.0 / (len(self.loader) * level_config["transition"]) if is_transition_phase else 0
-        
-        
+
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
-            
             return (
                 f"Lvl {' ' * (3 - len(str(self.resolution))) * 2}{self.level} ({self.resolution}x{self.resolution}) "
                 + f"Epoch {epoch+1}/{total_epochs} "
@@ -274,24 +261,28 @@ class StyleGAN(AbstractModel):
                 + f"GL={g_loss:.3f} DL={d_loss:.3f} "
                 # + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
             )
-            
+
         total_epochs = level_config["transition"] + level_config["training"]
-        epoch_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=tqdm_description(self, epoch, total_epochs))
-        
+        epoch_iter = tqdm(
+            enumerate(self.loader),
+            total=len(self.loader),
+            desc=tqdm_description(self, epoch, total_epochs),
+        )
+
         for i, imgs in epoch_iter:
             # Update alpha
             self.alpha = min(self.alpha + alpha_step, 1.0)
-            
+
             # Update dataset alpha
             self.dataset.update_alpha(self.alpha)
-            
+
             # Train on batch
             imgs = imgs.to(device)
             g_loss, d_loss = self.perform_train_step(imgs, device, self.level, self.alpha)
 
             # Update tqdm description
             epoch_iter.desc = tqdm_description(self, epoch, total_epochs, g_loss, d_loss)
-            
+
             if i % image_interval == 0:
                 epoch_total = sum(self.current_epochs.values())
                 iter_ = (epoch_total * len(self.loader)) + i
@@ -299,8 +290,7 @@ class StyleGAN(AbstractModel):
 
     def perform_train_step(self, real_imgs, device, current_level, alpha):
         """
-        Perform a single training step, including forward and backward passes for both
-        the generator and discriminator.
+        Perform a single training step, including forward and backward passes for G and D.
 
         Parameters
         ----------
@@ -326,7 +316,7 @@ class StyleGAN(AbstractModel):
         # Reset gradients
         self.optimizer_D.zero_grad()
         self.optimizer_G.zero_grad()
-        
+
         # Train discriminator
         z = torch.randn(current_batch_size, self.latent_dim, device=device)
         detached_fake_imgs = self.generator(z, current_level, alpha).detach()
@@ -344,9 +334,9 @@ class StyleGAN(AbstractModel):
         # Compute distances
         # self.real_distance = pairwise_euclidean_distance(real_imgs)
         # self.fake_distance = pairwise_euclidean_distance(fake_imgs)
-        
+
         return g_loss.item(), d_loss.item()
-    
+
     def calculate_completed_epochs(self, alpha, level_config, epochs_before):
         """
         Calculate the number of epochs completed at the current level based on alpha.
@@ -375,7 +365,7 @@ class StyleGAN(AbstractModel):
             completed_fraction = level_config["transition"]
 
         return int(completed_fraction)
-    
+
     def save_checkpoint(self, epoch_total, current_epochs, save_dir="outputs/StyleGAN_checkpoints"):
         """
         Save a checkpoint of the current state, including models, optimizers, and training parameters.
@@ -391,7 +381,6 @@ class StyleGAN(AbstractModel):
         save_dir : str
             Directory to save the checkpoint to.
         """
-
         save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
 
@@ -414,9 +403,38 @@ class StyleGAN(AbstractModel):
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved at {checkpoint_path}")
 
-
     @classmethod
-    def from_checkpoint(cls, dataset_name, checkpoint_path, loss, device, latent_dim=None, w_dim=None, style_layers=None):
+    def from_checkpoint(
+        cls,
+        dataset_name,
+        checkpoint_path,
+        loss,
+        device,
+        latent_dim=None,
+        w_dim=None,
+        style_layers=None,
+    ):
+        """
+        Create a StyleGAN instance from a checkpoint.
+
+        Parameters
+        ----------
+        dataset_name : str
+            Name of the dataset to use.
+        checkpoint_path : str
+            Path to the checkpoint file.
+        loss : str
+            Loss function to use for training.
+            ["r1", "wgan-gp", "wgan", "basic"]
+        device : torch.device
+            Device to use for training.
+        latent_dim : int
+            Dimension of the latent space.
+        w_dim : int
+            Dimension of the W space.
+        style_layers : int
+            Number of layers in the style mapping network.
+        """
         checkpoint = torch.load(checkpoint_path, map_location=device)
 
         # Extract necessary components from checkpoint
@@ -432,9 +450,9 @@ class StyleGAN(AbstractModel):
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
-        
+
         # Initialize the instance with 0 learning rates
-        instance.train_init(0, 0, 0, loss)            
+        instance.train_init(0, 0, 0, loss)
 
         # Load the state into the instance
         instance.generator.load_state_dict(checkpoint["generator_state_dict"])
@@ -445,7 +463,7 @@ class StyleGAN(AbstractModel):
         # Set current step, level, epoch tracking, fids and latent vector
         instance.level = level
         instance.alpha = alpha
-        instance.resolution = 4 * (2 ** level)
+        instance.resolution = 4 * (2**level)
         instance.epoch_total = epoch_total
         instance.current_epochs = current_epochs
         instance.fids = fids
@@ -453,10 +471,17 @@ class StyleGAN(AbstractModel):
 
         return instance
 
-    def generate_images(self, iter_, epoch, device, save_dir="outputs/StyleGAN_images", latent_vector=None):
+    def generate_images(
+        self,
+        iter_,
+        epoch,
+        device,
+        save_dir="outputs/StyleGAN_images",
+        latent_vector=None,
+    ):
         """
         Save generated images.
-        
+
         Parameters
         ----------
         iter_ : int
@@ -471,7 +496,7 @@ class StyleGAN(AbstractModel):
         with torch.no_grad():
             save_folder = self.get_save_dir(save_dir)
             os.makedirs(save_folder, exist_ok=True)
-            
+
             # Use provided latent vector or generate a new one
             if latent_vector is None:
                 z = torch.randn(64, self.latent_dim).to(device)
@@ -482,20 +507,24 @@ class StyleGAN(AbstractModel):
             for _ in range(min(len(self.dataset), 64)):
                 real_images.append(self.dataset[_])
             real_images = torch.stack(real_images).to(device)
-            
+
             # Resize if necessary
             if real_images.size(-1) != 128:
                 upscaler = Resize((128, 128), interpolation=0)  # 0 corresponds to nearest-neighbor
                 real_images = upscaler(real_images)
-            
+
             # Denormalize and save real images
             real_images = denormalize_image(real_images.cpu())
-            save_image(real_images, f"{save_folder}/real_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
-
+            save_image(
+                real_images,
+                f"{save_folder}/real_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png",
+                nrow=8,
+                normalize=False,
+            )
 
             # Generate images
             fake_images = self.generator(z, self.level, self.alpha).detach().cpu()
-            
+
             # Check if upscaling is needed
             current_size = fake_images.size(-1)
             if current_size != 128:
@@ -504,8 +533,13 @@ class StyleGAN(AbstractModel):
 
             # Denormalize and save images
             denormalized_images = denormalize_image(fake_images)
-            save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png", nrow=8, normalize=False)
-            
+            save_image(
+                denormalized_images,
+                f"{save_folder}/fake_{iter_}_{self.level}_{epoch}_{self.alpha:.2f}.png",
+                nrow=8,
+                normalize=False,
+            )
+
     def fit_pca(self, num_samples=10000, batch_size=100, n_components=50):
         """
         Fit PCA on the W space of the StyleGAN model.
@@ -521,9 +555,10 @@ class StyleGAN(AbstractModel):
         """
         self.generator.eval()
         all_w = []
+        self.n_components = n_components
 
         # Process in batches
-        for _ in tqdm(range(0, num_samples, batch_size), desc='Generating W vectors'):
+        for _ in tqdm(range(0, num_samples, batch_size), desc="Generating W vectors"):
             z = torch.randn(batch_size, self.latent_dim, device="cpu")
             with torch.no_grad():
                 w = self.generator.mapping(z).cpu()  # Get W vectors
@@ -570,7 +605,42 @@ class StyleGAN(AbstractModel):
         adjusted_w = torch.tensor(adjusted_w_flat, dtype=torch.float32).view_as(w_vectors).to(w_vectors.device)
 
         return adjusted_w
-    
+
+    def blend_styles(self, base_w, x1, x_list, layers_list):
+        """
+        Blends different styles on the base latent vector for specified layers.
+
+        Parameters:
+        ----------
+        base_w (tensor): Base latent vector.
+        x_list (list of floats): List of strengths for each eigenvector.
+        layers_list (list of list of ints): List of layer indices for each eigenvector.
+        num_layers (int): Total number of layers in the generator.
+
+        Returns:
+        -------
+        list of tensors: A list of blended latent vectors, one for each layer.
+        """
+        # Initialize a list of w vectors, one for each layer, starting with the base_w
+        blended_w = [base_w.clone() for _ in range(self.level + 1)]
+
+        # Apply each eigenvector strength to its corresponding layers
+        for i, x_strength in enumerate(x_list):
+            if x_strength == 0 and len(layers_list[i]) == 5:
+                continue
+            # Create a zero tensor and set the ith element to the eigenvector strength
+            x_tensor = x1.clone()
+            x_tensor[i] += x_strength
+
+            # Transform the control vector using the PCA transformation
+            w_offset = torch.tensor(self.pca.inverse_transform(x_tensor.unsqueeze(0)).squeeze(0))
+
+            # Apply this transformed control vector to the specified layers
+            for layer in layers_list[i]:
+                blended_w[layer] += w_offset - base_w
+
+        return self.generator.synthesis.predict_modified_layer(blended_w, self.level, True)
+
     def graph_fid(self, save_dir="outputs/StyleGAN_fid_plots"):
         """
         Generate a subplot of FID scores for each trained level.
@@ -583,25 +653,38 @@ class StyleGAN(AbstractModel):
         # Generate path
         save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
-            
+
         # Find the unique levels
         levels = sorted(set(self.fids["level"]))
 
         # Create subplots
-        fig = make_subplots(rows=len(levels), cols=1, subplot_titles=[f"Level {level}" for level in levels])
+        fig = make_subplots(
+            rows=len(levels),
+            cols=1,
+            subplot_titles=[f"Level {level}" for level in levels],
+        )
 
         # Add traces
         for i, level in enumerate(levels):
-            level_data = [(epoch, fid) for l, epoch, fid in zip(self.fids["level"], self.fids["epoch"], self.fids["fid"]) if l == level]
+            level_data = [
+                (epoch, fid)
+                for lvl, epoch, fid in zip(self.fids["level"], self.fids["epoch"], self.fids["fid"])
+                if lvl == level
+            ]
             epochs, fids = zip(*level_data)
-            
+
             fig.add_trace(
-                go.Scatter(x=epochs, y=fids, mode='lines+markers', name=f"Level {level}"),
-                row=i+1, col=1
+                go.Scatter(x=epochs, y=fids, mode="lines+markers", name=f"Level {level}"),
+                row=i + 1,
+                col=1,
             )
 
         # Update layout
-        fig.update_layout(height=400*len(levels), width=800, title_text="FID Scores per Training Level")
+        fig.update_layout(
+            height=400 * len(levels),
+            width=800,
+            title_text="FID Scores per Training Level",
+        )
         fig.update_xaxes(title_text="Epoch")
         fig.update_yaxes(title_text="FID Score")
 
