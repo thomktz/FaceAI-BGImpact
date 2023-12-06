@@ -1,36 +1,36 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '@/views/Home.vue'
-import MainLayout from '@/views/MainLayout.vue';
-import LiveDemo from '@/views/LiveDemo.vue';
-import GANSpace from '@/views/GANSpace.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "@/views/Home.vue";
+import MainLayout from "@/views/MainLayout.vue";
+import LiveDemo from "@/views/LiveDemo.vue";
+import GANSpace from "@/views/GANSpace.vue";
 
 const routes = [
   {
-    path: '/',
+    path: "/",
     component: MainLayout,
     children: [
       {
-        path: '',
-        name: 'Home',
-        component: Home
+        path: "",
+        name: "Home",
+        component: Home,
       },
       {
-        path: '/live-demo',
-        name: 'LiveDemo',
-        component: LiveDemo
+        path: "/live-demo",
+        name: "LiveDemo",
+        component: LiveDemo,
       },
       {
-        path: '/gan-space',
-        name: 'GANSpace',
-        component: GANSpace
+        path: "/gan-space",
+        name: "GANSpace",
+        component: GANSpace,
       },
-    ]
+    ],
   },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

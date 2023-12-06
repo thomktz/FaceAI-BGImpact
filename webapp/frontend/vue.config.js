@@ -1,4 +1,4 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require("@vue/cli-service");
 module.exports = defineConfig({
   transpileDependencies: true,
   devServer: {
@@ -7,4 +7,4 @@ module.exports = defineConfig({
     allowedHosts: "all",
     server: process.env.VUE_APP_SERVER,
   },
-})
+});

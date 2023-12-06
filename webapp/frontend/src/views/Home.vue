@@ -1,21 +1,41 @@
 <template>
   <v-container fluid>
     <v-row class="container">
-
       <!-- Project Description with a larger width -->
       <div class="project-description">
         <h2>FaceAI - Background Impact</h2>
-        <p>Evaluating the effect of removing an image's background on the training of facial generation AIs.</p>
-        <p>This project implements various Generative AI models to generate faces:</p>
+        <p>
+          Evaluating the effect of removing an image's background on the
+          training of facial generation AIs.
+        </p>
+        <p>
+          This project implements various Generative AI models to generate
+          faces:
+        </p>
         <ul>
           <li>Deep Convolutional Generative Adversarial Network (DCGAN)</li>
           <li>Progressive-growing StyleGAN</li>
           <li>Variational Autoencoder (VAE)</li>
         </ul>
-        <p>The projects also implements two new versions of the Flicker-Face-HQ (FFHQ)</p>
+        <p>
+          The projects also implements two new versions of the Flicker-Face-HQ
+          (FFHQ)
+        </p>
         <ul>
-          <li><a href="https://www.kaggle.com/datasets/thomaskientz/ffhq-blur" target="_blank">FFHQ-Blur</a></li>
-          <li><a href="https://www.kaggle.com/datasets/thomaskientz/ffhq-grey" target="_blank">FFHQ-Grey</a></li>
+          <li>
+            <a
+              href="https://www.kaggle.com/datasets/thomaskientz/ffhq-blur"
+              target="_blank"
+              >FFHQ-Blur</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.kaggle.com/datasets/thomaskientz/ffhq-grey"
+              target="_blank"
+              >FFHQ-Grey</a
+            >
+          </li>
         </ul>
         <!-- Insert image from github link -->
         <img src="/datasets.png" alt="Datasets" class="image" />
@@ -53,13 +73,12 @@
           </a>
         </div>
       </div>
-
     </v-row>
   </v-container>
 </template>
 
 <script>
-import { Icon } from '@iconify/vue';
+import { Icon } from "@iconify/vue";
 
 export default {
   components: {

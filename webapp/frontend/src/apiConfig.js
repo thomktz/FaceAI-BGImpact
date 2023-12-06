@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { useToast } from 'vue-toastification';
+import axios from "axios";
+import { useToast } from "vue-toastification";
 
 // Create an Axios instance
 const apiClient = axios.create({
@@ -14,17 +14,16 @@ const toast = useToast();
 
 // Add a request interceptor
 apiClient.interceptors.request.use(
-  request => {
+  (request) => {
     // Log the full request details here
     // console.log("Starting Request", JSON.stringify(request, null, 2));
     return request;
   },
-  error => {
+  (error) => {
     // Do something with request error
-    c// onsole.error("Request Error:", error);
+    c; // onsole.error("Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
-
 
 export { apiClient, toast };

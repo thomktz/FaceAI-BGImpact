@@ -30,16 +30,36 @@
           <!-- Buttons -->
           <v-row>
             <v-col cols="12">
-              <v-btn block color="primary" class="generate-button" @click="randomizeLatents">
+              <v-btn
+                block
+                color="primary"
+                class="generate-button"
+                @click="randomizeLatents"
+              >
                 Randomize Latents
               </v-btn>
-              <v-btn block color="primary" class="generate-button" @click="applyStyleSliders">
+              <v-btn
+                block
+                color="primary"
+                class="generate-button"
+                @click="applyStyleSliders"
+              >
                 Apply Style Sliders
               </v-btn>
-              <v-btn block color="primary" class="generate-button" @click="randomizeStyleVectors">
+              <v-btn
+                block
+                color="primary"
+                class="generate-button"
+                @click="randomizeStyleVectors"
+              >
                 Randomize Style Vectors
               </v-btn>
-              <v-btn block color="primary" class="generate-button" @click="resetStyleSliders">
+              <v-btn
+                block
+                color="primary"
+                class="generate-button"
+                @click="resetStyleSliders"
+              >
                 Reset
               </v-btn>
             </v-col>
@@ -50,35 +70,42 @@
   </v-container>
 </template>
 
-
 <script>
-import { apiClient } from '@/apiConfig'
+import { apiClient } from "@/apiConfig";
 
 export default {
   data() {
     return {
-      images: [],  // Store images URLs
-      styleVector: new Array(10).fill(0),  // Initialize style vector
+      images: [], // Store images URLs
+      styleVector: new Array(10).fill(0), // Initialize style vector
     };
   },
   methods: {
     randomizeLatents() {
-      apiClient.get('stylegan/randomize-latents')
-        .then(response => {
-          console.log("Generation took:", response.data.time)
-          this.images = response.data.images.map(img => `data:image/jpeg;base64,${img}`);
-          console.log("Generation took:", response.data.time)
+      apiClient
+        .get("stylegan/randomize-latents")
+        .then((response) => {
+          console.log("Generation took:", response.data.time);
+          this.images = response.data.images.map(
+            (img) => `data:image/jpeg;base64,${img}`,
+          );
+          console.log("Generation took:", response.data.time);
         })
-        .catch(error => console.error('Error randomizing latents:', error));
+        .catch((error) => console.error("Error randomizing latents:", error));
     },
     applyStyleSliders() {
       const payload = { slider_values: this.styleVector };
-      apiClient.post('stylegan/apply-style-sliders', payload)
-        .then(response => {
-          this.images = response.data.images.map(img => `data:image/jpeg;base64,${img}`);
-          console.log("Generation took:", response.data.time)
+      apiClient
+        .post("stylegan/apply-style-sliders", payload)
+        .then((response) => {
+          this.images = response.data.images.map(
+            (img) => `data:image/jpeg;base64,${img}`,
+          );
+          console.log("Generation took:", response.data.time);
         })
-        .catch(error => console.error('Error applying style sliders:', error));
+        .catch((error) =>
+          console.error("Error applying style sliders:", error),
+        );
     },
     randomizeStyleVectors() {
       this.styleVector = this.styleVector.map(() => Math.random() * 2 - 1);
@@ -87,8 +114,8 @@ export default {
     resetStyleSliders() {
       this.styleVector.fill(0);
       this.applyStyleSliders();
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -102,7 +129,7 @@ export default {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;  /* Updated to stretch for consistent width */
+  align-items: stretch; /* Updated to stretch for consistent width */
 }
 .generate-button {
   margin-top: 10px;

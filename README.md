@@ -1,16 +1,17 @@
 # FaceAI - Background Impact
 
 This project implements various Generative AI models to generate faces:
+
 - Deep Convolutional Generative Adversarial Network (DCGAN)
 - Progressive-growing StyleGAN
 - Variational Autoencoder (VAE)
 
 The projects also implements two new versions of the [Flicker-Face-HQ (FFHQ)](https://github.com)
+
 - [FFHQ-Blur](https://www.kaggle.com/datasets/thomaskientz/ffhq-blur) (Where the background is blurred)
 - [FFHQ-Grey](https://www.kaggle.com/datasets/thomaskientz/ffhq-grey) (Where the background is greyed-out)
 
 ![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
-
 
 The motivation stemmed from the fact that a lot of the variance in VAEs seemed to be wasted on the background of the image. There are no existing large-scale faces datasets with uniform background (the ORL dataset only has 400 images), so we decided to create our own.
 
@@ -23,9 +24,10 @@ We published the models and dataset transformations as a pip package. To install
 `pip install faceai-bgimpact`
 
 ## Folder structure
+
 ```
 FaceAI-BGImpact
-├── faceai_bgimpact             
+├── faceai_bgimpact
 │   ├── configs                         # Configuration files for models
 │   │   ├── default_dcgan_config.py
 │   │   └── default_stylegan_config.py
@@ -35,9 +37,9 @@ FaceAI-BGImpact
 │   │   ├── create_masks.py             # Functions to create masks for FFHQ dataset
 │   │   ├── create_blur_and_grey.py     # Functions to create blurred and greyed-out FFHQ datasets
 │   │   └── download_all_ffhq.py        # Functions to download all FFHQ datasets
-│   ├── models                          
-│   │   ├── dcgan_                      # DCGAN model implementation 
-│   │   │   ├── dcgan.py                
+│   ├── models
+│   │   ├── dcgan_                      # DCGAN model implementation
+│   │   │   ├── dcgan.py
 │   │   │   ├── discriminator.py
 │   │   │   └── generator.py
 │   │   ├── stylegan_                   # StyleGAN model implementation
@@ -51,7 +53,7 @@ FaceAI-BGImpact
 │   ├── scripts
 │   │   ├── train.py                    # Script to train models
 │   │   ├── create_video.py             # Script to create videos from generated images
-│   │   ├── generate_images.py    
+│   │   ├── generate_images.py
 │   │   └── graph_fids.py
 │   ├── main.py                         # Entry point for the package
 │   └── Nirmala.ttf                     # Font file used in the project
@@ -68,17 +70,19 @@ The `train.py` script is an entry point to train a model. It includes command-li
 
 0. Ensure you have the package installed, or the required dependencies for dev installed (see Dependencies section below).
 
-1. To train a model, you call `faceai-bgimpact train` and specify the model type using the `--model` flag, and the dataset with the `--dataset` flag. 
+1. To train a model, you call `faceai-bgimpact train` and specify the model type using the `--model` flag, and the dataset with the `--dataset` flag.
 
 2. Additional command-line arguments allow for fine-tuning the training process:
 
 Model arguments:
+
 - `--model`: Required. Specifies the type of model to train with options "DCGAN", "StyleGAN".
 - `--dataset`: Required. Selects the dataset to use with options "ffhq_raw", "ffhq_blur", "ffhq_grey".
 - `--latent-dim`: Optional. Defines the dimension of the latent space for generative models.
 - `--config-path`: Optional. Path to a custom JSON configuration file for model training.
 
 Training arguments:
+
 - `--lr`: Optional. Learning rate for DCGAN model training.
 - `--dlr`: Optional. Discriminator learning rate for StyleGAN training.
 - `--glr`: Optional. Generator learning rate for StyleGAN training.
@@ -90,10 +94,10 @@ Training arguments:
 - `--image-interval`: Optional. Iteration interval to wait before saving generated images.
 
 Checkpoint arguments:
+
 - `--list`: Optional. Lists all available checkpoints if set.
 - `--checkpoint-path`: Optional. Path to a specific checkpoint file to resume training, takes precedence over `--checkpoint-epoch`.
 - `--checkpoint-epoch`: Optional. Specifies the epoch number from which to resume training.
-
 
 3. Example usage:
 
@@ -117,10 +121,9 @@ And activate the environment using:
 
 `poetry shell`
 
-To install the package locally, you can run 
+To install the package locally, you can run
 
 `poetry install`
-
 
 Since these packages are heavy (especially PyTorch), you may use your own environment if you wish, but it might not work as expected.
 
@@ -139,6 +142,7 @@ Alternatively, with poetry, you can run:
 `poetry run pytest -v`
 
 ## TODO:
+
 - VAE
 - BMSG-GAN (https://github.com/akanimax/BMSG-GAN)
 - GANSpace (https://proceedings.neurips.cc/paper/2020/file/6fe43269967adbb64ec6149852b5cc3e-Paper.pdf)
