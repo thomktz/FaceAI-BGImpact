@@ -606,7 +606,7 @@ class StyleGAN(AbstractModel):
 
         return adjusted_w
 
-    def blend_styles(self, base_w, x1, x_list, layers_list):
+    def blend_styles(self, base_w, x1, x_list, layers_list, apply_noise):
         """
         Blends different styles on the base latent vector for specified layers.
 
@@ -616,13 +616,14 @@ class StyleGAN(AbstractModel):
         x_list (list of floats): List of strengths for each eigenvector.
         layers_list (list of list of ints): List of layer indices for each eigenvector.
         num_layers (int): Total number of layers in the generator.
+        apply_noise (bool): Whether to add noise to the input tensor.
 
         Returns:
         -------
         list of tensors: A list of blended latent vectors, one for each layer.
         """
         # Initialize a list of w vectors, one for each layer, starting with the base_w
-        blended_w = [base_w.clone() for _ in range(self.level + 1)]
+        blended_w = [base_w.clone() for _ in range(2 * (self.level + 1))]
 
         # Apply each eigenvector strength to its corresponding layers
         for i, x_strength in enumerate(x_list):
@@ -639,7 +640,7 @@ class StyleGAN(AbstractModel):
             for layer in layers_list[i]:
                 blended_w[layer] += w_offset - base_w
 
-        return self.generator.synthesis.predict_modified_layer(blended_w, self.level, True)
+        return self.generator.synthesis.predict_modified_layer(blended_w, self.level, apply_noise=apply_noise)
 
     def graph_fid(self, save_dir="outputs/StyleGAN_fid_plots"):
         """

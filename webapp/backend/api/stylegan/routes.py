@@ -11,9 +11,9 @@ from .load_trained_model import stylegan
 from flask_restx import fields
 from PIL import Image
 
-NUM_IMAGES = 9
 stored_w_vectors = None
 N_PCA = stylegan.n_components
+APPLY_NOISE = False
 
 to_pil_image = ToPILImage()
 
@@ -38,7 +38,7 @@ class SetNSliders(Resource):
 class RandomX1Others(Resource):
     def get(self):
         global x1_others
-        x1_others = torch.randn(N_PCA - n_sliders)
+        x1_others = torch.randn(N_PCA - n_sliders) / 5
         return {"message": "Random x1 others set"}, 200
 
 
@@ -82,11 +82,9 @@ class GenerateImage(Resource):
     def post(self):
         eigenvector_strengths = api.payload["eigenvector_strengths"]
         layers_list = api.payload["layers_list"]
-        print(eigenvector_strengths)
-        print(layers_list)
 
         # Apply blend_styles to generate the blended latent vectors
-        image_tensor = stylegan.blend_styles(base_w, x1, eigenvector_strengths, layers_list)
+        image_tensor = stylegan.blend_styles(base_w, x1, eigenvector_strengths, layers_list, APPLY_NOISE)
         image_tensor = (image_tensor.clamp(-1, 1) + 1) / 2  # Denormalize the image
 
         # Convert tensor to Base64 image
@@ -155,7 +153,7 @@ class GenerateTransitionImages(Resource):
                     eigenvector_strengths[eigenvector_index] = strength
 
                     # Generate blended latent vector
-                    image_tensor = stylegan.blend_styles(base_w_, x1_, eigenvector_strengths, layers_list)
+                    image_tensor = stylegan.blend_styles(base_w_, x1_, eigenvector_strengths, layers_list, APPLY_NOISE)
                     image_tensor = (image_tensor.clamp(-1, 1) + 1) / 2  # Denormalize the image
 
                     # Convert tensor to PIL image and add to the list

@@ -6,7 +6,11 @@
       :min="-slidersRange" :max="slidersRange" 
       :step="0.01 * slidersRange * 5"
       v-model="sliderValues[index - 1]" 
-      thumb-label="always">
+      thumb-label="always"
+      >
+      <template v-slot:label>
+        <div v-katex="'x_{' + (index-1) + '}'"></div>
+      </template>
     </v-slider>
     <!-- Buttons -->
     <v-btn @click="setSlidersToZero">Set Sliders to 0</v-btn>
@@ -17,6 +21,8 @@
 </template>
 
 <script>
+import 'katex/dist/katex.min.css';
+
 export default {
   props: {
     nSliders: {

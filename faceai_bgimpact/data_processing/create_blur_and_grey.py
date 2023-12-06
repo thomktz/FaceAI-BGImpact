@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
+from zipfile import ZipFile, ZIP_DEFLATED
 from faceai_bgimpact.data_processing.paths import raw_folder_name, mask_folder_name, blur_folder_name, grey_folder_name
 
 # Ensure the output directories exist
@@ -44,6 +45,20 @@ def create_blurred_and_grey_images():
         grey_image_path = Path(grey_folder_name) / mask_file.name
         cv2.imwrite(str(blurred_image_path), blurred_image)
         cv2.imwrite(str(grey_image_path), grey_image)
+
+
+def compress_folder(folder_name):
+    """Compress a folder."""
+    # Create a zip file
+    zip_file_name = f"{folder_name}.zip"
+    zip_file = ZipFile(zip_file_name, "w", ZIP_DEFLATED)
+
+    # Add all files in the folder to the zip file
+    for file in tqdm(Path(folder_name).glob("*"), desc=f"Compressing {folder_name}"):
+        zip_file.write(file, file.name)
+
+    # Close the zip file
+    zip_file.close()
 
 
 if __name__ == "__main__":

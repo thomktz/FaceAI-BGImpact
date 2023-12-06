@@ -8,5 +8,5 @@ stylegan = StyleGAN.from_checkpoint(
 )
 
 print("Fitting PCA...")
-stylegan.fit_pca(num_samples=70000, batch_size=100, n_components=200)
+stylegan.fit_pca(num_samples=30000, batch_size=100, n_components=150)
 print("Done!")

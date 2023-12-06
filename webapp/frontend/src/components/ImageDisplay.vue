@@ -1,13 +1,16 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col class="d-flex justify-center">
-        <img v-if="resizedImage" :src="resizedImage" alt="Generated Image" />
-        <div v-else class="grey-placeholder"></div>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div>
+    <v-container class="fixed-center">
+      <v-row>
+        <v-col class="d-flex justify-center">
+          <img v-if="resizedImage" :src="resizedImage" alt="Generated Image" />
+          <div v-else class="grey-placeholder"></div>
+        </v-col>
+      </v-row>
+    </v-container>
+  </div>
 </template>
+
 
 <script>
 export default {
@@ -56,5 +59,17 @@ export default {
   width: 400px;
   height: 400px;
   background-color: grey;
+  z-index: 2;
 }
+.fixed-center {
+  position: fixed; /* Fix position relative to the viewport */
+  top: 50%; /* Position at 50% from the top */
+  left: 50%; /* Position at 50% from the left */
+  transform: translate(-50%, -50%); /* Adjust the positioning to center the element */
+}
+.img {
+  z-index: 2;
+}
+
+
 </style>

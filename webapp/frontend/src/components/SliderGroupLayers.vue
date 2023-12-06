@@ -7,15 +7,22 @@
         :max="slidersRange" 
         :step="0.01 * slidersRange * 5"
         thumb-label="always">
+        <template v-slot:label>
+          <div v-katex="'x_{' + (index-1) + '}'" style="margin-right: 5px;"></div>
+        </template>
       </v-slider>
       <v-range-slider 
         v-model="layerRanges[index-1]" 
-        :ticks="[0, 1, 2, 3, 4]"
+        :ticks="[...Array(maxLayers + 1).keys()]"
         :min="0"
-        :max="4" 
+        :max="9" 
         :step="1" 
+        @update:model-value="handleLayerRangeChange(index-1)"
         show-ticks="always"
         :tick-size="4">
+        <template v-slot:label>
+          <div v-katex="'L_{' + (index-1) + '}'" style="margin-right: 10px;"></div>
+        </template>
       </v-range-slider>
     </div>
     <!-- Buttons -->
@@ -32,7 +39,7 @@ export default {
     },
     maxLayers: {
       type: Number,
-      default: 4
+      default: 9
     },
     slidersRange: {
       type: Number,
@@ -42,33 +49,59 @@ export default {
   data() {
     return {
       sliderValues: Array(this.nSliders).fill(0),
-      layerRanges: Array(this.nSliders).fill().map(() => [0, this.maxLayers])
+      layerRanges: Array(this.nSliders).fill().map(() => [0, this.maxLayers]),
+      oldLayerRanges: Array(this.nSliders).fill().map(() => [0, this.maxLayers]),
+      fullLayerLists: Array(this.nSliders).fill().map(() => [...Array(this.maxLayers + 1).keys()]),
     };
   },
   watch: {
+    nSliders(newVal, oldVal) {
+      if (newVal > oldVal) {
+        // Handle increase in number of sliders
+        this.sliderValues = [...this.sliderValues, ...Array(newVal - oldVal).fill(0)];
+        this.layerRanges = [...this.layerRanges, ...Array(newVal - oldVal).fill().map(() => [0, this.maxLayers])];
+        this.oldLayerRanges = [...this.oldLayerRanges, ...Array(newVal - oldVal).fill().map(() => [0, this.maxLayers])];
+        this.fullLayerLists = [...this.fullLayerLists, ...Array(newVal - oldVal).fill().map(() => [...Array(this.maxLayers + 1).keys()])];
+      } else {
+        // Handle decrease in number of sliders
+        this.sliderValues = this.sliderValues.slice(0, newVal);
+        this.layerRanges = this.layerRanges.slice(0, newVal);
+        this.oldLayerRanges = this.oldLayerRanges.slice(0, newVal);
+        this.fullLayerLists = this.fullLayerLists.slice(0, newVal);
+      }
+    },
     sliderValues: {
       handler(newValues) {
         this.$emit('newSliderChange', newValues);
       },
       deep: true
     },
-    layerRanges: {
-      handler(newRanges) {
-        const fullLayerLists = newRanges.map(range => {
-          const [lower, upper] = range;
-          return Array.from({ length: upper - lower + 1 }, (_, i) => i + lower);
-        });
-        this.$emit('layerListChange', fullLayerLists);
-      },
-      deep: true
-    }
   },
   methods: {
     setSlidersToZero() {
       this.sliderValues.fill(0);
       this.layerRanges = this.layerRanges.map(() => [0, this.maxLayers]);
+    },
+    handleLayerRangeChange(index) {
+      // Check if value has changed
+      if (this.layerRanges[index][0] == this.oldLayerRanges[index][0] && this.layerRanges[index][1] == this.oldLayerRanges[index][1]) {
+        return;
+      }
+      console.log('Layer range changed')
+      this.oldLayerRanges[index] = [...this.layerRanges[index]];
+      this.fullLayerLists[index] = [...Array(this.maxLayers + 1).keys()].slice(this.layerRanges[index][0], this.layerRanges[index][1] + 1);
+
+      this.$emit('layerListChange', this.fullLayerLists);
     }
-    // No need for logSliderValue method since watchers are handling logging
   }
 }
 </script>
+
+<style scoped>
+.v-slider {
+  margin-bottom: -25px;
+}
+.v-range-slider {
+  margin-bottom: 15px;
+}
+</style>

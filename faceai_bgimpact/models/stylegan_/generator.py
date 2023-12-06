@@ -87,7 +87,7 @@ class SynthesisBlock(nn.Module):
         else:
             self.conv = WSConv2d(in_channel, out_channel, 3, 1, 1)
 
-    def forward(self, x, w, apply_noise):
+    def forward(self, x, w1, w2, apply_noise):
         """
         Forward pass for the StyleGAN convolutional block.
 
@@ -95,7 +95,9 @@ class SynthesisBlock(nn.Module):
         ----------
         x (torch.Tensor): Input tensor.
             Shape: (batch_size, in_channel, height, width)
-        w (torch.Tensor): Style tensor.
+        w1 (torch.Tensor): Style tensor.
+            Shape: (batch_size, style_dim)
+        w2 (torch.Tensor): Style tensor. Will be the same as w1 except in layer analysis.
             Shape: (batch_size, style_dim)
         apply_noise (bool): Whether to add noise to the input tensor.
 
@@ -104,14 +106,15 @@ class SynthesisBlock(nn.Module):
         torch.Tensor: Output tensor.
             Shape: (batch_size, out_channel, height, width)
         """
-        # TODO: w1 and w2
+        if w2 is None:
+            w2 = w1
         if not self.is_first_block:
             x = F.interpolate(x, scale_factor=2, mode="bilinear", antialias=True)
             x = self.conv1(x)
 
         if apply_noise:
             x = x + self.noise1(x.shape[0], x.device)
-        x = self.adain(x, w)
+        x = self.adain(x, w1)
         x = self.act(x)
 
         if not self.is_first_block:
@@ -120,7 +123,7 @@ class SynthesisBlock(nn.Module):
             x = self.conv(x)
         if apply_noise:
             x = x + self.noise2(x.shape[0], x.device)
-        x = self.adain(x, w)
+        x = self.adain(x, w2)
         x = self.act(x)
 
         return x
@@ -187,14 +190,14 @@ class SynthesisNetwork(nn.Module):
         """
         x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
 
-        x = self.init_block(x, w, apply_noise=apply_noise)
+        x = self.init_block(x, w, w, apply_noise=apply_noise)
 
         # Get the initial RGB image at 4x4 resolution
         if current_level <= 1:
             rgb = self.to_rgb_layers[0](x)
 
         for level in range(1, current_level + 1):
-            x = self.upscale_blocks[level - 1](x, w, apply_noise=apply_noise)
+            x = self.upscale_blocks[level - 1](x, w, w, apply_noise=apply_noise)
 
             if alpha < 1.0 and level == current_level:
                 # Interpolate between the new RGB image of the current resolution
@@ -228,14 +231,16 @@ class SynthesisNetwork(nn.Module):
         ----------
         torch.Tensor: Generated image tensor.
         """
-        w = new_ws[0].unsqueeze(0).unsqueeze(2).unsqueeze(3)
-        x = self.learned_constant.repeat(w.shape[0], 1, 1, 1)
+        w1 = new_ws[0].unsqueeze(0).unsqueeze(2).unsqueeze(3)
+        w2 = new_ws[1].unsqueeze(0).unsqueeze(2).unsqueeze(3)
+        x = self.learned_constant.repeat(w1.shape[0], 1, 1, 1)
 
-        x = self.init_block(x, w, apply_noise=apply_noise)
+        x = self.init_block(x, w1, w2, apply_noise=apply_noise)
 
         for level in range(1, current_level + 1):
-            w = new_ws[level].unsqueeze(0).unsqueeze(2).unsqueeze(3)
-            x = self.upscale_blocks[level - 1](x, w, apply_noise=apply_noise)
+            w1 = new_ws[2 * level].unsqueeze(0).unsqueeze(2).unsqueeze(3)
+            w2 = new_ws[2 * level + 1].unsqueeze(0).unsqueeze(2).unsqueeze(3)
+            x = self.upscale_blocks[level - 1](x, w1, w2, apply_noise=apply_noise)
 
             if level == current_level:
                 rgb = self.to_rgb_layers[level](x)

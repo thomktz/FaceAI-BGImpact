@@ -4,6 +4,7 @@ from faceai_bgimpact.scripts.create_video import create_video_function
 from faceai_bgimpact.scripts.download_all_ffhq import download_all_ffhq
 from faceai_bgimpact.scripts.graph_fids import graph_fids_function
 from faceai_bgimpact.data_processing.create_masks import create_masks
+from faceai_bgimpact.scripts.create_blur_and_grey import create_blur_and_grey
 
 
 def main():
@@ -109,6 +110,10 @@ def main():
     # Subparser for the 'create-masks' command
     subparsers.add_parser("create-masks", help="Create cutout masks for the images")
 
+    # Subparser for the 'create-blur-and-grey' command
+    create_blur_and_grey_parser = subparsers.add_parser("create-blur-and-grey", help="Create blurred and grey datasets")
+    create_blur_and_grey_parser.add_argument("--zip", action="store_true", help="Compress the output folders")
+
     args = parser.parse_args()
 
     if args.command == "train":
@@ -169,6 +174,10 @@ def main():
     elif args.command == "create-masks":
         print("Creating masks...")
         create_masks()
+    elif args.command == "create-blur-and-grey":
+        print("Creating blurred and grey images...")
+        create_blur_and_grey(zip_=args.zip)
+
     else:
         parser.print_help()
 

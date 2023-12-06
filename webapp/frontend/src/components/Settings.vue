@@ -9,19 +9,19 @@
           <v-spacer></v-spacer>
   
           <v-col cols="auto">
-            <v-select label="Model Type" :items="modelTypes" v-model="modelName" @input="updateSettings"></v-select>
+            <v-select label="Model Type" :items="modelTypes" v-model="modelName" @input="updateSettings" hide-details="true"></v-select>
           </v-col>
           
           <v-col cols="auto">
-            <v-text-field label="Sliders Range" type="number" v-model.number="slidersRange" @input="updateSettings" class="settings-input"></v-text-field>
+            <v-text-field label="Sliders Range" type="number" v-model.number="slidersRange" @input="updateSettings" class="settings-input" hide-details="true"></v-text-field>
           </v-col>
           
           <v-col cols="auto">
-            <v-text-field label="Number of New Sliders" type="number" v-model.number="nSlidersNew" @input="updateSettings" class="settings-input"></v-text-field>
+            <v-text-field label="Number of New Sliders" type="number" v-model.number="nSlidersNew" @input="updateSettings" class="settings-input" hide-details="true"></v-text-field>
           </v-col>
           
           <v-col cols="auto">
-            <v-text-field label="Number of Original Sliders" type="number" v-model.number="nSlidersOriginal" @input="updateSettings" class="settings-input"></v-text-field>
+            <v-text-field label="Number of Original Sliders" type="number" v-model.number="nSlidersOriginal" @input="updateSettings" class="settings-input" hide-details="true"></v-text-field>
           </v-col>
         </v-row>
       </v-container>
@@ -52,6 +52,9 @@
   </script>
   
   <style>
+  .v-footer {
+    padding-top: 0px !important;
+  }
   .settings-footer {
     border-top: 1px solid rgba(0, 0, 0, 0.12); /* Add a top border to the footer */
   }
