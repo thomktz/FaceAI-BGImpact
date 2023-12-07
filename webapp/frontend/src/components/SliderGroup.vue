@@ -45,6 +45,7 @@
 import "katex/dist/katex.min.css";
 
 export default {
+  emits: ["originalSliderChange", "othersToZero", "othersToRandom"],
   props: {
     nSliders: {
       type: Number,

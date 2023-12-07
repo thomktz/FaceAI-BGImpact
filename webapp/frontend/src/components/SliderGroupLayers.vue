@@ -35,6 +35,7 @@
         :max="slidersRange"
         :step="0.01 * slidersRange * 5"
         thumb-label="always"
+        :disabled="disabled"
       >
         <template v-slot:label>
           <div
@@ -52,6 +53,7 @@
         @update:model-value="handleLayerRangeChange(index - 1)"
         show-ticks="always"
         :tick-size="4"
+        :disabled="disabled"
       >
         <template v-slot:label>
           <div
@@ -68,6 +70,7 @@
 
 <script>
 export default {
+  emits: ["newSliderChange", "layerListChange"],
   props: {
     nSliders: {
       type: Number,
@@ -80,6 +83,10 @@ export default {
     slidersRange: {
       type: Number,
       default: 1.0,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {

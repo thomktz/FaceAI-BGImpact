@@ -21,12 +21,13 @@
                 </v-expansion-panel-text>
               </v-expansion-panel>
             </v-expansion-panels>
-            <SliderGroupLayers
-              :nSliders="settings.nSlidersNew"
-              :slidersRange="settings.slidersRange"
-              @newSliderChange="newSliderChange"
-              @layerListChange="layerListChange"
-            ></SliderGroupLayers>
+            <slider-group-layers
+              :n-sliders="settings.nSlidersNew"
+              :sliders-range="settings.slidersRange"
+              @new-slider-change="newSliderChange"
+              @layer-list-change="layerListChange"
+              :disabled="areSlidersDisabled"
+            ></slider-group-layers>
           </v-col>
 
           <!-- Image Display -->
@@ -34,8 +35,14 @@
             <ImageDisplay :imageData="imageData"></ImageDisplay>
           </v-col>
 
-          <!-- Image Display -->
-          <v-col cols="4" class="panel-column"> </v-col>
+          <!-- Edits controls -->
+          <v-col cols="4" class="panel-column">
+            <EditControls
+              :layerList="layerList"
+              :newSliderValues="newSliderValues"
+              @lambdaChange="lambdaChange"
+            ></EditControls>
+          </v-col>
         </v-row>
       </v-container>
     </v-main>
@@ -48,6 +55,7 @@ import Settings from "@/components/Settings.vue";
 import ImageDisplay from "@/components/ImageDisplay.vue";
 import SliderGroup from "@/components/SliderGroup.vue";
 import SliderGroupLayers from "@/components/SliderGroupLayers.vue";
+import EditControls from "@/components/EditControls.vue";
 import { apiClient } from "@/apiConfig";
 import "katex/dist/katex.min.css";
 
@@ -57,6 +65,7 @@ export default {
     ImageDisplay,
     SliderGroup,
     SliderGroupLayers,
+    EditControls,
   },
   data: () => ({
     settings: {
@@ -72,6 +81,8 @@ export default {
     originalSliderValues: Array(10).fill(0),
     newSliderValues: Array(5).fill(0),
     panel: null,
+    lambda: 1,
+    areSlidersDisabled: false,
   }),
   mounted() {
     this.handleSettingsUpdate(this.settings);
@@ -141,10 +152,19 @@ export default {
       this.layerList = newRanges;
       this.getImage();
     },
+    lambdaChange(newValue) {
+      this.lambda = newValue;
+      this.areSlidersDisabled = newValue !== 1;
+      this.getImage();
+    },
     getImage() {
+      // Scale the new slider values by lambda
+      const scaledNewSliderValues = this.newSliderValues.map(
+        (value) => value * this.lambda,
+      );
       apiClient
         .post("/stylegan/generate-image", {
-          eigenvector_strengths: this.newSliderValues,
+          eigenvector_strengths: scaledNewSliderValues,
           layers_list: this.layerList,
         })
         .then((response) => {
