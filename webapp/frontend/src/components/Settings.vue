@@ -13,7 +13,7 @@
             label="Model Type"
             :items="modelTypes"
             v-model="modelName"
-            @input="updateSettings"
+            @update:model-value="modelChange"
             hide-details="true"
           ></v-select>
         </v-col>
@@ -57,6 +57,7 @@
 
 <script>
 export default {
+  emits: ["updateSettings", "modelChange"],
   data: () => ({
     modelName: "Grey",
     slidersRange: 2.0,
@@ -73,6 +74,10 @@ export default {
         nSlidersNew: this.nSlidersNew,
         nSlidersOriginal: this.nSlidersOriginal,
       });
+    },
+    modelChange() {
+      console.log("Model changed");
+      this.$emit("modelChange", this.modelName);
     },
   },
 };

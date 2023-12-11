@@ -3,6 +3,7 @@ import torch
 import torch.optim as optim
 import plotly.graph_objects as go
 from tqdm import tqdm
+from joblib import dump, load
 from torchvision.utils import save_image
 from torchvision.transforms import Resize
 from pytorch_gan_metrics import get_fid
@@ -540,7 +541,9 @@ class StyleGAN(AbstractModel):
                 normalize=False,
             )
 
-    def fit_pca(self, num_samples=10000, batch_size=100, n_components=50):
+    def fit_pca(
+        self, num_samples=10000, batch_size=100, n_components=50, save_file="models/StyleGAN_PCA", use_saved=True
+    ):
         """
         Fit PCA on the W space of the StyleGAN model.
 
@@ -552,7 +555,23 @@ class StyleGAN(AbstractModel):
             Batch size for processing.
         n_components : int
             Number of components for PCA.
+        save : bool
+            Whether to save the PCA model.
+        use_saved : bool
+            Whether to use a saved PCA model.
         """
+        if use_saved:
+            try:
+                self.load_pca(save_file)
+                # Check if the loaded PCA has the correct number of components and samples
+                if self.pca.n_components_ == n_components and self.pca.n_samples_ == num_samples:
+                    print("Loaded PCA from saved file.")
+                    return
+                else:
+                    print("Saved PCA does not match the requested parameters. Fitting new PCA...")
+            except FileNotFoundError:
+                print("No saved PCA found. Fitting new PCA...")
+
         self.generator.eval()
         all_w = []
         self.n_components = n_components
@@ -570,6 +589,23 @@ class StyleGAN(AbstractModel):
         # Fit PCA
         self.pca = PCA(n_components=n_components)
         self.pca.fit(all_w_flat.numpy())
+
+        # Save PCA model as parquet file
+        full_save_file = self.get_save_dir(save_file) + ".joblib"
+        dump(self.pca, full_save_file)
+
+    def load_pca(self, save_file="outputs/StyleGAN_PCA"):
+        """
+        Load PCA from file.
+
+        Parameters:
+        ----------
+        save_file : str
+            File to load the PCA model from.
+        """
+        full_save_file = self.get_save_dir(save_file) + ".joblib"
+        self.pca = load(full_save_file)
+        self.n_components = self.pca.n_components_
 
     def manipulate_w(self, adjustment_factors, w_vectors):
         """

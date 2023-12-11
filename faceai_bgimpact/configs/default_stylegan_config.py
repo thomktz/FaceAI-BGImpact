@@ -13,7 +13,7 @@ config = {
         0: {"transition": 0, "training": 15, "batch_size": 128},
         1: {"transition": 4, "training": 20, "batch_size": 128},
         2: {"transition": 10, "training": 40, "batch_size": 128},
-        3: {"transition": 15, "training": 60, "batch_size": 128},
+        3: {"transition": 15, "training": 70, "batch_size": 128},
         4: {"transition": 25, "training": 95, "batch_size": 64},
         5: {"transition": 30, "training": 100, "batch_size": 32},
     },

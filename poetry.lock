@@ -1761,6 +1761,17 @@ files = [
 ]
 
 [[package]]
+name = "provae"
+version = "0.1.0"
+description = "Progressive-Growing VAE"
+optional = false
+python-versions = ">=3.9,<4.0"
+files = [
+    {file = "provae-0.1.0-py3-none-any.whl", hash = "sha256:18cd49d89f18960c4baa43e1e6eed2f76318af58f4f124236baa8d74ede37664"},
+    {file = "provae-0.1.0.tar.gz", hash = "sha256:db19194f4702b4b14c76866a1a68919653016d86169a7b1b46908c4908df8192"},
+]
+
+[[package]]
 name = "psutil"
 version = "5.9.6"
 description = "Cross-platform lib for process and system monitoring in Python."
@@ -2856,4 +2867,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "1d9ef25b0b1911ec48c2ed9921f25cabdaa069b03bbbc2785d6dd898259696df"
+content-hash = "b0846c6e4298c368f9c954101d56d6cc25e7772d5c8471210f11dde8e04ba5be"

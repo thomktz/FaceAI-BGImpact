@@ -46,7 +46,10 @@
         </v-row>
       </v-container>
     </v-main>
-    <Settings @updateSettings="handleSettingsUpdate"></Settings>
+    <Settings
+      @updateSettings="handleSettingsUpdate"
+      @modelChange="handleModelChange"
+    ></Settings>
   </v-app>
 </template>
 
@@ -69,7 +72,7 @@ export default {
   },
   data: () => ({
     settings: {
-      modelName: "grey",
+      modelName: "Grey",
       slidersRange: 2.0,
       nSlidersNew: 5,
       nSlidersOriginal: 10,
@@ -100,6 +103,7 @@ export default {
       apiClient
         .post("/stylegan/set-n-sliders", {
           n_sliders: this.settings.nSlidersOriginal,
+          model_name: this.settings.modelName,
         })
         .then((response) => {
           console.log(response);
@@ -109,10 +113,17 @@ export default {
         });
       this.getImage();
     },
+    handleModelChange(modelName) {
+      this.settings.modelName = modelName;
+      this.othersToZero();
+      this.getImage();
+    },
     othersToZero() {
       console.log("Set others to zero");
       apiClient
-        .get("/stylegan/zero-x1-others")
+        .post("/stylegan/zero-x1-others", {
+          model_name: this.settings.modelName,
+        })
         .then((response) => {
           this.originalSliderChange(this.originalSliderValues);
           this.getImage();
@@ -124,7 +135,9 @@ export default {
     othersToRandom() {
       console.log("Set others to random");
       apiClient
-        .get("/stylegan/random-x1-others")
+        .post("/stylegan/random-x1-others", {
+          model_name: this.settings.modelName,
+        })
         .then((response) => {
           this.originalSliderChange(this.originalSliderValues);
           this.getImage();
@@ -140,7 +153,10 @@ export default {
     originalSliderChange(newValues) {
       this.originalSliderValues = newValues;
       apiClient
-        .post("/stylegan/x1-sliders", { slider_values: newValues })
+        .post("/stylegan/x1-sliders", {
+          slider_values: newValues,
+          model_name: this.settings.modelName,
+        })
         .then((response) => {
           this.getImage();
         })
@@ -166,6 +182,7 @@ export default {
         .post("/stylegan/generate-image", {
           eigenvector_strengths: scaledNewSliderValues,
           layers_list: this.layerList,
+          model_name: this.settings.modelName,
         })
         .then((response) => {
           this.imageData = `data:image/jpeg;base64,${response.data.image}`;
