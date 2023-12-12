@@ -210,7 +210,7 @@ class StyleGAN(AbstractModel):
             batch_size=100,
             img_size=self.resolution,
             use_torch=True,
-            num_workers=os.cpu_count(),
+            num_workers=os.cpu_count() - 1,
         )
 
     def calculate_fid(self, num_images, batch_size, device, stats_dir="outputs/StyleGAN_fid_stats"):
