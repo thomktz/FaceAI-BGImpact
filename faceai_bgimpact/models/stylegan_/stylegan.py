@@ -207,7 +207,7 @@ class StyleGAN(AbstractModel):
         calc_and_save_stats(
             dataset_folder,
             save_file,
-            batch_size=100,
+            batch_size=10,
             img_size=self.resolution,
             use_torch=True,
             num_workers=os.cpu_count() - 1,
