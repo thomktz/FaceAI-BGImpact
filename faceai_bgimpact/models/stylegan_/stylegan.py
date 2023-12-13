@@ -176,6 +176,9 @@ class StyleGAN(AbstractModel):
                     self.current_epochs[level] = epoch + 1
                     self.save_checkpoint(self.epoch_total + 1, self.current_epochs)
 
+                # Update FID graph
+                self.graph_fid()
+
             # Update for next level
             if level < max(level_epochs.keys()):
                 self.alpha = 0.0  # Reset alpha for the next level
