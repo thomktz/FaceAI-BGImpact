@@ -17,12 +17,13 @@ class Decoder(nn.Module):
         self.fc = nn.Linear(latent_dim, 128 * self.init_size**2) 
 
         self.deconv_blocks = nn.Sequential(
-            nn.ConvTranspose2d(128, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1),
+            nn.ConvTranspose2d(128, 128, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(64, 3, kernel_size=3, stride=1, padding=1),
-            nn.Sigmoid()  # Sigmoid activation for pixel values between 0 and 1
+            # nn.Sigmoid()  # Sigmoid activation for pixel values between 0 and 1
         )
 
     def forward(self, z):

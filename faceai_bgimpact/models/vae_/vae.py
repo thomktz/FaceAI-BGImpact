@@ -50,8 +50,10 @@ class VAE(AbstractModel):
         self.optimizer_config = {}
 
     def loss_function(self, recon_x, x, mu, logvar):
+        
         # Reconstruction loss to measure how xell te model reconstructs the input 
-        BCE = torch.nn.BCELoss()(recon_x, x)
+        BCE = torch.mean((recon_x - x)**2) # MSE loss
+
 
         # KL divergence loss which encourage the latent space to be close to a standard normal distribution
         KLD = -0.5 * torch.mean(torch.mean(1 + logvar - mu.pow(2) - logvar.exp(), 1))
@@ -179,12 +181,20 @@ class VAE(AbstractModel):
         images = []
         with torch.no_grad():
             for _ in range(num_images // batch_size):
-                z = torch.randn(batch_size, self.latent_dim).to(device)
-                images.append(self.encoder(z).detach().cpu())
+                z = torch.randn(batch_size, 3, 128, 128).to(device)
+                mu, logvar = self.encoder(z)
+                images.append((mu.detach().cpu(), logvar.detach().cpu()))
 
         self.decoder.train()
-        imgs = torch.cat(images, dim=0)
-        denormalized_imgs = denormalize_image(imgs)
+        # Concatenate mu and logvar separately
+        mu_imgs = torch.cat([item[0] for item in images], dim=0)
+        logvar_imgs = torch.cat([item[1] for item in images], dim=0)
+
+
+        denormalized_mu = denormalize_image(mu_imgs)
+        denormalized_logvar = denormalize_image(logvar_imgs)
+
+        denormalized_imgs = (denormalized_mu, denormalized_logvar)
 
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
