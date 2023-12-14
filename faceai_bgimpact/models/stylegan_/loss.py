@@ -140,8 +140,8 @@ class R1Regularization(GANLoss):
 
         print(
             f"Discriminator: R1 penalty: {r1_penalty:.4f} | "
-            + "real_scores : {real_scores:.4f} | "
-            + "fake_scores : {fake_scores:.4f}"
+            + f"real_scores : {real_scores:.4f} | "
+            + f"fake_scores : {fake_scores:.4f}"
         )
         return loss
 
