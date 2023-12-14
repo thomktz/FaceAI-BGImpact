@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.optim as optim
+import numpy as np
 import plotly.graph_objects as go
 from tqdm import tqdm
 from joblib import dump, load
@@ -58,6 +59,52 @@ class StyleGAN(AbstractModel):
         self.pca = None
         self.fids = {"level": [], "epoch": [], "fid": []}
 
+    def sigmoid_lr_scheduler(self, epoch, config, k=0.5):
+        """
+        Manually define a sigmoid learning rate scheduler for the stabilization phase.
+
+        Parameters
+        ----------
+        epoch : int
+            Current epoch in the phase.
+        config : dict
+            Configuration for the current level.
+        k : float
+            Steepness of the sigmoid.
+            Default: 0.5
+        """
+        if epoch < config["transition"]:
+            return config["lr_lambda_transition"]
+
+        # After transition phase, use sigmoid
+        t_0 = config["stabilization"] / 2
+        t = epoch - config["transition"]
+
+        lambda_ = config["lr_lambda_transition"] + (
+            config["lr_lambda_stabilization"] - config["lr_lambda_transition"]
+        ) / (1 + np.exp(-k * (t - t_0)))
+        self.lambda_ = lambda_
+        return lambda_
+
+    def update_lr(self, base_glr, base_mlr, base_dlr, lambda_):
+        """
+        Update the learning rates for the current epoch.
+
+        Parameters
+        ----------
+        base_glr : float
+            Base learning rate for the generator.
+        base_mlr : float
+            Base learning rate for the mapping network.
+        base_dlr : float
+            Base learning rate for the discriminator.
+        lambda_ : float
+            Learning rate multiplier.
+        """
+        self.optimizer_G.param_groups[0]["lr"] = base_mlr * lambda_
+        self.optimizer_G.param_groups[1]["lr"] = base_glr * lambda_
+        self.optimizer_D.param_groups[0]["lr"] = base_dlr * lambda_
+
     def train_init(self, glr, mlr, dlr, loss):
         """
         Initialize the training process.
@@ -92,6 +139,7 @@ class StyleGAN(AbstractModel):
         self.resolution = 4
         self.alpha = 1
         self.epoch_total = None
+        self.lambda_ = 1.0
 
         self.loss = {
             "wgan": WGAN,
@@ -126,7 +174,7 @@ class StyleGAN(AbstractModel):
         if hasattr(self, "current_epochs"):
             # Check if checkpoint was the last epoch of the level
             if self.current_epochs[self.level] == (
-                level_epochs[self.level]["training"] + level_epochs[self.level]["transition"]
+                level_epochs[self.level]["stabilization"] + level_epochs[self.level]["transition"]
             ):
                 # If so, move to the next level
                 self.level += 1
@@ -155,7 +203,7 @@ class StyleGAN(AbstractModel):
             )
 
             # Calculate total epochs for this level from configuration
-            total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["training"]
+            total_level_epochs = level_epochs[level]["transition"] + level_epochs[level]["stabilization"]
             start_epoch_for_level = start_epoch if level == start_level else 0
 
             # Computing FID stats for current level
@@ -165,6 +213,11 @@ class StyleGAN(AbstractModel):
             for epoch in range(start_epoch_for_level, total_level_epochs):
                 self.current_epochs[level] = epoch
                 self.epoch_total = sum(self.current_epochs.values())
+
+                # Update learning rates
+                self.lambda_ = self.sigmoid_lr_scheduler(epoch, level_epochs[level])
+                self.update_lr(glr, mlr, dlr, self.lambda_)
+
                 self._train_one_epoch(level_epochs[level], epoch, image_interval, device)
 
                 # Calculate FID score of epoch
@@ -266,7 +319,7 @@ class StyleGAN(AbstractModel):
                 # + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
             )
 
-        total_epochs = level_config["transition"] + level_config["training"]
+        total_epochs = level_config["transition"] + level_config["stabilization"]
         epoch_iter = tqdm(
             enumerate(self.loader),
             total=len(self.loader),
@@ -403,6 +456,7 @@ class StyleGAN(AbstractModel):
             "style_layers": self.style_layers,
             "fids": self.fids,
             "latent_vector": self.latent_vector,
+            "lambda_": self.lambda_,
         }
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved at {checkpoint_path}")
@@ -451,6 +505,7 @@ class StyleGAN(AbstractModel):
         style_layers = checkpoint.get("style_layers", style_layers)
         fids = checkpoint.get("fids", {"level": [], "epoch": [], "fid": []})
         latent_vector = checkpoint.get("latent_vector", torch.randn(64, latent_dim))
+        lambda_ = checkpoint.get("lambda_", 1.0)
 
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
@@ -472,6 +527,7 @@ class StyleGAN(AbstractModel):
         instance.current_epochs = current_epochs
         instance.fids = fids
         instance.latent_vector = latent_vector
+        instance.lambda_ = lambda_
 
         return instance
 

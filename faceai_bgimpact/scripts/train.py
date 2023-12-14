@@ -33,9 +33,6 @@ def train_function(
     dataset,
     latent_dim,
     lr,
-    dlr,
-    glr,
-    mlr,
     loss,
     batch_size,
     num_epochs,
@@ -54,16 +51,8 @@ def train_function(
         config["latent_dim"] = latent_dim
     if lr:
         config["lr"] = lr
-    if dlr:
-        config["dlr"] = dlr
-    if glr:
-        config["glr"] = glr
-    if mlr:
-        config["mlr"] = mlr
     if loss:
         config["loss"] = loss
-    if batch_size:
-        config["batch_size"] = batch_size
     if save_interval:
         config["save_interval"] = save_interval
     if image_interval:
@@ -122,6 +111,7 @@ def train_function(
                 w_dim=config["w_dim"],
                 style_layers=config["style_layers"],
             )
+
         train_config = dict(
             dlr=config["dlr"],
             glr=config["glr"],
