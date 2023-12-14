@@ -316,7 +316,7 @@ class StyleGAN(AbstractModel):
                 + f"Epoch {epoch+1}/{total_epochs} "
                 + f"α={self.alpha:.2f} "
                 + f"GL={g_loss:.3f} DL={d_loss:.3f} "
-                # + f"d={self.real_distance:.1f}/{self.fake_distance:.1f}"
+                + f"λ={self.lambda_:.3f} "
             )
 
         total_epochs = level_config["transition"] + level_config["stabilization"]
