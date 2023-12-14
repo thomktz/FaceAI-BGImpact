@@ -59,7 +59,7 @@ class StyleGAN(AbstractModel):
         self.pca = None
         self.fids = {"level": [], "epoch": [], "fid": []}
 
-    def sigmoid_lr_scheduler(self, epoch, config, k=0.5):
+    def sigmoid_lr_scheduler(self, epoch, config, k=10):
         """
         Manually define a sigmoid learning rate scheduler for the stabilization phase.
 
@@ -82,7 +82,7 @@ class StyleGAN(AbstractModel):
 
         lambda_ = config["lr_lambda_transition"] + (
             config["lr_lambda_stabilization"] - config["lr_lambda_transition"]
-        ) / (1 + np.exp(-k * (t - t_0)))
+        ) / (1 + np.exp(-k * (t - t_0) / t_0))
         self.lambda_ = lambda_
         return lambda_
 
