@@ -178,23 +178,21 @@ class VAE(AbstractModel):
             Computed FID score.
         """
         self.encoder.eval()
-        images = []
+        generated_images = []
+
         with torch.no_grad():
             for _ in range(num_images // batch_size):
                 z = torch.randn(batch_size, 3, 128, 128).to(device)
                 mu, logvar = self.encoder(z)
-                images.append((mu.detach().cpu(), logvar.detach().cpu()))
+                z_samples = self.reparameterize(mu, logvar)
+                generated_images.append(self.decoder(z_samples).detach().cpu())
 
         self.decoder.train()
-        # Concatenate mu and logvar separately
-        mu_imgs = torch.cat([item[0] for item in images], dim=0)
-        logvar_imgs = torch.cat([item[1] for item in images], dim=0)
+        # Concatenate the image
+        generated_images = torch.cat(generated_images, dim=0)
 
-
-        denormalized_mu = denormalize_image(mu_imgs)
-        denormalized_logvar = denormalize_image(logvar_imgs)
-
-        denormalized_imgs = (denormalized_mu, denormalized_logvar)
+        # Denormalized the image
+        denormalized_imgs = denormalize_image(generated_images)
 
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
