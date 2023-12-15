@@ -43,14 +43,14 @@ config = {
             "stabilization": 95,
             "batch_size": 64,
             "lr_lambda_transition": 0.5,
-            "lr_lambda_stabilization": 0.05,
+            "lr_lambda_stabilization": 0.1,
         },
         5: {
             "transition": 25,
             "stabilization": 100,
             "batch_size": 32,
-            "lr_lambda_transition": 0.3,
-            "lr_lambda_stabilization": 0.01,
+            "lr_lambda_transition": 0.4,
+            "lr_lambda_stabilization": 0.05,
         },
     },
 }
