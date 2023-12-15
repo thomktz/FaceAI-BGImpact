@@ -140,14 +140,6 @@ class VAE(AbstractModel):
         ----------
         real_imgs : torch.Tensor
             Tensor of shape (batch_size, 3, 128, 128) containing the real images.
-        real_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the real labels.
-        fake_labels : torch.Tensor
-            Tensor of shape (batch_size, 1) containing the fake labels.
-        batch_size : int
-            Batch size.
-        device : torch.device
-            Device to use for training.
         """
         mu, logvar = self.encoder(real_imgs)
         z = self.reparameterize(mu, logvar)
@@ -169,6 +161,10 @@ class VAE(AbstractModel):
 
         Parameters
         ----------
+        num_images : int
+            number of images used.
+        batch_size : int 
+            Number of images used in a sample.   
         device : torch.device
             Device to use for calculation.
 
@@ -197,7 +193,7 @@ class VAE(AbstractModel):
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
 
-    def generate_images(self, epoch, device, save_dir="outputs/generated_images"):
+    def generate_images(self, epoch, batch_size, device, save_dir="outputs/generated_images"):
         """
         Save generated images.
 
@@ -205,6 +201,8 @@ class VAE(AbstractModel):
         ----------
         epoch : int
             Current epoch.
+        batch_size : int
+            Number of images used in a sample.
         device : torch.device
             Device to use for training.
         save_dir : str
@@ -213,9 +211,11 @@ class VAE(AbstractModel):
         save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
 
-        z = torch.randn(64, self.latent_dim).to(device)
+        z =  torch.randn(batch_size, 3, 128, 128).to(device)
+        mu, logvar = self.encoder(z)
+        z_sample = self.reparameterize(mu, logvar)
+        fake_images = self.decoder(z_sample).cpu()
 
-        fake_images = self.decoder(z).cpu()
         denormalized_images = denormalize_image(fake_images)
         save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
 
@@ -223,9 +223,11 @@ class VAE(AbstractModel):
         """Generate one image and save it to the directory."""
         os.makedirs(save_folder, exist_ok=True)
 
-        z = torch.randn(1, self.latent_dim).to(device)
+        z =  torch.randn(1, 3, 128, 128).to(device)
+        mu, logvar = self.encoder(z)
+        z_sample = self.reparameterize(mu, logvar)
+        fake_image = self.decoder(z_sample).cpu()
 
-        fake_image = self.decoder(z).cpu()
         denormalized_image = denormalize_image(fake_image)
         save_image(denormalized_image, os.path.join(save_folder, filename), normalize=False)
 
