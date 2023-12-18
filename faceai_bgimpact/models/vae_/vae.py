@@ -1,7 +1,5 @@
-
 import os
 import torch
-import torch.nn as nn
 import torch.optim as optim
 
 from tqdm import tqdm
@@ -15,7 +13,6 @@ from faceai_bgimpact.models.utils import weights_init
 
 from faceai_bgimpact.models.vae_.decoder import Decoder
 from faceai_bgimpact.models.vae_.encoder import Encoder
-
 
 
 class VAE(AbstractModel):
@@ -41,7 +38,6 @@ class VAE(AbstractModel):
         self.decoder = Decoder(latent_dim).to(device)
         self.latent_dim = latent_dim
 
-        
         # Apply the weights initialization
         self.encoder.apply(weights_init)
         self.decoder.apply(weights_init)
@@ -50,25 +46,21 @@ class VAE(AbstractModel):
         self.optimizer_config = {}
 
     def loss_function(self, recon_x, x, mu, logvar):
-        
-        # Reconstruction loss to measure how xell te model reconstructs the input 
-        BCE = torch.mean((recon_x - x)**2) # MSE loss
-
+        """VAE loss function."""
+        # Reconstruction loss to measure how xell te model reconstructs the input
+        BCE = torch.mean((recon_x - x) ** 2)  # MSE loss
 
         # KL divergence loss which encourage the latent space to be close to a standard normal distribution
         KLD = -0.5 * torch.mean(torch.mean(1 + logvar - mu.pow(2) - logvar.exp(), 1))
 
         return BCE + KLD * 0.1
-    
+
     def reparameterize(self, mu, logvar):
-        """
-        Reparameterization trick to sample from N(mu, exp(logvar)).
-        """
+        """Reparameterization trick to sample from N(mu, exp(logvar))."""
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         z = mu + eps * std
         return z
-
 
     def train_init(self, lr, batch_size):
         """Initialize the training parameters and optimizer."""
@@ -104,13 +96,12 @@ class VAE(AbstractModel):
 
             for _, imgs in data_iter:
                 imgs = imgs.to(device)
-                
+
                 # Zero the parameter gradients
                 # TODO: Why do we need to zero the gradients here?
                 # We're doing it twice
                 self.optimizer.zero_grad()
 
-                
                 loss = self.perform_train_step(imgs)
 
                 running_loss += loss.item()
@@ -145,7 +136,7 @@ class VAE(AbstractModel):
         z = self.reparameterize(mu, logvar)
         recon_imgs = self.decoder(z)
 
-        loss = self.loss_function(recon_imgs,real_imgs,mu,logvar)
+        loss = self.loss_function(recon_imgs, real_imgs, mu, logvar)
 
         # Backward pass and optimization
 
@@ -163,8 +154,8 @@ class VAE(AbstractModel):
         ----------
         num_images : int
             number of images used.
-        batch_size : int 
-            Number of images used in a sample.   
+        batch_size : int
+            Number of images used in a sample.
         device : torch.device
             Device to use for calculation.
 
@@ -193,7 +184,7 @@ class VAE(AbstractModel):
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
 
-    def generate_images(self, epoch, batch_size, device, save_dir="outputs/generated_images"):
+    def generate_images(self, epoch, batch_size, device, save_dir="outputs/VAE_images"):
         """
         Save generated images.
 
@@ -211,7 +202,7 @@ class VAE(AbstractModel):
         save_folder = self.get_save_dir(save_dir)
         os.makedirs(save_folder, exist_ok=True)
 
-        z =  torch.randn(batch_size, 3, 128, 128).to(device)
+        z = torch.randn(batch_size, 3, 128, 128).to(device)
         mu, logvar = self.encoder(z)
         z_sample = self.reparameterize(mu, logvar)
         fake_images = self.decoder(z_sample).cpu()
@@ -223,7 +214,7 @@ class VAE(AbstractModel):
         """Generate one image and save it to the directory."""
         os.makedirs(save_folder, exist_ok=True)
 
-        z =  torch.randn(1, 3, 128, 128).to(device)
+        z = torch.randn(1, 3, 128, 128).to(device)
         mu, logvar = self.encoder(z)
         z_sample = self.reparameterize(mu, logvar)
         fake_image = self.decoder(z_sample).cpu()
@@ -231,7 +222,7 @@ class VAE(AbstractModel):
         denormalized_image = denormalize_image(fake_image)
         save_image(denormalized_image, os.path.join(save_folder, filename), normalize=False)
 
-    def save_checkpoint(self, epoch, save_dir="outputs/checkpoints"):
+    def save_checkpoint(self, epoch, save_dir="outputs/VAE_checkpoints"):
         """
         Save a checkpoint of the current state. This includes the models, optimizers, FIDs, and training params.
 

@@ -2,7 +2,7 @@
 
 import os
 import torch
-from faceai_bgimpact.models import DCGAN, StyleGAN
+from faceai_bgimpact.models import DCGAN, StyleGAN, VAE
 from faceai_bgimpact.configs import configs
 
 
@@ -132,7 +132,25 @@ def train_function(
             image_interval=config["image_interval"],
             level_epochs={int(k): v for (k, v) in config["level_epochs"].items()},
         )
-
+    elif model.lower() == "vae":
+        if checkpoint_path is None:
+            model = VAE(
+                dataset_name=dataset,
+                latent_dim=config["latent_dim"],
+                device=device,
+            )
+        else:
+            model = VAE.from_checkpoint(
+                checkpoint_path=checkpoint_path,
+                device=device,
+            )
+        train_config = dict(
+            num_epochs=config["num_epochs"],
+            batch_size=config["batch_size"],
+            lr=config["lr"],
+            device=device,
+            save_interval=config["save_interval"],
+        )
     else:
         raise ValueError("Invalid model type")
 

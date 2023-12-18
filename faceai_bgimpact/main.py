@@ -18,7 +18,7 @@ def main():
         "--model",
         type=str,
         required=True,
-        choices=["DCGAN", "StyleGAN"],
+        choices=["DCGAN", "StyleGAN", "VAE"],
         help="Type of model to train",
     )
     train_parser.add_argument(
