@@ -32,6 +32,7 @@ class VAE(AbstractModel):
     def __init__(self, dataset_name, latent_dim, device):
         # Initialize the abstract class
         super().__init__(dataset_name)
+        self.dataset_name = dataset_name
 
         # VAE-specific attributes
         self.encoder = Encoder(latent_dim).to(device)
