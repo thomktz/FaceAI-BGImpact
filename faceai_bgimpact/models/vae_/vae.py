@@ -66,7 +66,7 @@ class VAE(AbstractModel):
 
     def train_init(self, lr, batch_size):
         """Initialize the training parameters and optimizer."""
-        _, self.loader = get_dataloader(self.dataset_name, batch_size)
+        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size)
         self.optimizer = optim.Adam(list(self.encoder.parameters()) + list(self.decoder.parameters()), lr=lr)
 
     def train(self, num_epochs, lr, batch_size, device, save_interval=1, image_interval=50):
@@ -243,7 +243,7 @@ class VAE(AbstractModel):
             os.makedirs(save_folder, exist_ok=True)
 
             # Get first batch and get the first 64 images of it
-            real_imgs = next(iter(self.loader))[:64].to(device)
+            real_imgs = [self.dataset[i] for i in range(64)]
 
             mu, logvar = self.encoder(real_imgs)
             z = self.reparameterize(mu, logvar)
