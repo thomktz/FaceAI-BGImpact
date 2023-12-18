@@ -254,6 +254,10 @@ class VAE(AbstractModel):
             # Save the reconstructed images
             save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{epoch}.png", nrow=8, normalize=False)
 
+            # Check if the real images have already been saved
+            if not os.path.exists(f"{save_folder}/real.png"):
+                save_image(denormalize_image(real_imgs), f"{save_folder}/real.png", nrow=8, normalize=False)
+
     def generate_one_image(self, device, save_folder, filename):
         """Generate one image and save it to the directory."""
         os.makedirs(save_folder, exist_ok=True)
