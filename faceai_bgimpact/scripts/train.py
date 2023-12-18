@@ -150,6 +150,7 @@ def train_function(
             lr=config["lr"],
             device=device,
             save_interval=config["save_interval"],
+            image_interval=config["image_interval"],
         )
     else:
         raise ValueError("Invalid model type")

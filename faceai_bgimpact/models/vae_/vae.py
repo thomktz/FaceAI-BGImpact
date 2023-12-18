@@ -67,7 +67,7 @@ class VAE(AbstractModel):
         _, self.loader = get_dataloader(self.dataset_name, batch_size)
         self.optimizer = optim.Adam(list(self.encoder.parameters()) + list(self.decoder.parameters()), lr=lr)
 
-    def train(self, num_epochs, lr, batch_size, device, save_interval):
+    def train(self, num_epochs, lr, batch_size, device, save_interval=1, image_interval=50):
         """
         Trains the VAE model.
 
@@ -82,7 +82,9 @@ class VAE(AbstractModel):
         device : torch.device
             Device to use for training.
         save_interval : int
-            Number of epochs to wait before saving the models and generated images. Defaults to 10.
+            Number of epochs to wait before saving the models. Defaults to 1.
+        image_interval : int
+            Number of iterations to wait before saving generated images. Defaults to 50.
         """
         # Initialize training parameters and optimizer
         self.train_init(lr, batch_size)
@@ -94,7 +96,7 @@ class VAE(AbstractModel):
 
             data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc=f"Epoch {epoch+1}/{num_epochs}")
 
-            for _, imgs in data_iter:
+            for i, imgs in data_iter:
                 imgs = imgs.to(device)
 
                 # Zero the parameter gradients
@@ -106,14 +108,16 @@ class VAE(AbstractModel):
 
                 running_loss += loss.item()
 
+                if i % image_interval == 0:
+                    iter_ = (epoch * len(self.loader)) + i
+                    self.generate_images(iter_, epoch, device)
+
             epoch_loss = running_loss / len(self.loader)
             self.epoch_losses["train"].append(epoch_loss)
 
             if ((epoch + 1) % save_interval == 0) or (epoch <= 3):
                 print(f"Saving checkpoint at epoch {epoch+1}...")
                 self.save_checkpoint(epoch)
-
-            self.generate_images(epoch, device)
 
             # Evaluate the FID score, and log it as 'test' loss
             # FID needs at least 2048 images to compare the final average pooling features
@@ -184,31 +188,39 @@ class VAE(AbstractModel):
         stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
         return get_fid(denormalized_imgs, stats_path)
 
-    def generate_images(self, epoch, batch_size, device, save_dir="outputs/VAE_images"):
+    def generate_images(self, iter_, epoch, device, save_dir="outputs/VAE_images"):
         """
         Save generated images.
 
         Parameters
         ----------
+        iter_ : int
+            Current iteration.
         epoch : int
             Current epoch.
-        batch_size : int
-            Number of images used in a sample.
         device : torch.device
             Device to use for training.
         save_dir : str
             Directory to save the images to.
         """
-        save_folder = self.get_save_dir(save_dir)
-        os.makedirs(save_folder, exist_ok=True)
+        with torch.no_grad():
+            save_folder = self.get_save_dir(save_dir)
+            os.makedirs(save_folder, exist_ok=True)
 
-        z = torch.randn(batch_size, 3, 128, 128).to(device)
-        mu, logvar = self.encoder(z)
-        z_sample = self.reparameterize(mu, logvar)
-        fake_images = self.decoder(z_sample).cpu()
+            # Take the first 64 images from the dataset
+            imgs = next(iter(self.loader))[0][:64].to(device)
 
-        denormalized_images = denormalize_image(fake_images)
-        save_image(denormalized_images, f"{save_folder}/epoch_{epoch+1}.png", nrow=8, normalize=False)
+            # Encode them
+            mu, logvar = self.encoder(imgs)
+
+            # Sample from the latent space
+            z_sample = self.reparameterize(mu, logvar)
+            fake_images = self.decoder(z_sample).cpu()
+
+            denormalized_images = denormalize_image(fake_images)
+
+            # Save the reconstructed images
+            save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{epoch}.png", nrow=8, normalize=False)
 
     def generate_one_image(self, device, save_folder, filename):
         """Generate one image and save it to the directory."""
