@@ -91,6 +91,9 @@ class VAE(AbstractModel):
         # Initialize training parameters and optimizer
         self.train_init(lr, batch_size)
 
+        # Make FID stats
+        self.make_fid_stats(device)
+
         for epoch in range(self.start_epoch, num_epochs):
             self.encoder.train()
             self.decoder.train()
@@ -152,7 +155,7 @@ class VAE(AbstractModel):
 
         return loss
 
-    def make_fid_stats(self, device, save_dir="outputs/StyleGAN_fid_stats"):
+    def make_fid_stats(self, device):
         """
         Calculate and save FID stats for the dataset.
 
@@ -160,8 +163,6 @@ class VAE(AbstractModel):
         ----------
         device : torch.device
             Device to use for calculation.
-        save_dir : str
-            Directory to save the stats to.
         """
         # If device is CPU, ignore and skip
         if str(device) == "cpu":
