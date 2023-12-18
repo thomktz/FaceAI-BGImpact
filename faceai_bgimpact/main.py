@@ -72,7 +72,7 @@ def main():
         "--model",
         type=str,
         required=True,
-        choices=["DCGAN", "StyleGAN"],
+        choices=["DCGAN", "StyleGAN", "VAE"],
         help="Type of model",
     )
     create_video_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
@@ -96,7 +96,7 @@ def main():
         "--model",
         type=str,
         required=True,
-        choices=["DCGAN", "StyleGAN"],
+        choices=["DCGAN", "StyleGAN", "VAE"],
         help="Type of model",
     )
     graph_fids_parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset used")
