@@ -207,17 +207,14 @@ class VAE(AbstractModel):
             save_folder = self.get_save_dir(save_dir)
             os.makedirs(save_folder, exist_ok=True)
 
-            # Take the first 64 images from the dataset
-            imgs = next(iter(self.loader))[0][:64].to(device)
+            # Get first batch and get the first 64 images of it
+            real_imgs = next(iter(self.loader))[:64].to(device)
 
-            # Encode them
-            mu, logvar = self.encoder(imgs)
+            mu, logvar = self.encoder(real_imgs)
+            z = self.reparameterize(mu, logvar)
+            recon_imgs = self.decoder(z)
 
-            # Sample from the latent space
-            z_sample = self.reparameterize(mu, logvar)
-            fake_images = self.decoder(z_sample).cpu()
-
-            denormalized_images = denormalize_image(fake_images)
+            denormalized_images = denormalize_image(recon_imgs)
 
             # Save the reconstructed images
             save_image(denormalized_images, f"{save_folder}/fake_{iter_}_{epoch}.png", nrow=8, normalize=False)
