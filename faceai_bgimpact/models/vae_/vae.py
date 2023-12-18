@@ -176,7 +176,7 @@ class VAE(AbstractModel):
         if os.path.exists(stats_path):
             return
 
-        print("Generating FID stats for resolution", self.resolution, "...")
+        print("Generating FID stats for the dataset...")
         calc_and_save_stats(
             dataset_folder,
             stats_path,
