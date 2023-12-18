@@ -209,9 +209,8 @@ class VAE(AbstractModel):
 
         with torch.no_grad():
             for _ in range(num_images // batch_size):
-                z = torch.randn(batch_size, 3, 128, 128).to(device)
-                mu, logvar = self.encoder(z)
-                z_samples = self.reparameterize(mu, logvar)
+                # Sample from the VAE latent space
+                z_samples = torch.randn(batch_size, self.latent_dim).to(device)
                 generated_images.append(self.decoder(z_samples).detach().cpu())
 
         self.decoder.train()
