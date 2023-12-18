@@ -243,7 +243,7 @@ class VAE(AbstractModel):
             os.makedirs(save_folder, exist_ok=True)
 
             # Get first batch and get the first 64 images of it
-            real_imgs = torch.tensor([self.dataset[i] for i in range(64)]).to(device)
+            real_imgs = torch.stack([self.dataset[i] for i in range(64)]).to(device)
 
             mu, logvar = self.encoder(real_imgs)
             z = self.reparameterize(mu, logvar)
