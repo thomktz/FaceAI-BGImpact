@@ -181,7 +181,7 @@ class VAE(AbstractModel):
             dataset_folder,
             stats_path,
             batch_size=10,
-            img_size=self.resolution,
+            img_size=128,
             use_torch=True,
             num_workers=os.cpu_count() - 1,
         )
