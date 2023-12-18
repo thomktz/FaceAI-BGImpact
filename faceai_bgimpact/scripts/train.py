@@ -23,7 +23,7 @@ def list_checkpoints(checkpoint_dir):
 def find_checkpoint_path(checkpoint_dir, epoch):
     """Find the checkpoint path for a given epoch."""
     for file in os.listdir(checkpoint_dir):
-        if file.startswith(f"step_{epoch}_"):
+        if file.startswith(f"step_{epoch}_") or file.startswith(f"checkpoint_epoch_{epoch}."):
             return os.path.join(checkpoint_dir, file)
     raise FileNotFoundError(f"No checkpoint found for epoch {epoch} in {checkpoint_dir}")
 
