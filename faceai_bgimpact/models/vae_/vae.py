@@ -5,6 +5,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from torchvision.utils import save_image
 from pytorch_gan_metrics import get_fid
+from pytorch_gan_metrics.utils import calc_and_save_stats
 
 from faceai_bgimpact.data_processing.paths import data_folder
 from faceai_bgimpact.models.abstract_model import AbstractModel
@@ -150,6 +151,39 @@ class VAE(AbstractModel):
         self.optimizer.step()
 
         return loss
+
+    def make_fid_stats(self, device, save_dir="outputs/StyleGAN_fid_stats"):
+        """
+        Calculate and save FID stats for the dataset.
+
+        Parameters
+        ----------
+        device : torch.device
+            Device to use for calculation.
+        save_dir : str
+            Directory to save the stats to.
+        """
+        # If device is CPU, ignore and skip
+        if str(device) == "cpu":
+            print("Skipping FID stats for CPU")
+            return
+
+        dataset_folder = f"{data_folder}/{self.dataset_name}"
+        stats_path = f"{data_folder}/{self.dataset_name}_statistics.npz"
+
+        # If the stats file already exists, skip
+        if os.path.exists(stats_path):
+            return
+
+        print("Generating FID stats for resolution", self.resolution, "...")
+        calc_and_save_stats(
+            dataset_folder,
+            stats_path,
+            batch_size=10,
+            img_size=self.resolution,
+            use_torch=True,
+            num_workers=os.cpu_count() - 1,
+        )
 
     def calculate_fid(self, num_images, batch_size, device):
         """
