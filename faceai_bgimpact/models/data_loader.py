@@ -77,8 +77,6 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
     alpha : float
         The alpha value for progressive growing.
     """
-    print(f"Loading dataset: {dataset_name} with resolution {resolution} and alpha {alpha}")
-
     # Load the dataset with blended images
     root_dir = f"{data_folder}/{dataset_name}"
     dataset = FFHQDataset(root_dir=root_dir, resolution=resolution, alpha=alpha)

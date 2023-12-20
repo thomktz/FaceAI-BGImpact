@@ -248,7 +248,6 @@ class StyleGAN(AbstractModel):
             Directory to save the stats to.
         """
         # If device is CPU, ignore and skip
-        print(device)
         if str(device) == "cpu":
             return
 
