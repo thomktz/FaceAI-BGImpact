@@ -137,18 +137,11 @@ class R1Regularization(GANLoss):
         # R1 regularization
         r1_penalty = self._r1_penalty(real_images, level, alpha)
         loss += r1_penalty
-
-        print(
-            f"Discriminator: R1 penalty: {r1_penalty:.4f} | "
-            + f"real_scores : {real_scores:.4f} | "
-            + f"fake_scores : {fake_scores:.4f}"
-        )
         return loss
 
     def g_loss(self, _, fake_images, level, alpha):
         """Generator loss."""
         fake_scores = torch.mean(self.D(fake_images, level, alpha))
-        print(f"Generator: fake_scores : {fake_scores:.4f}")
         return -fake_scores
 
     def _r1_penalty(self, real_images, level, alpha):
