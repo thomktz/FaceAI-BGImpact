@@ -222,8 +222,7 @@ class StyleGAN(AbstractModel):
                 self._train_one_epoch(level_epochs[level], epoch, image_interval, device)
 
                 # Calculate FID score of epoch
-                if self.alpha == 1.0:
-                    self.calculate_fid(2048 + self.batch_size, self.batch_size, device)
+                self.calculate_fid(2048 + self.batch_size, self.batch_size, device)
 
                 # Save checkpoint
                 if (self.epoch_total + 1) % save_interval == 0:
