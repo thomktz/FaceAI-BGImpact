@@ -301,7 +301,6 @@ class StyleGAN(AbstractModel):
         self.fids["epoch"].append(self.epoch_total)
         self.fids["fid"].append(fid)
         self.last_fid = fid
-        print("Level", self.level, "Epoch", self.epoch_total, "FID", fid)
 
     def _train_one_epoch(self, level_config, epoch, image_interval, device):
         """Training loop for one epoch."""
@@ -314,7 +313,7 @@ class StyleGAN(AbstractModel):
         def tqdm_description(self, epoch, total_epochs, g_loss=0, d_loss=0):
             return (
                 f"Lvl {' ' * (3 - len(str(self.resolution))) * 2}{self.level} ({self.resolution}x{self.resolution}) "
-                + f"Epoch {epoch+1}/{total_epochs} "
+                + f"Epoch {epoch+1}/{total_epochs} ({self.self.epoch_total}) "
                 + f"α={self.alpha:.2f} "
                 + f"GL={g_loss*100:.1f} DL={d_loss*100:.1f} "
                 + f"λ={self.lambda_:.3f} "
@@ -461,7 +460,6 @@ class StyleGAN(AbstractModel):
             "lambda_": self.lambda_,
         }
         torch.save(checkpoint, checkpoint_path)
-        print(f"Checkpoint saved at {checkpoint_path}")
 
     @classmethod
     def from_checkpoint(
@@ -794,5 +792,3 @@ class StyleGAN(AbstractModel):
         fig.write_image(f"{save_folder}/fid_plot_{self.epoch_total}.png")
         # Optionally, save as interactive HTML
         fig.write_html(f"{save_folder}/fid_plot_{self.epoch_total}.html")
-
-        print(f"FID plots saved at {save_folder}")
