@@ -140,6 +140,7 @@ class StyleGAN(AbstractModel):
         self.alpha = 1
         self.epoch_total = None
         self.lambda_ = 1.0
+        self.last_fid = 1000.0
 
         self.loss = {
             "wgan": WGAN,
@@ -300,6 +301,7 @@ class StyleGAN(AbstractModel):
         self.fids["level"].append(self.level)
         self.fids["epoch"].append(self.epoch_total)
         self.fids["fid"].append(fid)
+        self.last_fid = fid
         print("Level", self.level, "Epoch", self.epoch_total, "FID", fid)
 
     def _train_one_epoch(self, level_config, epoch, image_interval, device):
@@ -315,8 +317,9 @@ class StyleGAN(AbstractModel):
                 f"Lvl {' ' * (3 - len(str(self.resolution))) * 2}{self.level} ({self.resolution}x{self.resolution}) "
                 + f"Epoch {epoch+1}/{total_epochs} "
                 + f"α={self.alpha:.2f} "
-                + f"GL={g_loss:.3f} DL={d_loss:.3f} "
+                + f"GL={g_loss*100:.1f} DL={d_loss*100:.1f} "
                 + f"λ={self.lambda_:.3f} "
+                + f"FID={self.last_fid:.3f} "
             )
 
         total_epochs = level_config["transition"] + level_config["stabilization"]
@@ -507,6 +510,8 @@ class StyleGAN(AbstractModel):
         latent_vector = checkpoint.get("latent_vector", torch.randn(64, latent_dim))
         lambda_ = checkpoint.get("lambda_", 1.0)
 
+        last_fid = fids["fid"][-1] if len(fids["fid"]) > 0 else 1000.0
+
         # Create a new StyleGAN instance
         instance = cls(dataset_name, latent_dim, w_dim, style_layers, device)
 
@@ -528,6 +533,7 @@ class StyleGAN(AbstractModel):
         instance.fids = fids
         instance.latent_vector = latent_vector
         instance.lambda_ = lambda_
+        instance.last_fid = last_fid
 
         return instance
 
