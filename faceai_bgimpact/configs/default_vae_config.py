@@ -5,5 +5,5 @@ config = {
     "batch_size": 128,
     "num_epochs": 400,
     "save_interval": 5,
-    "image_interval": 16,
+    "image_interval": 50,
 }
