@@ -20,3 +20,6 @@ faceai_bgimpact/outputs/
 
 dist/
 webapp/models/
+
+venv/
+outputs/
