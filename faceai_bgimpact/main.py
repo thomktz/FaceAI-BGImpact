@@ -28,19 +28,16 @@ def main():
         choices=["ffhq_raw", "ffhq_blur", "ffhq_grey"],
         help="Name of the dataset to use",
     )
+    train_parser.add_argument("--batch-size", type=int, help="Batch size")
     train_parser.add_argument("--latent-dim", type=int, help="Dimension of the latent space")
     train_parser.add_argument("--lr", type=float, help="Learning rate (for DCGAN)")
-    train_parser.add_argument("--dlr", type=float, help="Discriminator learning rate (for StyleGAN)")
-    train_parser.add_argument("--glr", type=float, help="Generator learning rate (for StyleGAN)")
-    train_parser.add_argument("--mlr", type=float, help="W-Mapping learning rate (for StyleGAN)")
     train_parser.add_argument(
         "--loss",
         type=str,
         choices=["r1", "wgan", "wgan-gp", "basic"],
-        default="wgan-gp",
+        default="r1",
         help="Learning rate decay",
     )
-    train_parser.add_argument("--batch-size", type=int, help="Batch size")
     train_parser.add_argument("--num-epochs", type=int, help="Number of epochs to train (DCGAN)")
     train_parser.add_argument(
         "--save-interval",
@@ -126,9 +123,6 @@ def main():
             dataset=args.dataset,
             latent_dim=args.latent_dim,
             lr=args.lr,
-            dlr=args.dlr,
-            glr=args.glr,
-            mlr=args.mlr,
             loss=args.loss,
             batch_size=args.batch_size,
             num_epochs=args.num_epochs,

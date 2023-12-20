@@ -1,6 +1,6 @@
 # frontend Dockerfile
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim
+FROM anibali/pytorch:2.0.1-nocuda-ubuntu22.04
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
