@@ -6,6 +6,8 @@ from tqdm import tqdm
 from torchvision.utils import save_image
 from pytorch_gan_metrics import get_fid
 from pytorch_gan_metrics.utils import calc_and_save_stats
+from sklearn.decomposition import PCA
+from joblib import dump, load
 
 from faceai_bgimpact.data_processing.paths import data_folder
 from faceai_bgimpact.models.abstract_model import AbstractModel
@@ -46,6 +48,10 @@ class VAE(AbstractModel):
 
         self.start_epoch = 0
         self.optimizer_config = {}
+        
+        #Add for PCA
+        # self.latent_vector = torch.randn(64, self.latent_dim)
+        self.pca = None
 
     def loss_function(self, recon_x, x, mu, logvar):
         """VAE loss function."""
@@ -333,3 +339,108 @@ class VAE(AbstractModel):
         instance.optimizer_config = checkpoint["optimizer_state_dict"]
 
         return instance
+    
+    def fit_pca(self, num_samples=10000, batch_size=100, n_components=50, save_file="models/VAE_PCA", use_saved=True):
+        """Fit PCA to the latent space of the VAE.
+        
+        Parameters:
+        ----------
+        num_samples : int
+            Number of samples to use for PCA.
+        batch_size : int
+            Batch size for processing.
+        n_components : int
+            Number of components for PCA.
+        save : bool
+            Whether to save the PCA model.
+        use_saved : bool
+            Whether to use a saved PCA model.
+        """
+        if use_saved:
+            try:
+                self.load_pca(save_file)
+                # Check if the loaded PCA has the correct number of components and samples
+                if self.pca.n_components_ == n_components and self.pca.n_samples_ == num_samples:
+                    print("Loaded PCA from saved file.")
+                    return
+                else:
+                    print("Saved PCA does not match the requested parameters. Fitting new PCA...")
+            except FileNotFoundError:
+                print("No saved PCA found. Fitting new PCA...")
+                
+        self.encoder.eval()
+        all_z = []
+        self.n_components = n_components
+        
+        # Process in batches
+        for _ in tqdm(range(0, num_samples, batch_size), desc="Fitting PCA to the VAE"):
+            # Sample from the VAE latent space
+            z_samples = torch.randn(batch_size, self.latent_dim)
+            z_samples = z_samples.to(self.device)
+
+            # Get the latent space representation
+            with torch.no_grad():
+                mu, logvar = self.encoder(z_samples)
+                z = self.reparameterize(mu, logvar)
+                
+            all_z.append(z.cpu())
+        
+        # Concatenate all the latent vectors
+        all_z = torch.cat(all_z, dim=0)[:num_samples]  # Ensure exact number of samples
+        all_z_flat = all_z.view(num_samples, -1).numpy() # Flatten for PCA
+        
+        # Fit PCA
+        self.pca = PCA(n_components=n_components)
+        self.pca.fit(all_z_flat)
+        
+        # Save PCA as parquet file
+        full_save_file = self.get_save_dir(save_file) + ".joblib"
+        dump(self.pca, full_save_file)
+        
+    def load_pca(self, save_file="outputs/VAE_PCA"):
+        """
+        Load PCA from file.
+
+        Parameters:
+        ----------
+        save_file : str
+            File to load the PCA model from.
+        """
+        full_save_file = self.get_save_dir(save_file) + ".joblib"
+        self.pca = load(full_save_file)
+        self.n_components = self.pca.n_components_
+        
+    def manipulate_z(self, adjustment_factors, z_vectors):
+        """
+        Manipulate a batch of z vectors using specific principal components.
+
+        Parameters:
+        ----------
+        adjustment_factors : list of float
+            List of factors by which to adjust the components. Length must be <= n_components.
+        w_vectors : torch.Tensor
+            Batch of style vectors in z space to be manipulated.
+
+        Returns:
+        ----------
+        torch.Tensor
+            Batch of adjusted z vectors.
+        """
+        if not self.pca:
+            raise ValueError("PCA not fitted. Call fit_pca first.")
+        if len(adjustment_factors) > self.pca.n_components:
+            raise ValueError(f"Length of adjustment_factors ({len(adjustment_factors)}) must be <= n_components ({self.pca.n_components})")
+        
+        # Reshape and process the batch of z vectors
+        original_z_flat = z_vectors.view(z_vectors.shape[0], -1).cpu().numpy()  # Flatten for PCA
+        z_pca = self.pca.transform(original_z_flat)
+        
+        # Manipulate specified components for all vectors in the batch
+        for i, factor in enumerate(adjustment_factors):
+            z_pca[:, i] += factor
+        
+        # Inverse PCA transformation and reshape back to original shape
+        adjusted_z_flat = self.pca.inverse_transform(z_pca)
+        adjusted_z = torch.from_numpy(adjusted_z_flat).view(z_vectors.shape).to(self.device)
+        
+        return adjusted_z
