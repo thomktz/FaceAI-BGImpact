@@ -110,6 +110,7 @@ To test our hypothesis, we trained models on both the original and the greyed-ou
 We picked versions of the two main categories of generative models: Autoencoders (AE) and Generative Adversarial Networks (GAN).
 
 \subsection{Auto-encoders}
+\subsubsection*{Principle - Auto-encoders}
 
 \quad Autoencoders are unsupervised artificial neural networks whose main objective is to learn efficient representations of input data. 
 An autoencoder consists of two sub-networks: an encoder and a decoder. 
@@ -124,29 +125,21 @@ The aim is to minimize the difference between the input and the reconstructed ou
     \caption{Autoencoder architecture}
 \end{figure}
 
-Let $e_{\theta}$ be the encoder function and $d_{\phi}$ the decoder function. 
+Let $e_{\theta}:\mathcal{X}\to \mathcal{F}$ be the encoder function and $d_{\phi}:\mathcal{F}\to \mathcal{X}$ the decoder function. 
 During training, input image $x$ is fed to the encoder function and passed through a series of layers that reduce their dimensions to give a compressed latent vector $z$. 
 The number, type and size of the layers, as well as the size of the latent space, are parameters that can be controlled. 
-Next, the decoder function maps the $mathcal{F}$ latent space at the bottleneck to the output, attempting to recreate the original image after some generalized non-linear compression. 
-
-\begin{align*}
-    e_{\theta}:\mathcal{X}\to \mathcal{F}, d_{\phi}:\mathcal{F}\to \mathcal{X}\
-\end{align*}
-
+Next, the decoder function maps the $\mathcal{F}$ latent space at the bottleneck to the output, attempting to recreate the original image after some generalized non-linear compression. 
 
 The loss function used to train the neural network through the backpropagation procedure is as follows: 
 
 \[\mathcal{L}(x,\hat{x})=\left\| x-\hat{x}\right\|_{2}=\left\| x-d_{\phi}(e_{\theta}(x)) \right\|_{2}\]
 
-Ideally, we would like to have a small latent space to obtain maximum compression, while obtaining a sufficiently small error. 
-But, reducing the size of the latent space beyond a certain value leads to a significant loss of information.
-However, the latent space of an autoencoder is subject to irregularity due to overfitting. 
-The regularity of the latent space depends on its dimension, the distribution of data in the initial space and the encoder architecture. 
-It is therefore not possible to directly define a generative process by simply sampling a point in the latent space and passing it through the decoder to generate new data.
+There is a trade-off between quality and latent dimensionality. Below a certain point, the latent space is too small to capture the important features of the input data, and all the images look the same.
+This means that latent space of an autoencoder also subject to irregularity due to overfitting. 
 
-This is why we introduce the Variational Autoencoder (VAE). 
-This architecture, proposed by King et al. in 2013, addresses the problem of irregular latent space in a conventional autoencoder because, instead of mapping an input to a fixed vector, the encoder outputs parameters of a predefined distribution in the latent space for each input. 
-The VAE then imposes a constraint on this latent distribution, forcing it to be a Gaussian distribution to ensure that the latent space is regularized.
+\subsubsection*{Principle - Variational Auto-encoders}
+To tackle this problem, King et al. in 2013 proposed the Variational Autoencoder (VAE) architecture. It addresses the problem of irregular latent space in a conventional autoencoder by mapping inputs to parameters of a probability distribution instead of a fixed vector.
+The VAE then imposes a constraint on this latent distribution, forcing it to be a Gaussian distribution, ensuring that the latent space is regularized.
 
 \begin{figure}[H]
     \centering
@@ -154,10 +147,8 @@ The VAE then imposes a constraint on this latent distribution, forcing it to be 
     \caption{Variational Autoencoder architecture}
 \end{figure}
 
-The main difference between AE and VAE lies in the encoder output. Unlike the autoencoder, where the encoder output was the latent vector, here the encoder produces the mean and standard deviation for each latent variable. 
-The latent vector is then sampled from this Gaussian distribution and passed to the decoder to reconstruct the input as before.
+The VAE's encoder outputs the mean and standard deviation for each latent variable. The latent for the decoder is sampled from that distribution.
 The VAE loss function takes into account two terms, the reconstruction loss and the similarity loss (regularizer). 
-As in the AE, the reconstruction loss is the mean squared loss of the input and reconstructed output. 
 The regularizer corresponds to the Kullback-Leibler divergence between the latent space distribution and a standard Gaussian distribution.
   
 We can define the reconstruction loss as follows:
@@ -173,16 +164,15 @@ $$\text{similarity loss}=\mathrm{D}_{\mathrm{KL}}(\mathcal{N}(\mu_{x},\sigma_{x}
 Finally,
 $$\text{loss}=\text{reconstruction loss}+\text{similarity loss}$$
 
+\subsubsection*{Rationale for choosing VAE}
+VAEs generally perform better in image generation tasks. 
+First, by learning a probabilistic latent space representation, it allows for smoother transitions and better interpolation in the latent space, which is crucial for generating diverse and realistic images. 
+Then, VAEs inherently include a regularization term in their objective function, which encourages the learned latent space to be well-structured. 
+This regularization helps prevent overfitting and aids in disentangling meaningful features in the latent space.
 
-As previously noted, the encoder-generated distribution is sampled to obtain the latent vector before it is input into the decoder. This random sampling makes back-propagation difficult for the encoder, since we cannot trace the errors. To address this issue, we employ a reparameterization trick to model the sampling process, enabling the propagation of errors through the network. The latent vector z is represented as a function of the output from the encoder.
-$z=\mu_{x}+\sigma_{x}\epsilon, \epsilon\sim\mathcal{N}(\textbf{0},\textbf{I})$
-
-VAEs generally perform better in image generation tasks. First, by learning a probabilistic latent space representation, it allows for smoother transitions and better interpolation in the latent space, which is crucial for generating diverse and realistic images. Then, VAEs inherently include a regularization term in their objective function, which encourages the learned latent space to be well-structured. This regularization helps prevent overfitting and aids in disentangling meaningful features in the latent space.
-
-Rationale for choosing VAEs: By structure, VAEs are more likely to learn a latent space that is interpretable. Also, they are relatively stable to train.
 
 \subsection{Generative Adversarial Networks}
-
+\subsubsection*{Principle - Generative Adversarial Networks}
 \quad Introduced by Ian Goodfellow and al. in 2014, the Generative Adversarial Network consists of a Generator and a Discriminator, two neural networks that are trained simultaneously by adversarial training. \\
 Firstly, the Generator model attempts to model the distribution of data in order to generate realistic samples. 
 It takes as input a random noise sample of fixed size from a latent space and generates new false images. 
@@ -207,15 +197,18 @@ The discriminator tries to maximize the objective function while the generator t
 
 According to the authors of the article, in practice, the Generator objective function does not provide sufficient gradient to allow good learning. At the start of the training, when the sample is likely to be classified as false by the Discriminator, the function $\log(1 - D(G(z)))$  saturates because the gradients are relatively flat. As a result, the Generator is trained to maximize $log(D(G(z)))$, which provides much stronger gradients early in the learning. Thus, Instead of minimizing the likelihood of the Discriminator being correct, we maximize the likelihood of the Discriminator being wrong. 
 
+\subsubsection*{Principle - Deep Convolutiobnal Generative Adversarial Networks}
 In practice, “vanilla” GANs are hard to train and do not yield very realistic results, by 2024 standards. The first improvement we implemented over the standard GAN architecture was to use deep convolutions (and deconvolutions) for the Generator (and Discriminator), making it a DC-GAN (Deep Convolutional GAN). When dealing with image data, convolutions are more spatially aware than regular fully-connected layers because they only “mix” the values of pixels close together.
 
 While more efficient than plain GANs, DCGANs have not been shown to generate realistic images. Their latent space is also very disorganized and hard to interpret. To tackle both of these problems, we decided to implement a custom version of NVidia’s StyleGAN, from scratch.
 
+\subsubsection*{Principle - StyleGAN}
 StyleGAN is a variety of ProGANs (Progressive Growing GANs). The key breakthroughs of those models lies in the progressive refinement of images, commencing from a low resolution and gradually advancing to a higher resolution. In the StyleGAN paper, the authors present an enhanced version of ProGAN's image generator, specifically focusing on advancements in the generator network.
 One of the key features of the ProGAN architecture is the progressive nature of the layers, which enables the different visual characteristics of an image to be taken into account effectively. The concept is simple: the lower the layer and resolution, the greater the impact on coarser features. This granularity means that the inputs at each level can be modified independently, allowing precise control of the visual elements, from general characteristics to complex details, without affecting the other levels. The result is the generation of high-resolution images with a higher level of authenticity than previous models.
 To further enhance visual expression, StyleGAN incorporates background noise into each channel before the Adaptive Normalisation (AdaIN) module. This adjustment subtly influences the visual characteristics of the resolution level on which it operates, contributing to the realism of the images generated.
 On top of this, they introduce a style vector, called "w", which is used in place of the traditional latent vector "x" to give finer control over the appearance of the images generated.
 
+\subsubsection*{Rationale for choosing StyleGAN}
 
 \section*{References}
 
