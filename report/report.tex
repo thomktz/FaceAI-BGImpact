@@ -165,10 +165,12 @@ Finally,
 $$\text{loss}=\text{reconstruction loss}+\text{similarity loss}$$
 
 \subsubsection*{Rationale for choosing VAE}
-VAEs generally perform better in image generation tasks. 
+VAEs generally perform better than regular AEs in image generation tasks. 
 First, by learning a probabilistic latent space representation, it allows for smoother transitions and better interpolation in the latent space, which is crucial for generating diverse and realistic images. 
 Then, VAEs inherently include a regularization term in their objective function, which encourages the learned latent space to be well-structured. 
 This regularization helps prevent overfitting and aids in disentangling meaningful features in the latent space.
+  
+This is especially important for us, since we want to be able to interpret the latent space of our models.
 
 
 \subsection{Generative Adversarial Networks}
