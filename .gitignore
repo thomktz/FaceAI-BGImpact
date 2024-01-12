@@ -3,7 +3,7 @@ faceai_bgimpact/data_processing/**/*.jpg
 faceai_bgimpact/data_processing/**/*.jpeg
 faceai_bgimpact/data_processing/**/*.png
 faceai_bgimpact/data_processing/**/*.gif
-*.png
+
 *.mp4
 *.pyc
 
@@ -19,7 +19,12 @@ faceai_bgimpact/data_processing/**/*.gif
 faceai_bgimpact/outputs/
 
 dist/
-# webapp/models/
+webapp/models/
 
 venv/
 outputs/
+
+*.aux
+*.log
+*.out
+*.gz
