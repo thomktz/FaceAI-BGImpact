@@ -202,13 +202,53 @@ According to the authors of the article, in practice, the Generator objective fu
 \subsubsection*{Principle - Deep Convolutiobnal Generative Adversarial Networks}
 In practice, “vanilla” GANs are hard to train and do not yield very realistic results, by 2024 standards. The first improvement we implemented over the standard GAN architecture was to use deep convolutions (and deconvolutions) for the Generator (and Discriminator), making it a DC-GAN (Deep Convolutional GAN). When dealing with image data, convolutions are more spatially aware than regular fully-connected layers because they only “mix” the values of pixels close together.
 
-While more efficient than plain GANs, DCGANs have not been shown to generate realistic images. Their latent space is also very disorganized and hard to interpret. To tackle both of these problems, we decided to implement a custom version of NVidia’s StyleGAN, from scratch.
+While more efficient than plain GANs, DCGANs have not been shown to generate realistic images. Their latent space is also very disorganized and hard to interpret. To tackle both of these problems, we decided to implement a custom version of NVidia’s StyleGAN, from scratch. StyleGANs are a variety of Progressive Growing GANs, which we will discuss in the next section.
+
+\subsubsection*{Principle - ProGANs}
+One of the key features of the ProGAN architecture is the progressive nature of the layers, which enables the different visual characteristics of an image to be taken into account effectively. 
+The concept is simple: the lower the layer and resolution, the greater the impact on coarser features. 
+This granularity means that the inputs at each level can be modified independently, allowing precise control of the visual elements, from general characteristics to complex details, without affecting the other levels. 
+The result is the generation of high-resolution images with a higher level of authenticity than previous models.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/progan.png}
+    \caption{ProGAN training}
+\end{figure}
+
+In practice, the generator and discriminator are initialized with the full number of levels, but not all are used at first. Let's see the generation of an image at level 0 (i.e. at resolution 4x4):
+
+\[\text{image}_{4x4}(z) = \text{ToRGB}_{4x4}(G_{4x4}(z))\]
+\[\text{critic}_{4x4}(\text{image}) = D_{4x4}(\text{FromRGB}_{4x4}(\text{image}))\]
+
+Now, at level 1 (resolution 8x8):
+
+\[\text{image}_{8x8}(z) = \text{ToRGB}_{8x8}(G_{8x8}(G_{4x4}(z)))\]
+\[\text{critic}_{8x8}(\text{image}) = D_{4x4}(D_{8x8}(\text{FromRGB}_{8x8}(\text{image})))\]
+
+To prevent an explosion of gradients during the transition, we introduce $\alpha \in \left[0, 1\right]$, a parameter that controls the degree of blending between the two levels.
+
+\[\text{image}_{8x8}(z, \alpha) = \alpha \times \text{image}_{8x8}(z) + (1-\alpha) \times Upscale(\text{image}_{4x4}(z))\]
+\[\text{critic}_{8x8}(\text{image}, \alpha) = \alpha \times \text{critic}_{8x8}(\text{image}) + (1-\alpha) \times \text{critic}_{4x4}(DownScale(\text{image}))\]
+
+The $\alpha$ parameter is increased linearly from 0 to 1 during the transition between levels 0 and 1. This process is repeated until the highest level is reached. 
+
+ProGAN yields much better results than conventional GANs, but the latent space is still very disorganized and hard to interpret.
 
 \subsubsection*{Principle - StyleGAN}
-StyleGAN is a variety of ProGANs (Progressive Growing GANs). The key breakthroughs of those models lies in the progressive refinement of images, commencing from a low resolution and gradually advancing to a higher resolution. In the StyleGAN paper, the authors present an enhanced version of ProGAN's image generator, specifically focusing on advancements in the generator network.
-One of the key features of the ProGAN architecture is the progressive nature of the layers, which enables the different visual characteristics of an image to be taken into account effectively. The concept is simple: the lower the layer and resolution, the greater the impact on coarser features. This granularity means that the inputs at each level can be modified independently, allowing precise control of the visual elements, from general characteristics to complex details, without affecting the other levels. The result is the generation of high-resolution images with a higher level of authenticity than previous models.
-To further enhance visual expression, StyleGAN incorporates background noise into each channel before the Adaptive Normalisation (AdaIN) module. This adjustment subtly influences the visual characteristics of the resolution level on which it operates, contributing to the realism of the images generated.
-On top of this, they introduce a style vector, called "w", which is used in place of the traditional latent vector "x" to give finer control over the appearance of the images generated.
+
+The main contribution of StyleGAN is in introduce a style-vector $w$ in the generator.
+
+In each forward pass, a Mapping network $\mathcal{M}$ is used to map the latent vector $z$ to the intermediate latent space of styles, $w$.
+Then, the generator $G$ uses $w$, instead of $z$, to generate the image. It also uses a learned constant $z_0$ to control the base style of the image, and some noise $\epsilon$.
+\[w = \mathcal{M}(z)\]
+\[\text{image}_{4x4}(w) = \text{ToRGB}_{4x4}(G_{4x4}(w, z_0, \epsilon))\]
+
+The key difference is that in the level 1, 
+
+\[\text{image}_{8x8}(w) = \text{ToRGB}_{8x8}(G_{8x8}(w, G_{4x4}(w, z_0, \epsilon), \epsilon))\]
+
 
 \subsubsection*{Rationale for choosing StyleGAN}
 
