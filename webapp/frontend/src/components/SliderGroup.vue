@@ -45,7 +45,7 @@
 import "katex/dist/katex.min.css";
 
 export default {
-  emits: ["originalSliderChange", "othersToZero", "othersToRandom"],
+  emits: ["sliderChange", "othersToZero", "othersToRandom"],
   props: {
     nSliders: {
       type: Number,
@@ -64,7 +64,7 @@ export default {
   watch: {
     sliderValues: {
       handler(newValues) {
-        this.$emit("originalSliderChange", newValues);
+        this.$emit("sliderChange", newValues);
       },
       deep: true,
     },
