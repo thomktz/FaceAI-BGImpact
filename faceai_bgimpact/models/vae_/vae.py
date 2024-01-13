@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.optim as optim
+import plotly.graph_objects as go
 
 from tqdm import tqdm
 from torchvision.utils import save_image
@@ -48,8 +49,8 @@ class VAE(AbstractModel):
 
         self.start_epoch = 0
         self.optimizer_config = {}
-        
-        #Add for PCA
+
+        # Add for PCA
         # self.latent_vector = torch.randn(64, self.latent_dim)
         self.pca = None
 
@@ -110,13 +111,8 @@ class VAE(AbstractModel):
             for i, imgs in data_iter:
                 imgs = imgs.to(device)
 
-                # Zero the parameter gradients
-                # TODO: Why do we need to zero the gradients here?
-                # We're doing it twice
                 self.optimizer.zero_grad()
-
                 loss = self.perform_train_step(imgs)
-
                 running_loss += loss.item()
 
                 if i % image_interval == 0:
@@ -137,6 +133,7 @@ class VAE(AbstractModel):
             fid_score = self.calculate_fid(2048 + batch_size, batch_size, device)
             self.epoch_losses["test"].append(fid_score)
             print(f"FID: {fid_score:.2f}")
+            self.graph_fid(epoch)
 
     def perform_train_step(self, real_imgs):
         """
@@ -214,10 +211,19 @@ class VAE(AbstractModel):
         generated_images = []
 
         with torch.no_grad():
-            for _ in range(num_images // batch_size):
-                # Sample from the VAE latent space
-                z_samples = torch.randn(batch_size, self.latent_dim).to(device)
-                generated_images.append(self.decoder(z_samples).detach().cpu())
+            num_batches = num_images // batch_size
+
+            data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc="Fitting PCA for VAE")
+
+            for i, imgs in data_iter:
+                # Stop if we have enough samples
+                if i >= num_batches:
+                    break
+                imgs = imgs.to(device)
+                mu, logvar = self.encoder(imgs)
+                z = self.reparameterize(mu, logvar)
+                recon_imgs = self.decoder(z)
+                generated_images.append(recon_imgs.detach().cpu())
 
         self.decoder.train()
         # Concatenate the image
@@ -339,10 +345,18 @@ class VAE(AbstractModel):
         instance.optimizer_config = checkpoint["optimizer_state_dict"]
 
         return instance
-    
-    def fit_pca(self, num_samples=10000, batch_size=100, n_components=50, save_file="models/VAE_PCA", use_saved=True):
+
+    def fit_pca(
+        self,
+        num_samples=10000,
+        batch_size=100,
+        n_components=50,
+        save_file="models/VAE_PCA",
+        use_saved=True,
+        device="cpu",
+    ):
         """Fit PCA to the latent space of the VAE.
-        
+
         Parameters:
         ----------
         num_samples : int
@@ -367,36 +381,47 @@ class VAE(AbstractModel):
                     print("Saved PCA does not match the requested parameters. Fitting new PCA...")
             except FileNotFoundError:
                 print("No saved PCA found. Fitting new PCA...")
-                
+
         self.encoder.eval()
         all_z = []
         self.n_components = n_components
-        
+
+        # In the VAE, you want to encode the real images and then sample from the latent space
+        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size)
+        if num_samples > len(self.dataset):
+            raise ValueError(f"num_samples ({num_samples}) must be <= len(dataset) ({len(self.dataset)})")
+
+        n_batches = num_samples // batch_size
+        data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc="Fitting PCA for VAE")
+
         # Process in batches
-        for _ in tqdm(range(0, num_samples, batch_size), desc="Fitting PCA to the VAE"):
-            # Sample from the VAE latent space
-            z_samples = torch.randn(batch_size, self.latent_dim)
-            z_samples = z_samples.to(self.device)
+        for i, imgs in data_iter:
+            # Stop if we have enough samples
+            if i >= n_batches:
+                break
+
+            # Sample real images
+            real_imgs = imgs.to(device)
 
             # Get the latent space representation
             with torch.no_grad():
-                mu, logvar = self.encoder(z_samples)
+                mu, logvar = self.encoder(real_imgs)
                 z = self.reparameterize(mu, logvar)
-                
+
             all_z.append(z.cpu())
-        
+
         # Concatenate all the latent vectors
         all_z = torch.cat(all_z, dim=0)[:num_samples]  # Ensure exact number of samples
-        all_z_flat = all_z.view(num_samples, -1).numpy() # Flatten for PCA
-        
+        all_z_flat = all_z.view(num_samples, -1).numpy()  # Flatten for PCA
+
         # Fit PCA
         self.pca = PCA(n_components=n_components)
         self.pca.fit(all_z_flat)
-        
+
         # Save PCA as parquet file
         full_save_file = self.get_save_dir(save_file) + ".joblib"
         dump(self.pca, full_save_file)
-        
+
     def load_pca(self, save_file="outputs/VAE_PCA"):
         """
         Load PCA from file.
@@ -409,38 +434,75 @@ class VAE(AbstractModel):
         full_save_file = self.get_save_dir(save_file) + ".joblib"
         self.pca = load(full_save_file)
         self.n_components = self.pca.n_components_
-        
-    def manipulate_z(self, adjustment_factors, z_vectors):
+
+    def image_from_eigenvector_strengths(self, eigenvector_strengths: list):
         """
-        Manipulate a batch of z vectors using specific principal components.
+        Generate an image from a list of eigenvector strengths.
 
         Parameters:
         ----------
-        adjustment_factors : list of float
-            List of factors by which to adjust the components. Length must be <= n_components.
-        w_vectors : torch.Tensor
-            Batch of style vectors in z space to be manipulated.
+        eigenvector_strengths : list of float
+            List of strengths for each eigenvector.
 
         Returns:
         ----------
         torch.Tensor
-            Batch of adjusted z vectors.
+            Generated image.
         """
         if not self.pca:
             raise ValueError("PCA not fitted. Call fit_pca first.")
-        if len(adjustment_factors) > self.pca.n_components:
-            raise ValueError(f"Length of adjustment_factors ({len(adjustment_factors)}) must be <= n_components ({self.pca.n_components})")
-        
-        # Reshape and process the batch of z vectors
-        original_z_flat = z_vectors.view(z_vectors.shape[0], -1).cpu().numpy()  # Flatten for PCA
-        z_pca = self.pca.transform(original_z_flat)
-        
-        # Manipulate specified components for all vectors in the batch
-        for i, factor in enumerate(adjustment_factors):
-            z_pca[:, i] += factor
-        
-        # Inverse PCA transformation and reshape back to original shape
-        adjusted_z_flat = self.pca.inverse_transform(z_pca)
-        adjusted_z = torch.from_numpy(adjusted_z_flat).view(z_vectors.shape).to(self.device)
-        
-        return adjusted_z
+        if len(eigenvector_strengths) > self.pca.n_components:
+            raise ValueError(
+                f"Length of eigenvector_strengths ({len(eigenvector_strengths)}) must be <= ({self.pca.n_components})"
+            )
+
+        # Sample z = V x
+        x = torch.zeros(self.pca.n_components)
+        for i, strength in enumerate(eigenvector_strengths):
+            x[i] = strength
+        z = torch.tensor(self.pca.inverse_transform(x.view(1, -1)))
+
+        # Generate image
+        self.decoder.eval()
+        with torch.no_grad():
+            image_tensor = self.decoder(z)
+            image_tensor = (image_tensor.clamp(-1, 1) + 1) / 2
+
+        return image_tensor
+
+    def graph_fid(self, epoch, save_dir="outputs/VAE_fid_plots"):
+        """
+        Generate a subplot of FID scores for each trained level.
+
+        Parameters
+        ----------
+        save_dir : str
+            Directory to save the generated plot.
+        """
+        # Generate path
+        save_folder = self.get_save_dir(save_dir)
+        os.makedirs(save_folder, exist_ok=True)
+
+        # Get the levels
+        fids = self.epoch_losses["test"]
+
+        # Create the plot
+        fig = go.Figure()
+
+        # Add the FID scores
+        fig.add_trace(go.Scatter(x=list(range(1, len(fids) + 1)), y=fids, name="FID Score"))
+
+        # Update layout
+        fig.update_layout(
+            height=400,
+            width=800,
+            title_text="FID Scores per epochs",
+        )
+        fig.update_xaxes(title_text="Epoch")
+        fig.update_yaxes(title_text="FID Score")
+
+        # Save the plot
+        os.makedirs(os.path.dirname(save_folder), exist_ok=True)
+        fig.write_image(f"{save_folder}/fid_plot_{epoch+1}.png")
+        # Optionally, save as interactive HTML
+        fig.write_html(f"{save_folder}/fid_plot_{epoch+1}.html")

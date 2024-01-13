@@ -104,6 +104,9 @@ To do this, we first decomposed the image by isolating the face and background u
 Then we created two datasets, one with a large Gaussian blur background and the other with a grey background. 
 With over 70,000 images, our neutral background datasets are effective for training generative algorithms.
 
+We focused on the 128x128 resolution version of the FFHQ dataset.
+The datasets we generated were uploaded to Kaggle [here](https://www.kaggle.com/thomaskientz/datasets).
+
 \textbf{Our main hypothesis is that the removal of the background will have a positive impact on the performance and the training of the generative models. Furthermore, we expect the latent space to be more interpretable.}
 
 To test our hypothesis, we trained models on both the original and the greyed-out versions of the same dataset. 
