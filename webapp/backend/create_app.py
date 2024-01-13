@@ -5,9 +5,7 @@ from flask_cors import CORS
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 from backend.extensions import api
-from backend.api import (
-    stylegan_ns,
-)
+from backend.api import stylegan_ns, vae_ns
 
 
 def create_app():
@@ -49,6 +47,7 @@ def create_app():
 
     # Initialize the Flask-RestX Api and register the namespaces
     api.add_namespace(stylegan_ns, path="/stylegan")
+    api.add_namespace(vae_ns, path="/vae")
 
     # For testing purposes
     @app.route("/hello")

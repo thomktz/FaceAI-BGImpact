@@ -5,12 +5,12 @@ from flask_restx import Resource
 from torchvision.transforms import ToPILImage
 
 from .namespace import api
-from .model_manager import ModelManager
+from ..model_manager import ModelManager
 from flask_restx import fields
 
 
 model_manager = ModelManager()
-model_manager.load_all_models(["grey", "raw"])  # blur
+model_manager.load_all_models("StyleGAN", ["grey", "raw"])
 
 stored_w_vectors = None
 APPLY_NOISE = False
