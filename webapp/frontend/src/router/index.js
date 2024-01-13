@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import MainLayout from "@/views/MainLayout.vue";
-import LiveDemo from "@/views/LiveDemo.vue";
 import GANSpace from "@/views/GANSpace.vue";
+import VAESpace from "@/views/VAESpace.vue";
 
 const routes = [
   {
@@ -15,14 +15,14 @@ const routes = [
         component: Home,
       },
       {
-        path: "/live-demo",
-        name: "LiveDemo",
-        component: LiveDemo,
+        path: "/stylegan",
+        name: "StyleGAN",
+        component: GANSpace,
       },
       {
-        path: "/gan-space",
-        name: "GANSpace",
-        component: GANSpace,
+        path: "/vae",
+        name: "VAE",
+        component: VAESpace,
       },
     ],
   },

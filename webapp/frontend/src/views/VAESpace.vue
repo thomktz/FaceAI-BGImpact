@@ -5,29 +5,14 @@
         <v-row>
           <!-- Collapsible "Base Style Controls" Panel -->
           <v-col cols="4" class="panel-column">
-            <v-expansion-panels v-model="panel">
-              <v-expansion-panel>
-                <v-expansion-panel-title class="panel-title">
-                  <h2>Base style controls</h2>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                  <SliderGroup
-                    :nSliders="settings.nSlidersOriginal"
-                    :slidersRange="settings.slidersRange"
-                    @othersToZero="othersToZero"
-                    @othersToRandom="othersToRandom"
-                    @sliderChange="originalSliderChange"
-                  ></SliderGroup>
-                </v-expansion-panel-text>
-              </v-expansion-panel>
-            </v-expansion-panels>
-            <slider-group-layers
-              :n-sliders="settings.nSlidersNew"
-              :sliders-range="settings.slidersRange"
-              @new-slider-change="newSliderChange"
-              @layer-list-change="layerListChange"
-              :disabled="areSlidersDisabled"
-            ></slider-group-layers>
+            <h2>Base style controls</h2>
+            <SliderGroup
+              :nSliders="settings.nSliders"
+              :slidersRange="settings.slidersRange"
+              @othersToZero="othersToZero"
+              @othersToRandom="othersToRandom"
+              @sliderChange="sliderChange"
+            ></SliderGroup>
           </v-col>
 
           <!-- Image Display -->
@@ -38,8 +23,7 @@
           <!-- Edits controls -->
           <v-col cols="4" class="panel-column">
             <EditControls
-              :layerList="layerList"
-              :newSliderValues="newSliderValues"
+              :sliderValues="sliderValues"
               @lambdaChange="lambdaChange"
             ></EditControls>
           </v-col>
@@ -57,7 +41,6 @@
 import Settings from "@/components/Settings.vue";
 import ImageDisplay from "@/components/ImageDisplay.vue";
 import SliderGroup from "@/components/SliderGroup.vue";
-import SliderGroupLayers from "@/components/SliderGroupLayers.vue";
 import EditControls from "@/components/EditControls.vue";
 import { apiClient } from "@/apiConfig";
 import "katex/dist/katex.min.css";
@@ -67,42 +50,32 @@ export default {
     Settings,
     ImageDisplay,
     SliderGroup,
-    SliderGroupLayers,
     EditControls,
   },
   data: () => ({
     settings: {
       modelName: "Grey",
       slidersRange: 2.0,
-      nSlidersNew: 5,
-      nSlidersOriginal: 10,
+      nSliders: 10,
     },
     imageData: "",
-    layerList: Array(5)
-      .fill()
-      .map(() => [...Array(10).keys()]),
-    originalSliderValues: Array(10).fill(0),
-    newSliderValues: Array(5).fill(0),
+    sliderValues: Array(5).fill(0),
     panel: null,
     lambda: 1,
     areSlidersDisabled: false,
   }),
   mounted() {
     this.handleSettingsUpdate(this.settings);
-    this.originalSliderChange(this.originalSliderValues);
+    this.sliderChange(this.sliderValues);
     this.getImage();
   },
   methods: {
     handleSettingsUpdate(newSettings) {
       this.settings = { ...newSettings };
-      this.layerList = Array(this.settings.nSlidersNew)
-        .fill()
-        .map(() => [...Array(10).keys()]);
-      this.originalSliderValues = Array(this.settings.nSlidersOriginal).fill(0);
-      this.newSliderValues = Array(this.settings.nSlidersNew).fill(0);
+      this.SliderValues = Array(this.settings.nSliders).fill(0);
       apiClient
-        .post("/stylegan/set-n-sliders", {
-          n_sliders: this.settings.nSlidersOriginal,
+        .post("/vae/set-n-sliders", {
+          n_sliders: this.settings.nSliders,
           model_name: this.settings.modelName,
         })
         .then((response) => {
@@ -121,11 +94,11 @@ export default {
     othersToZero() {
       console.log("Set others to zero");
       apiClient
-        .post("/stylegan/zero-x1-others", {
+        .post("/vae/zero-x1-others", {
           model_name: this.settings.modelName,
         })
         .then((response) => {
-          this.originalSliderChange(this.originalSliderValues);
+          this.sliderChange(this.SliderValues);
           this.getImage();
         })
         .catch((error) => {
@@ -135,37 +108,19 @@ export default {
     othersToRandom() {
       console.log("Set others to random");
       apiClient
-        .post("/stylegan/random-x1-others", {
+        .post("/vae/random-x1-others", {
           model_name: this.settings.modelName,
         })
         .then((response) => {
-          this.originalSliderChange(this.originalSliderValues);
+          this.sliderChange(this.SliderValues);
           this.getImage();
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    newSliderChange(newValues) {
-      this.newSliderValues = newValues;
-      this.getImage();
-    },
-    originalSliderChange(newValues) {
-      this.originalSliderValues = newValues;
-      apiClient
-        .post("/stylegan/x1-sliders", {
-          slider_values: newValues,
-          model_name: this.settings.modelName,
-        })
-        .then((response) => {
-          this.getImage();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
-    layerListChange(newRanges) {
-      this.layerList = newRanges;
+    sliderChange(newValues) {
+      this.sliderValues = newValues;
       this.getImage();
     },
     lambdaChange(newValue) {
@@ -175,13 +130,12 @@ export default {
     },
     getImage() {
       // Scale the new slider values by lambda
-      const scaledNewSliderValues = this.newSliderValues.map(
+      const scaledSliderValues = this.sliderValues.map(
         (value) => value * this.lambda,
       );
       apiClient
-        .post("/stylegan/generate-image", {
-          eigenvector_strengths: scaledNewSliderValues,
-          layers_list: this.layerList,
+        .post("/vae/generate-image", {
+          eigenvector_strengths: scaledSliderValues,
           model_name: this.settings.modelName,
         })
         .then((response) => {
