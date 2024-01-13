@@ -100,14 +100,21 @@ However, we have not found any studies on the importance of this effect of the b
 
 \quad Our idea was to create our own neutral-background dataset, from a normal face dataset, the Flicker-Faces-HQ dataset, often used for facial generation tasks. 
 
-To do this, we first decomposed the image by isolating the face and background using the \textit{removebg} library. 
+To do this, we first decomposed the image by isolating the face and background using the \texttt{rembg} library. 
 Then we created two datasets, one with a large Gaussian blur background and the other with a grey background. 
 With over 70,000 images, our neutral background datasets are effective for training generative algorithms.
 
 We focused on the 128x128 resolution version of the FFHQ dataset.
-The datasets we generated were uploaded to Kaggle [here](https://www.kaggle.com/thomaskientz/datasets).
+The datasets we generated were uploaded to Kaggle \hyperlink{https://www.kaggle.com/thomaskientz/datasets}{on this link}.
 
-\textbf{Our main hypothesis is that the removal of the background will have a positive impact on the performance and the training of the generative models. Furthermore, we expect the latent space to be more interpretable.}
+\textbf{Our main hypothesis is that the removal of the background will have a positive impact on the performance and the training of the generative models. 
+Furthermore, we expect the latent space to be more interpretable.}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/mask.png}
+    \caption{From left to right, original image, mask, blurred, greyed-out}
+\end{figure}
 
 To test our hypothesis, we trained models on both the original and the greyed-out versions of the same dataset. 
 We picked versions of the two main categories of generative models: Autoencoders (AE) and Generative Adversarial Networks (GAN).
@@ -252,8 +259,36 @@ The key difference is that in the level 1,
 
 \[\text{image}_{8x8}(w) = \text{ToRGB}_{8x8}(G_{8x8}(w, G_{4x4}(w, z_0, \epsilon), \epsilon))\]
 
+The style vector $w$ is passed to the generator at each level.
 
 \subsubsection*{Rationale for choosing StyleGAN}
+
+The key features of StyleGAN over the other variants is that $w$ is supposedly more interpretable than $z$.
+
+\section{Training}
+
+\section{Sample and control of the latent space}
+
+Even with these models, sampling from the latent spaces is not straightforward.
+
+\subsubsection*{VAE}
+
+For each input image $x$, the encoder outputs $\mu_x, \sigma_x$. We can then sample $z$ from $\mathcal{N}(\mu_x, \sigma_x)$.
+To generate now images, we can fit a Principal Component Analysis (PCA) on a large sample of $z$ generated from the true images to get the inverse transform $V_{\text{VAE}}$.
+This allows us to sample and control the latent spcae using its eigenvectors in $z$ space:
+
+\[z(x) = V_{\text{VAE}} \cdot x\]
+
+
+\subsubsection*{StyleGAN}
+
+For StyleGAN, we want to sample $w$ directly. For this, we will generate random $z$ and use the Mapping network $\mathcal{M}$ to map them to $w$.
+We can then fit a PCA on a large sample of our synthetic $w$ to get the inverse transform $V_{\text{StyleGAN}}$.
+
+\[w(x) = V_{\text{StyleGAN}} \cdot x\]
+
+We also implemented style-blending, which is a technique where you give different $w$ to different levels of the generator.
+
 
 \section*{References}
 
