@@ -265,7 +265,51 @@ The style vector $w$ is passed to the generator at each level.
 
 The key features of StyleGAN over the other variants is that $w$ is supposedly more interpretable than $z$.
 
+\subsubsection*{Training metric - FID}
+
+\quad To evaluate the performance of our models, we used the Fréchet Inception Distance (FID) metric. Unlike other models, the losses of GANs are not very informative. The FID metric is a measure of the similarity between two datasets of images. 
+At resolution $l$ and blending factor $\alpha$, we're comparing blended real images $x(l, \alpha)$ and generated images $G_{l, \alpha}(w, z_0, \epsilon)$, with
+
+\[ x(l, \alpha) = \alpha \times x_{l} + (1-\alpha) \times UpScale(x_{l-1}) \]
+
 \section{Training}
+
+\subsubsection*{Hardware setup}
+
+These models require a lot of computing power. Luckily, in the end, a family member was able to provide us with SSH access into a Windows-Subsystems-for-Linux (WSL) environment within their computer. This computer had a NVIDIA GeForce RTX 3080 GPU.
+
+\begin{table}[H]
+  \caption{Time and Cost Analysis for the different GPU options - StyleGAN benchmark}
+  \label{your-table}
+  \centering
+  \begin{tabular}{lcccccl}
+    \toprule
+    & \multicolumn{1}{c}{M1 CPU} & \multicolumn{1}{c}{Colab Free} & \multicolumn{1}{c}{Colab Pro} & \multicolumn{1}{c}{SSP Cloud\footnotemark} & \multicolumn{1}{c}{Family GPU} \\
+    \midrule
+    GPU & - & T4 & V100 & T4 & RTX 3080 \\
+    Time per epoch\footnotemark (minutes) & 240 & 120 & 12 & 120 & 10 \\
+    Cost per hour\footnotemark (cents€) & 0.8 & 0 & 45.8\footnotemark & 0 & 4 \\
+    Cost per epoch (cents€) & 3.2 & 0 & 9.16 & 0 & 0.7 \\
+    Cost for 400 epochs (€) & 12.8 & \textbf{0} & 36.6 & \textbf{0} & \textbf{2.8} \\
+    Time for 400 epochs (hours) & 1600 & 800 & 80 & 800 & \textbf{66.7} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\footnotetext[1]{ENSAE provides us with an access to Datalab - SSP Cloud, with access to GPU instances}
+\footnotetext[2]{Average over the different levels of StyleGAN - Resolution 4x4 is faster to train than 128x128.}
+\footnotetext[3]{Taking into account electricity (M1 at 40W and RTX 3080 at 200W, at 0.20€/kWh).}
+\footnotetext[4]{A Colab Pro subscription provides you with 100 compute units per month. These ran out in less than 24 hours of V100 training.}
+
+The remote setup via SSH explains the large number of commits on the repository - we had to push our code to GitHub to be able to access it from the remote machine at each change we made.
+
+\subsubsection*{VAE}
+
+\subsubsection*{StyleGAN}
+StyleGAN is a very ressource-intensive model. 
+We trained each levels (i.e. resolution, starting from 4x4) until convergence of the FIDs. 
+
+It is capital to ensure fairness in the training of the different datasets, for the results to be comparable. This means that they must train for the same number of epochs per level. So, to ensure fairness between the datasets, we implemented a learning rate scheduler which slowly decreases the learning rate following an inverse sigmoid function. This way, each model could train at appropriate learning rates during training.
 
 \section{Sample and control of the latent space}
 
