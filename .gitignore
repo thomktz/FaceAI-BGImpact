@@ -19,7 +19,7 @@ faceai_bgimpact/data_processing/**/*.gif
 faceai_bgimpact/outputs/
 
 dist/
-webapp/models/
+webapp/backend/models/VAE*
 webapp/ffhq_data/
 
 venv/
