@@ -30,10 +30,10 @@ def create_app():
         resources={
             r"/*": {
                 "origins": [
-                    "http://localhost:8080",
-                    "http://127.0.0.1:8080",
-                    "https://aml.kientz.net",
-                    "http://89.168.39.28:8080" "https://89.168.39.28:8080",
+                    "http://localhost:8082",
+                    "http://127.0.0.1:8082",
+                    "https://ml.kientz.net",
+                    "http://89.168.39.28:8082" "https://89.168.39.28:8082",
                 ],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],

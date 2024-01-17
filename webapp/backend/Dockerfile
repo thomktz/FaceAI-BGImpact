@@ -14,7 +14,7 @@ RUN pip install flask-cors==4.0.0
 # Copy the current directory contents into the container at /usr/src/app
 COPY . .
 
-# Expose port 5000 to be accessible from the outside
-EXPOSE 5000
+# Expose port 5002 to be accessible from the outside
+EXPOSE 5002
 
 CMD PYTHONPATH=. python main.py
