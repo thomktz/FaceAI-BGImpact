@@ -375,9 +375,11 @@ Here are samples from the latent space, $w$:
 Overall, these are much more detailed than the VAE samples, but introduce a lot of visual artefacts. 
 The grey-background does seem to produce better quality images, as the FIDs would indicate, but that remains subjective.
 
-Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
+Let's now compare the strongest eigenvectors of the PCA of the latent spaces. 
+Each row below is the effect of varying the corresponding eigenvector from -3 to 3, leaving the others at 0. Each row $i$ represents the style vectors $(w_{i, t})_{t \in [0, 3]} = t \cdot \delta_i \cdot V_{\text{StyleGAN}}$, where $\delta_i$ is the Kronecker delta, and V is the PCA matrix.
 
-\subsubsection*{Original (raw)}
+
+\subsubsection*{Original (raw) - StyleGAN $w$ eigenvectors}
 
 
 \begin{figure}[H]
@@ -385,7 +387,7 @@ Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
   \begin{minipage}{.18\linewidth}
       \centering
       $\lambda_{\text{raw}, 0} = 7.9$ \\
-      Hair
+      BG\footnotemark brightness, hair
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
@@ -399,7 +401,7 @@ Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
   \begin{minipage}{.18\linewidth}
       \centering
       $\lambda_{\text{raw}, 1} = 5.8$ \\
-      Head rotation
+      BG red-ness, head rotation
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
@@ -407,13 +409,14 @@ Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
       \includegraphics[width=\linewidth]{eigen/raw_gan_1.png}
   \end{minipage}
 \end{figure}
+\footnotetext[1]{Background}
 
 \begin{figure}[H]
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
       $\lambda_{\text{raw}, 2} = 5.2$ \\
-      Hair
+      BG blue-ness, hair
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
@@ -450,8 +453,9 @@ Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
   \end{minipage}
 \end{figure}
 
+The eigenvectors are very tangled with background variations, and the effects on the facial features themselves are not big.
 
-\subsubsection*{Grey-background}
+\subsubsection*{Grey-background - StyleGAN $w$ eigenvectors}
 
 \begin{figure}[H]
   \centering
@@ -523,29 +527,25 @@ Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
   \end{minipage}
 \end{figure}
 
-The grey-background eigenvectors seem to have a much more pronounced effect on the facial attributes, even though the eigenvalues are smaller. \\
+The grey-background eigenvectors seem to have a much more pronounced and clear effect on the facial attributes, even though the eigenvalues are smaller. \\
 \textbf{This demonstrates that a lot of the variance is uselessly captured by the background in the original model, and shows the effectiveness of our method at tackling this problem.}\\
 This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey, 2}}$, two eigenvectors that capture head rotation.
 
-\newpage
-\bibliographystyle{plain}  % Choose a style that suits your needs
-\bibliography{bibtex}  % The filename of your .bib file (without extension)
+This is also the case, in a lesser extent, for the VAE:
 
-\section*{Appendix}
-
-\subsubsection*{Grey-background}
+\subsubsection*{Original (raw) - VAE $x$ eigenvectors}
 
 \begin{figure}[H]
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
-      $\lambda_0 = 4.3$ \\
-      Gender, hair
+      $\lambda_{\text{raw}, 0} = 1.19$ \\
+      BG color
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
       \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_0.png}
+      \includegraphics[width=\linewidth]{eigen/raw_vae_0.png}
   \end{minipage}
 \end{figure}
 
@@ -553,41 +553,13 @@ This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey,
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
-      $\lambda_1 = 3.1$ \\
-      Gender, lipstick, hair
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_1.png}
-  \end{minipage}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_2 = 2.5$ \\
+      $\lambda_{\text{raw}, 1} = 1.15$ \\
       Head rotation
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
       \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_2.png}
-  \end{minipage}
-\end{figure}
-  
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_3 = 2.2$ \\
-      Gender, skin, hair
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_3.png}
+      \includegraphics[width=\linewidth]{eigen/raw_vae_1.png}
   \end{minipage}
 \end{figure}
 
@@ -595,13 +567,29 @@ This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey,
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
-      $\lambda_4 = 1.9$ \\
-      Glasses, gender, hair
+      $\lambda_{\text{raw}, 2} = 1.14$ \\
+      BG color
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
       \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_4.png}
+      \includegraphics[width=\linewidth]{eigen/raw_vae_2.png}
+  \end{minipage}
+\end{figure}
+
+\subsubsection*{Grey-background - VAE $x$ eigenvectors}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey}, 0} = 1.18$ \\
+      Hair, head rotation
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_vae_0.png}
   \end{minipage}
 \end{figure}
 
@@ -609,28 +597,173 @@ This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey,
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
-      $\lambda_5 = 1.6$ \\
-      Age, glasses
+      $\lambda_{\text{grey}, 1} = 1.17$ \\
+      Head rotation
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
       \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_5.png}
+      \includegraphics[width=\linewidth]{eigen/grey_vae_1.png}
   \end{minipage}
 \end{figure}
+
 
 \begin{figure}[H]
   \centering
   \begin{minipage}{.18\linewidth}
       \centering
-      $\lambda_6 = 1.5$ \\
-      Hair
+      $\lambda_{\text{grey}, 1} = 1.15$ \\
+      Skin tone
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
       \centering
-      \includegraphics[width=\linewidth]{eigen/grey_gan_6.png}
+      \includegraphics[width=\linewidth]{eigen/grey_vae_2.png}
   \end{minipage}
+\end{figure}
+
+A full list of the eigenvectors and their effects can be found in the Appendix.
+
+\newpage
+\bibliographystyle{plain}  % Choose a style that suits your needs
+\bibliography{bibtex}  % The filename of your .bib file (without extension)
+
+\newpage
+\section*{Appendix}
+
+\subsubsection*{Grey-background - StyleGAN $w$ eigenvectors 0-14}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_0.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_1.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_2.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_3.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_4.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_5.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_6.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_7.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_8.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_9.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_10.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_11.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_12.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_13.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_14.png}
+\end{figure}
+
+\newpage
+\subsubsection*{Grey-background - StyleGAN $w$ eigenvectors 15-29}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_15.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_16.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_17.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_18.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_19.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_20.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_21.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_22.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_23.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_24.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_25.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_26.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_27.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_28.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_gan_29.png}
+
+\end{figure}
+\newpage
+
+\subsubsection*{Original (raw) - StyleGAN $w$ eigenvectors 0-14}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_0.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_1.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_2.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_3.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_4.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_5.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_6.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_7.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_8.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_9.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_10.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_11.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_12.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_13.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_14.png}
+\end{figure}
+
+\newpage
+\subsubsection*{Original (raw) - StyleGAN $w$ eigenvectors 15-29}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_15.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_16.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_17.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_18.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_19.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_20.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_21.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_22.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_23.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_24.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_25.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_26.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_27.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_28.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_gan_29.png}
+
+\end{figure}
+\newpage
+
+
+\subsubsection*{Grey-background - VAE $x$ eigenvectors 0-14}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_0.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_1.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_2.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_3.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_4.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_5.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_6.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_7.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_8.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_9.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_10.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_11.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_12.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_13.png}
+  \includegraphics[width=0.9\linewidth]{eigen/grey_vae_14.png}
+\end{figure}
+
+\newpage
+
+\subsubsection*{Original (raw) - VAE $x$ eigenvectors 0-14}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_0.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_1.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_2.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_3.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_4.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_5.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_6.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_7.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_8.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_9.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_10.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_11.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_12.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_13.png}
+  \includegraphics[width=0.9\linewidth]{eigen/raw_vae_14.png}
 \end{figure}
 
 \end{document}
