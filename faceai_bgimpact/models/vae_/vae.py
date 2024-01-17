@@ -354,6 +354,7 @@ class VAE(AbstractModel):
         save_file="models/VAE_PCA",
         use_saved=True,
         device="cpu",
+        other_data_folder=None,
     ):
         """Fit PCA to the latent space of the VAE.
 
@@ -369,6 +370,10 @@ class VAE(AbstractModel):
             Whether to save the PCA model.
         use_saved : bool
             Whether to use a saved PCA model.
+        device : torch.device
+            Device to use for training.
+        other_data_folder : str
+            Path to the folder containing the dataset. If None, use the default folder.
         """
         if use_saved:
             try:
@@ -378,7 +383,10 @@ class VAE(AbstractModel):
                     print("Loaded PCA from saved file.")
                     return
                 else:
-                    print("Saved PCA does not match the requested parameters. Fitting new PCA...")
+                    print(f"Saved PCA ({self.pca.n_components_}, {self.pca.n_samples_}).")
+                    print(
+                        f"Does not match the requested parameters ({n_components}, {num_samples}). Fitting new PCA..."
+                    )
             except FileNotFoundError:
                 print("No saved PCA found. Fitting new PCA...")
 
@@ -387,7 +395,7 @@ class VAE(AbstractModel):
         self.n_components = n_components
 
         # In the VAE, you want to encode the real images and then sample from the latent space
-        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size)
+        self.dataset, self.loader = get_dataloader(self.dataset_name, batch_size, other_data_folder=other_data_folder)
         if num_samples > len(self.dataset):
             raise ValueError(f"num_samples ({num_samples}) must be <= len(dataset) ({len(self.dataset)})")
 

@@ -60,7 +60,7 @@ class FFHQDataset(Dataset):
         return len(self.image_files)
 
 
-def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha=1.0):
+def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha=1.0, other_data_folder=None):
     """
     Create a DataLoader for the specified FFHQ dataset.
 
@@ -78,7 +78,10 @@ def get_dataloader(dataset_name, batch_size, shuffle=True, resolution=128, alpha
         The alpha value for progressive growing.
     """
     # Load the dataset with blended images
-    root_dir = f"{data_folder}/{dataset_name}"
+    if other_data_folder is None:
+        root_dir = f"{data_folder}/{dataset_name}"
+    else:
+        root_dir = f"{other_data_folder}/{dataset_name}"
     dataset = FFHQDataset(root_dir=root_dir, resolution=resolution, alpha=alpha)
 
     # Create DataLoader
