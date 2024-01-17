@@ -80,18 +80,20 @@
 \quad The realm of image generation has seen some major breakthroughs in recent years. 
 An area of specific interest to us was that of the latent representations of complex images in generative models. 
 Observing these gives us an insight into what best characterizes an image, in the eyes of the trained algorithm. 
-When applied to a dataset of human faces, they can give us objective* (*depending on dataset bias…) insight into our most defining traits.
-
+When applied to a dataset of human faces, they can give us objective\footnotemark insight into our most defining traits.
+\footnotetext[1]{Depending on dataset bias}
 Most image generation techniques will create an image from a scalar vector as input. 
 During training, the algorithm will learn to map the dimensions of input vectors to different aspects of the image. 
 This vector is what we are calling the latent vector, and its shape is the latent dimension. 
 It can very well be interpreted as a compressed version of the image - indeed, a 128x128x3 RGB image is 49k+ scalars, and latent dimension is typically chosen to have 64-512 scalars. 
 
-The key observation that we made was that in many trained face generation algorithms, the background of the image occupied a large portion* (* metrics discussed later - PCA eigenvalues) of the captured variance - i.e. of the latent space. 
+The key observation that we made was that in many trained face generation algorithms, the background of the image occupied a large portion\footnotemark of the captured variance - i.e. of the latent space. 
+\footnotetext[2]{Metrics discussed later - PCA eigenvalues}
 This means that some precious space from the latent vector is wasted on encoding what is behind the face, instead of the face itself. 
 
-There are a few neutral-background datasets, but none of them have nearly enough samples to train generative algorithms, and are mostly used to train or fine tune classifiers (https://libguides.princeton.edu/facedatabases). 
-We should aim for 10k-100k+ unique images, but none here exceed 1k with a neutral background.
+There are a few neutral-background datasets, but none of them have nearly enough samples to train generative algorithms, and are mostly used to train or fine tune classifiers. 
+An index of such datasets can be found \href{https://libguides.princeton.edu/facedatabases}{here}. 
+For image generation, we should aim for 10k-100k+ unique images, but none here exceed 1k with a neutral background.
 
 \section{Related work}
 
