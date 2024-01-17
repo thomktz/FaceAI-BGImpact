@@ -4,8 +4,8 @@ from flask import Flask
 from flask_cors import CORS
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from backend.extensions import api
-from backend.api import stylegan_ns
+from extensions import api
+from api import stylegan_ns
 
 
 def create_app():
