@@ -353,7 +353,7 @@ And some samples from the latent space:
     \caption{Samples from the raw and grey VAEs' latent spaces}
 \end{figure}
 
-It is hard to see any differences between the actual faces in the samples, which is expected given the equivalent adjusted FID scores.
+It is hard to see any differences between the quality of the faces in the samples, which is expected given the equivalent adjusted FID scores.
 
 \subsubsection*{StyleGAN}
 
@@ -362,7 +362,7 @@ We can then fit a PCA on a large sample of our synthetic $w$ to get the inverse 
 
 \[w(x) = V_{\text{StyleGAN}} \cdot x\]
 
-We also implemented style-blending, which is a technique where you give different $w$ to different levels of the generator.
+We also implemented style-blending, which is a technique where you can give different $w$ to different levels of the generator.
 The GANSpace paper \cite{harkonen2020ganspace} was very helpful in understanding how to control the latent space of StyleGAN.
 
 Here are samples from the latent space, $w$:
@@ -374,11 +374,11 @@ Here are samples from the latent space, $w$:
   \caption{Samples from the raw and grey GANs' style latent spaces}
 \end{figure}
 
-Overall, these are much more detailed than the VAE samples, but introduce a lot of visual artefacts. 
+Overall, these are much more detailed and diverse than the VAE samples, but introduce a lot of visual artefacts. 
 The grey-background does seem to produce better quality images, as the FIDs would indicate, but that remains subjective.
 
 Let's now compare the strongest eigenvectors of the PCA of the latent spaces. 
-Each row below is the effect of varying the corresponding eigenvector from -3 to 3, leaving the others at 0. Each row $i$ represents the style vectors $(w_{i, t})_{t \in [0, 3]} = t \cdot \delta_i \cdot V_{\text{StyleGAN}}$, where $\delta_i$ is the Kronecker delta, and V is the PCA matrix.
+Each row below is the effect of varying the corresponding eigenvector from -3 to 3, leaving the others at 0. Each row $i$ represents the style vectors $(w_{i, t})_{t \in [0, 3]} = t \cdot \delta_i \cdot V_{\text{StyleGAN}}$, where $\delta_i$ is the Kronecker delta, and V is the PCA inverse transform.
 
 
 \subsubsection*{Original (raw) - StyleGAN $w$ eigenvectors}
@@ -624,7 +624,7 @@ This is also the case, in a lesser extent, for the VAE:
   \end{minipage}
 \end{figure}
 
-A full list of the eigenvectors and their effects can be found in the Appendix.
+A full list of the eigenvectors can be found in the Appendix.
 
 \newpage
 \bibliographystyle{plain}  % Choose a style that suits your needs
