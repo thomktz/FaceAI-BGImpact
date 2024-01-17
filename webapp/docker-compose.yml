@@ -12,7 +12,7 @@ services:
     volumes:
       - ./backend:/app
     ports: 
-      - 5000:5000
+      - 5000:5002
 
   frontend:
     build: ./frontend
