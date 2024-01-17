@@ -125,13 +125,13 @@ Furthermore, we expect the latent space to be more interpretable.}
 \end{figure}
 
 To test our hypothesis, we trained models on both the original and the greyed-out versions of the same dataset. 
-We picked versions of the two main categories of generative models: Autoencoders (AE) and Generative Adversarial Networks (GAN).
+We picked versions of the two main categories of generative models: Auto-encoders (AE) and Generative Adversarial Networks (GAN).
 
 \subsection{Auto-encoders}
 \subsubsection*{Principle - Auto-encoders}
 
-\quad Autoencoders are unsupervised artificial neural networks whose main objective is to learn efficient representations of input data. 
-An autoencoder consists of two sub-networks: an encoder and a decoder. 
+\quad Auto-encoders are unsupervised artificial neural networks whose main objective is to learn efficient representations of input data. 
+An auto-encoder consists of two sub-networks: an encoder and a decoder. 
 Firstly, the encoder compresses the input data (image) into a lower-dimensional representation. 
 It reduces the dimensionality of the input data by mapping it to a set of hidden variables, often referred to as 'latent space'. 
 The decoder then takes the encoded representation and reconstructs the original input data from it. 
@@ -140,7 +140,7 @@ The aim is to minimize the difference between the input and the reconstructed ou
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{images/ae.png}
-    \caption{Autoencoder architecture}
+    \caption{Auto-encoder architecture}
 \end{figure}
 
 Let $e_{\theta}:\mathcal{X}\to \mathcal{F}$ be the encoder function and $d_{\phi}:\mathcal{F}\to \mathcal{X}$ the decoder function. 
@@ -153,16 +153,16 @@ The loss function used to train the neural network through the backpropagation p
 \[\mathcal{L}(x,\hat{x})=\left\| x-\hat{x}\right\|_{2}=\left\| x-d_{\phi}(e_{\theta}(x)) \right\|_{2}\]
 
 There is a trade-off between quality and latent dimensionality. Below a certain point, the latent space is too small to capture the important features of the input data, and all the images look the same.
-This means that latent space of an autoencoder also subject to irregularity due to overfitting. 
+This means that latent space of an auto-encoder also subject to irregularity due to overfitting. 
 
 \subsubsection*{Principle - Variational Auto-encoders}
-To tackle this problem, King et al. in 2013 proposed the Variational Autoencoder (VAE) architecture. It addresses the problem of irregular latent space in a conventional autoencoder by mapping inputs to parameters of a probability distribution instead of a fixed vector.
+To tackle this problem, King et al. in 2013 proposed the Variational Auto-encoder (VAE) architecture. It addresses the problem of irregular latent space in a conventional auto-encoder by mapping inputs to parameters of a probability distribution instead of a fixed vector.
 The VAE then imposes a constraint on this latent distribution, forcing it to be a Gaussian distribution, ensuring that the latent space is regularized.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/vae.png}
-    \caption{Variational Autoencoder architecture}
+    \caption{Variational Auto-encoder architecture}
 \end{figure}
 
 The VAE's encoder outputs the mean and standard deviation for each latent variable. The latent for the decoder is sampled from that distribution.
@@ -333,18 +333,6 @@ This allows us to sample and control the latent space using its eigenvectors in 
 \[z(x) = V_{\text{VAE}} \cdot x\]
 
 This approach was inspired by CodeParade's video \href{https://www.youtube.com/watch?v=4VAkrUNLKSo}{"Computer Generates Human Faces"}, which introduced the idea of using PCA to control the latent space of a VAE.
-
-We can first take a look at reconstructions of the original images:
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.31\textwidth]{images/true_images.png}
-    \includegraphics[width=0.31\textwidth]{images/raw_reconstruction.png}
-    \includegraphics[width=0.31\textwidth]{images/grey_reconstruction.png}
-    \caption{Real images, reconstruction from original VAE, reconstruction from grey VAE}
-\end{figure}
-
-And some samples from the latent space:
 
 \begin{figure}[H]
     \centering
