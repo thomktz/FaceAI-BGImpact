@@ -1,5 +1,10 @@
 \begin{thebibliography}{1}
 
+
+\bibitem{kingma2013vae}
+Diederik Kingma and Max Welling.
+\newblock Auto-Encoding Variational Bayes, 2013.
+
 \bibitem{gauthier2014conditional}
 Jon Gauthier.
 \newblock Conditional generative adversarial nets for convolutional face generation.
