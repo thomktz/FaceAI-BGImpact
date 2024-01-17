@@ -29,6 +29,7 @@
 \usepackage{graphicx}       % images
 \usepackage{float}          % images
 \usepackage{amsmath}        % math
+\usepackage{bookmark}       % bookmarks
 
 \title{Advanced Machine Learning, Fall 2023}
 
@@ -189,27 +190,16 @@ This is especially important for us, since we want to be able to interpret the l
 Firstly, the Generator model attempts to model the distribution of data in order to generate realistic samples. 
 It takes as input a random noise sample of fixed size from a latent space and generates new false images. 
 The main objective is to fool the Discriminator by transforming the random noise into images indistinguishable from the real ones, making it harder to classify images as true or false. 
-Then, acting like a binary classifier, the Discriminator attempts to classify the input data as real or generated one. \\
+Then, acting like a binary classifier, the Discriminator attempts to classify the input data as real or generated one. Training stops when the generated images look like real images.\\
 
-The generator and discriminator are trained in a loop, with the generator trying to improve its ability to generate realistic samples and the discriminator improving its ability to distinguish between real and fake samples. 
-A loss is then measured and back propagated to update the weights of the two models. 
-Training stops when the generated images look like real images.\\
 In other words, the Generator and the Discriminator play the following two-player minimax game :
 $$ \min_G \max_D V(D, G) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}(\mathbf{x})} [\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p_{\text{latent}}(\mathbf{z})} [\log (1 - D(G(\mathbf{z})))] $$
 
-where:
+where $\mathbf{z}$ is a random noise vector drawn from the latent space distribution, $D(\mathbf{x})$ the output of the discriminator and $G(\mathbf{z})$ is the output of the generator.\\
 
-\begin{itemize}
-    \item $\mathbf{z}$ is a random noise vector drawn from the latent space distribution 
-    \item $D(\mathbf{x})$ is the output of the discriminator for a real data sample
-    \item $D(G(\mathbf{z}))$ is the output of the discriminator for a generated data sample
-\end{itemize}
+In practical application, the authors note challenges with weak gradients for the Generator. To address this, instead of minimizing the likelihood of the Discriminator being correct, they propose maximizing the likelihood of the Discriminator being wrong, improving the learning process.
 
-The discriminator tries to maximize the objective function while the generator tries to minimize the objective function. This is what we call adversarial training where the loss of one is the benefit of the other. By alternating between gradient ascent and descent, the network can be trained.\\
-
-According to the authors of the article, in practice, the Generator objective function does not provide sufficient gradient to allow good learning. At the start of the training, when the sample is likely to be classified as false by the Discriminator, the function $\log(1 - D(G(z)))$  saturates because the gradients are relatively flat. As a result, the Generator is trained to maximize $log(D(G(z)))$, which provides much stronger gradients early in the learning. Thus, Instead of minimizing the likelihood of the Discriminator being correct, we maximize the likelihood of the Discriminator being wrong. 
-
-\subsubsection*{Principle - Deep Convolutiobnal Generative Adversarial Networks}
+\subsubsection*{Principle - Deep Convolutional Generative Adversarial Networks}
 In practice, “vanilla” GANs are hard to train and do not yield very realistic results, by 2024 standards. The first improvement we implemented over the standard GAN architecture was to use deep convolutions (and deconvolutions) for the Generator (and Discriminator), making it a DC-GAN (Deep Convolutional GAN). When dealing with image data, convolutions are more spatially aware than regular fully-connected layers because they only “mix” the values of pixels close together.
 
 While more efficient than plain GANs, DCGANs have not been shown to generate realistic images. Their latent space is also very disorganized and hard to interpret. To tackle both of these problems, we decided to implement a custom version of NVidia’s StyleGAN, from scratch. StyleGANs are a variety of Progressive Growing GANs, which we will discuss in the next section.
@@ -268,6 +258,12 @@ The key features of StyleGAN over the other variants is that $w$ is supposedly m
 \subsubsection*{Training metric - FID}
 
 \quad To evaluate the performance of our models, we used the Fréchet Inception Distance (FID) metric. Unlike other models, the losses of GANs are not very informative. The FID metric is a measure of the similarity between two datasets of images. 
+subsection*{Performance Measure of our models}
+
+The FID score is lower when the generated images closely match the real ones, indicating higher quality. 
+The calculation involves two steps: feature extraction using the Inception model, a pre-trained deep learning model that extracts features and generates vector representations for each image. 
+Then, the Fréchet Distance Calculation computes the mean and covariance of the feature vectors for both real and generated images, measuring the similarity between their distributions.
+
 At resolution $l$ and blending factor $\alpha$, we're comparing blended real images $x(l, \alpha)$ and generated images $G_{l, \alpha}(w, z_0, \epsilon)$, with
 
 \[ x(l, \alpha) = \alpha \times x_{l} + (1-\alpha) \times UpScale(x_{l-1}) \]
@@ -280,7 +276,6 @@ These models require a lot of computing power. Luckily, in the end, a family mem
 
 \begin{table}[H]
   \caption{Time and Cost Analysis for the different GPU options - StyleGAN benchmark}
-  \label{your-table}
   \centering
   \begin{tabular}{lcccccl}
     \toprule
@@ -334,28 +329,11 @@ We can then fit a PCA on a large sample of our synthetic $w$ to get the inverse 
 We also implemented style-blending, which is a technique where you give different $w$ to different levels of the generator.
 
 
-\section*{References}
+\begin{thebibliography}{9}
+  [1] Ian Goodfellow and al. (2014) Generative Adversarial Networks. \href{arXiv:1812.04948}{arXiv:1812.04948} \\
 
-References follow the acknowledgments. Use unnumbered first-level heading for
-the references. Any choice of citation style is acceptable as long as you are
-consistent. It is permissible to reduce the font size to \verb+small+ (9 point)
-when listing the references.
-{\bf Note that the Reference section does not count towards the eight pages of content that are allowed.}
-\medskip
+  [2] Terro Karras and al. (2018) A Style-Based Generator Architecture for Generative Adversarial Networks. \href{arXiv:1812.04948}{arXiv:1812.04948}
 
-\small
-
-[1] Alexander, J.A.\ \& Mozer, M.C.\ (1995) Template-based algorithms for
-connectionist rule extraction. In G.\ Tesauro, D.S.\ Touretzky and T.K.\ Leen
-(eds.), {\it Advances in Neural Information Processing Systems 7},
-pp.\ 609--616. Cambridge, MA: MIT Press.
-
-[2] Bower, J.M.\ \& Beeman, D.\ (1995) {\it The Book of GENESIS: Exploring
-  Realistic Neural Models with the GEneral NEural SImulation System.}  New York:
-TELOS/Springer--Verlag.
-
-[3] Hasselmo, M.E., Schnell, E.\ \& Barkai, E.\ (1995) Dynamics of learning and
-recall at excitatory recurrent synapses and cholinergic modulation in rat
-hippocampal region CA3. {\it Journal of Neuroscience} {\bf 15}(7):5249-5262.
+\end{thebibliography}
 
 \end{document}
