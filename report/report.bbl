@@ -5,6 +5,10 @@ Jon Gauthier.
 \newblock Conditional generative adversarial nets for convolutional face generation.
 \newblock Technical report, Stanford University, 2014.
 
+\bibitem{goodfellow2014generative}
+Ian Goodfellow et~al.
+\newblock Generative adversarial networks, 2014.
+
 \bibitem{harkonen2020ganspace}
 Erik Härkönen, Aaron Hertzmann, Jaakko Lehtinen, and Sylvain Paris.
 \newblock Ganspace: Discovering interpretable gan controls, 2020.
