@@ -156,7 +156,7 @@ There is a trade-off between quality and latent dimensionality. Below a certain 
 This means that latent space of an auto-encoder also subject to irregularity due to overfitting. 
 
 \subsubsection*{Principle - Variational Auto-encoders}
-To tackle this problem, King et al. in 2013 proposed the Variational Auto-encoder (VAE) architecture. It addresses the problem of irregular latent space in a conventional auto-encoder by mapping inputs to parameters of a probability distribution instead of a fixed vector.
+To tackle this problem, King et al. in 2013 \cite{kingma2013vae} proposed the Variational Auto-encoder (VAE) architecture. It addresses the problem of irregular latent space in a conventional auto-encoder by mapping inputs to parameters of a probability distribution instead of a fixed vector.
 The VAE then imposes a constraint on this latent distribution, forcing it to be a Gaussian distribution, ensuring that the latent space is regularized.
 
 \begin{figure}[H]

@@ -1,10 +1,5 @@
 \begin{thebibliography}{1}
 
-
-\bibitem{kingma2013vae}
-Diederik Kingma and Max Welling.
-\newblock Auto-Encoding Variational Bayes, 2013.
-
 \bibitem{gauthier2014conditional}
 Jon Gauthier.
 \newblock Conditional generative adversarial nets for convolutional face generation.
@@ -22,5 +17,9 @@ Erik Härkönen, Aaron Hertzmann, Jaakko Lehtinen, and Sylvain Paris.
 K.~KC, Z.~Yin, D.~Li, and Z.~Wu.
 \newblock Impacts of background removal on convolutional neural networks for plant disease classification in-situ.
 \newblock {\em Agriculture}, 11(827), 2021.
+
+\bibitem{kingma2013vae}
+Diederik Kingma and Max Welling.
+\newblock Auto-encoding variational bayes, 2013.
 
 \end{thebibliography}
