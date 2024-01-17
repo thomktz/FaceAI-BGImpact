@@ -31,6 +31,7 @@ FaceAI-BGImpact
 │   ├── configs                         # Configuration files for models
 │   │   ├── default_dcgan_config.py
 │   │   └── default_stylegan_config.py
+│   │   └── default_vae_config.py
 │   ├── data_processing                 # Scripts and notebooks for data preprocessing
 │   │   ├── paths.py                    # Data paths
 │   │   ├── download_raw_ffhq.py        # Functions to download raw FFHQ dataset
@@ -38,6 +39,8 @@ FaceAI-BGImpact
 │   │   ├── create_blur_and_grey.py     # Functions to create blurred and greyed-out FFHQ datasets
 │   │   └── download_all_ffhq.py        # Functions to download all FFHQ datasets
 │   ├── models
+│   │   ├── provae                      # PROVAE model implementation
+│   │   │   ├── provae.py
 │   │   ├── dcgan_                      # DCGAN model implementation
 │   │   │   ├── dcgan.py
 │   │   │   ├── discriminator.py
@@ -47,6 +50,10 @@ FaceAI-BGImpact
 │   │   │   ├── generator.py
 │   │   │   ├── loss.py                 # Loss functions for StyleGAN
 │   │   │   └── stylegan.py
+|   |   ├── vae_                        # VAE model implementation
+|   |   |   ├── decoder.py              
+│   │   │   ├── encoder.py              
+│   │   │   └── vae.py                  
 │   │   ├── abstract_model.py           # Abstract model class for common functionalities
 │   │   ├── data_loader.py              # Data loading utilities
 │   │   └── utils.py
