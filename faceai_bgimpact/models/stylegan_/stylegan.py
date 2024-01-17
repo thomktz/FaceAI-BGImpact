@@ -603,7 +603,13 @@ class StyleGAN(AbstractModel):
             )
 
     def fit_pca(
-        self, num_samples=10000, batch_size=100, n_components=50, save_file="models/StyleGAN_PCA", use_saved=True
+        self,
+        num_samples=10000,
+        batch_size=100,
+        n_components=50,
+        save_file="models/StyleGAN_PCA",
+        use_saved=True,
+        **kwargs,
     ):
         """
         Fit PCA on the W space of the StyleGAN model.
@@ -791,3 +797,29 @@ class StyleGAN(AbstractModel):
         fig.write_image(f"{save_folder}/fid_plot_{self.epoch_total}.png")
         # Optionally, save as interactive HTML
         fig.write_html(f"{save_folder}/fid_plot_{self.epoch_total}.html")
+
+    def image_from_eigenvector_strengths(self, eigenvalues, apply_noise):
+        """
+        Generate an image from a list of eigenvalues.
+
+        Parameters
+        ----------
+        eigenvalues : list of float
+            List of eigenvalues to use.
+        apply_noise : bool
+            Whether to add noise to the input tensor.
+
+        Returns
+        -------
+        torch.Tensor
+            Generated image.
+        """
+        # Create a zero tensor and set the ith element to the eigenvector strength
+        x_tensor = torch.zeros(self.n_components)
+        for i, eig in enumerate(eigenvalues):
+            x_tensor[i] = eig
+
+        # Transform the control vector using the PCA transformation
+        w = torch.tensor(self.pca.inverse_transform(x_tensor.unsqueeze(0))).unsqueeze(2).unsqueeze(3)
+        # Predict image
+        return (self.generator.predict_from_style(w, self.level, self.alpha, apply_noise=apply_noise) + 1) / 2

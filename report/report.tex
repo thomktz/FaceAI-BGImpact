@@ -11,7 +11,7 @@
 %     \usepackage[preprint]{neurips_2020}
 
 % to compile a camera-ready version, add the [final] option, e.g.:
-\usepackage[final]{neurips_2020}
+\usepackage[final, nonatbib]{neurips_2020}
 
 % to avoid loading the natbib package, add option nonatbib:
      %\usepackage[nonatbib]{neurips_2020}
@@ -30,6 +30,18 @@
 \usepackage{float}          % images
 \usepackage{amsmath}        % math
 \usepackage{bookmark}       % bookmarks
+\usepackage[utf8]{inputenc} % accents
+
+% Tighten spacing for figures
+\setlength{\intextsep}{2pt}
+\setlength{\textfloatsep}{2pt}
+\setlength{\floatsep}{2pt}
+\setlength{\abovecaptionskip}{2pt}
+\setlength{\belowcaptionskip}{2pt}
+
+% Tighten spacing for equations
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{0pt}
 
 \title{Advanced Machine Learning, Fall 2023}
 
@@ -83,16 +95,9 @@ We should aim for 10k-100k+ unique images, but none here exceed 1k with a neutra
 
 \section{Related work}
 
-\quad For the face generation task, some authors decided to circumvent the effect of the background by using a cropped version of their dataset to prevent various noisy backgrounds (Gauthier, 2014) from interacting with the model. 
-Jon Gauthier. 2014. Conditional Generative Adversarial Nets for Convolutional Face Generation. Technical Report. Stanford University (https://www.foldl.me/uploads/2015/conditional-gans-face-generation/paper.pdf)
+\quad For the face generation task, some authors decided to circumvent the effect of the background by using a cropped version of their dataset to prevent various noisy backgrounds from interacting with the model \cite{gauthier2014conditional}. 
 
-In a context of face generation with emotions with Sinha et al, 2022, the background issue is also circumvented by first replacing the background of the original image with a specific color  (solid dark green) and, as post-processing, the background of the original image is then added back to the generated image. 
-The goal of the authors was different though - they only did this because the “emotions” dataset they used to train their model (MEAD) had a solid dark green background.
-
-Sanjana Sinha, Sandika Biswas, Ravindra Yadav, and Brojeshwar Bhowmick. Emotion-controllable generalized talking face generation. International Joint Conferences on Artificial Intelligence Organization, 2022. (https://arxiv.org/pdf/2205.01155.pdf)
-
-The impact of the background removal on Convolutional Neural Networks has been proved for classification tasks (KC and al., 2021). Achieving a 12\% higher accuracy on the task of Plant Disease Classification In-Situ for a dataset with images taken with a homogeneous background compared to that of a dataset with a cluttered background.
-KC, K.; Yin, Z.; Li, D.; Wu, Z. Impacts of Background Removal on Convolutional Neural Networks for Plant Disease Classification In-Situ. Agriculture 2021, 11, 827. (https://www.mdpi.com/2077-0472/11/9/827)
+The impact of the background removal on Convolutional Neural Networks has been proved for classification tasks \cite{kcyin2021impact}. Achieving a 12\% higher accuracy on the task of Plant Disease Classification In-Situ for a dataset with images taken with a homogeneous background compared to that of a dataset with a cluttered background.
 
 All these tricks suggest an important effect of the background on image generation. 
 However, we have not found any studies on the importance of this effect of the background on image generation, and particularly face generation.
@@ -159,21 +164,6 @@ The VAE then imposes a constraint on this latent distribution, forcing it to be 
 \end{figure}
 
 The VAE's encoder outputs the mean and standard deviation for each latent variable. The latent for the decoder is sampled from that distribution.
-The VAE loss function takes into account two terms, the reconstruction loss and the similarity loss (regularizer). 
-The regularizer corresponds to the Kullback-Leibler divergence between the latent space distribution and a standard Gaussian distribution.
-  
-We can define the reconstruction loss as follows:
-$$\text{reconstruction loss} = \left\| x -\hat{x}\right\|_{2}=\left\| x-d_{\phi}(z) \right\|_{2}=\left\| x-d_{\phi}(\mu_{x}+\sigma_{x}\epsilon) \right\|_{2}$$
-
-where
-$$\mu_{x},\sigma_{x}=e_{\theta(x)} \text{ and } \epsilon\sim\mathcal{N}(\textbf{0},\textbf{I})$$
-
-
-And the similarity loss:
-$$\text{similarity loss}=\mathrm{D}_{\mathrm{KL}}(\mathcal{N}(\mu_{x},\sigma_{x}), \mathcal{N}(\textbf{0},\textbf{I})) \\$$
-
-Finally,
-$$\text{loss}=\text{reconstruction loss}+\text{similarity loss}$$
 
 \subsubsection*{Rationale for choosing VAE}
 VAEs generally perform better than regular AEs in image generation tasks. 
@@ -185,24 +175,16 @@ This is especially important for us, since we want to be able to interpret the l
 
 
 \subsection{Generative Adversarial Networks}
+
 \subsubsection*{Principle - Generative Adversarial Networks}
-\quad Introduced by Ian Goodfellow and al. in 2014, the Generative Adversarial Network consists of a Generator and a Discriminator, two neural networks that are trained simultaneously by adversarial training. \\
+
+\quad Introduced by Ian Goodfellow and al. in 2014 \cite{goodfellow2014generative}, the Generative Adversarial Network consists of a Generator and a Discriminator, two neural networks that are trained simultaneously by adversarial training. \\
 Firstly, the Generator model attempts to model the distribution of data in order to generate realistic samples. 
 It takes as input a random noise sample of fixed size from a latent space and generates new false images. 
 The main objective is to fool the Discriminator by transforming the random noise into images indistinguishable from the real ones, making it harder to classify images as true or false. 
 Then, acting like a binary classifier, the Discriminator attempts to classify the input data as real or generated one. Training stops when the generated images look like real images.\\
 
-In other words, the Generator and the Discriminator play the following two-player minimax game :
-$$ \min_G \max_D V(D, G) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}(\mathbf{x})} [\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p_{\text{latent}}(\mathbf{z})} [\log (1 - D(G(\mathbf{z})))] $$
-
-where $\mathbf{z}$ is a random noise vector drawn from the latent space distribution, $D(\mathbf{x})$ the output of the discriminator and $G(\mathbf{z})$ is the output of the generator.\\
-
-In practical application, the authors note challenges with weak gradients for the Generator. To address this, instead of minimizing the likelihood of the Discriminator being correct, they propose maximizing the likelihood of the Discriminator being wrong, improving the learning process.
-
-\subsubsection*{Principle - Deep Convolutional Generative Adversarial Networks}
-In practice, “vanilla” GANs are hard to train and do not yield very realistic results, by 2024 standards. The first improvement we implemented over the standard GAN architecture was to use deep convolutions (and deconvolutions) for the Generator (and Discriminator), making it a DC-GAN (Deep Convolutional GAN). When dealing with image data, convolutions are more spatially aware than regular fully-connected layers because they only “mix” the values of pixels close together.
-
-While more efficient than plain GANs, DCGANs have not been shown to generate realistic images. Their latent space is also very disorganized and hard to interpret. To tackle both of these problems, we decided to implement a custom version of NVidia’s StyleGAN, from scratch. StyleGANs are a variety of Progressive Growing GANs, which we will discuss in the next section.
+In other words, the Generator and the Discriminator play a two-player minimax game : $\min_G \max_D V(D, G)$, where $\mathbf{z}$ is a random noise vector drawn from the latent space distribution, $D(\mathbf{x})$ the output of the discriminator and $G(\mathbf{z})$ is the output of the generator.\\
 
 \subsubsection*{Principle - ProGANs}
 One of the key features of the ProGAN architecture is the progressive nature of the layers, which enables the different visual characteristics of an image to be taken into account effectively. 
@@ -213,7 +195,7 @@ The result is the generation of high-resolution images with a higher level of au
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/progan.png}
+    \includegraphics[width=0.5\textwidth]{images/progan.png}
     \caption{ProGAN training}
 \end{figure}
 
@@ -268,6 +250,12 @@ At resolution $l$ and blending factor $\alpha$, we're comparing blended real ima
 
 \[ x(l, \alpha) = \alpha \times x_{l} + (1-\alpha) \times UpScale(x_{l-1}) \]
 
+One think to keep in mind is that grey-background images weight 16\% less on average (raw 1.87Mb, grey 1.58Mb), because data was removed from them. We will be comparing what we define as an adjusted FID for the original dataset as follows:
+
+\[ \text{FID}_{\text{adjusted}} = \text{FID}_{\text{raw}} \times (1 - 0.16) \]
+
+Otherwise, the generation task is easier for the grey-background dataset, and the FID scores would be biased.
+
 \section{Training}
 
 \subsubsection*{Hardware setup}
@@ -300,11 +288,35 @@ The remote setup via SSH explains the large number of commits on the repository 
 
 \subsubsection*{VAE}
 
+VAEs converge very quickly, and epochs are short (40s on our hardware). Below is a graph of the evolution of the FID during training.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/vae_fids.png}
+    \caption{Training of grey and original VAEs. "adjusted" refers to the weight adjustment.}
+\end{figure}
+
+We can conclude that both models converge to a comparable FID (in their own scale), at farily high FID values. This is expected, as VAEs are not very good at generating realistic images. 
+
 \subsubsection*{StyleGAN}
 StyleGAN is a very ressource-intensive model. 
 We trained each levels (i.e. resolution, starting from 4x4) until convergence of the FIDs. 
 
-It is capital to ensure fairness in the training of the different datasets, for the results to be comparable. This means that they must train for the same number of epochs per level. So, to ensure fairness between the datasets, we implemented a learning rate scheduler which slowly decreases the learning rate following an inverse sigmoid function. This way, each model could train at appropriate learning rates during training.
+It is capital to ensure fairness in the training of the different datasets, for the results to be comparable. This means that they must train for the same number of epochs per level. To do so, we implemented a learning rate scheduler which slowly decreases the learning rate following an inverse sigmoid function during each level, and is reset at the beginning of the next level. This way, each model could train at appropriate learning rates during training.
+
+Each level (=resolution) was trained sequentially, starting from 4x4 up to 128x128. Below are the FID scores for the 5th and final level (128x128).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/stylegan_fids.png}
+    \caption{Training of grey and original StyleGANs. "adjusted" refers to the weight adjustment.}
+\end{figure}
+
+Observations:
+\begin{enumerate}
+  \item Even adjusted for image weight, the grey-background dataset seems to converge faster and to a lower value.
+  \item The FID levels are much lower than for the VAEs, which is expected.
+\end{enumerate}
 
 \section{Sample and control of the latent space}
 
@@ -318,6 +330,28 @@ This allows us to sample and control the latent spcae using its eigenvectors in 
 
 \[z(x) = V_{\text{VAE}} \cdot x\]
 
+This approach was inspired by CodeParade's video \href{https://www.youtube.com/watch?v=4VAkrUNLKSo}{"Computer Generates Human Faces"}, which introduced the idea of using PCA to control the latent space of a VAE.
+
+We can first take a look at reconstructions of the original images:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.31\textwidth]{images/true_images.png}
+    \includegraphics[width=0.31\textwidth]{images/raw_reconstruction.png}
+    \includegraphics[width=0.31\textwidth]{images/grey_reconstruction.png}
+    \caption{Real images, reconstruction from original VAE, reconstruction from grey VAE}
+\end{figure}
+
+And some samples from the latent space:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{images/sample_vae_raw.png}
+    \includegraphics[width=0.32\textwidth]{images/sample_vae_grey.png}
+    \caption{Samples from the raw and grey VAEs' latent spaces}
+\end{figure}
+
+It is hard to see any differences between the actual faces in the samples, which is expected given the equivalent adjusted FID scores.
 
 \subsubsection*{StyleGAN}
 
@@ -327,13 +361,276 @@ We can then fit a PCA on a large sample of our synthetic $w$ to get the inverse 
 \[w(x) = V_{\text{StyleGAN}} \cdot x\]
 
 We also implemented style-blending, which is a technique where you give different $w$ to different levels of the generator.
+The GANSpace paper \cite{harkonen2020ganspace} was very helpful in understanding how to control the latent space of StyleGAN.
+
+Here are samples from the latent space, $w$:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.32\textwidth]{images/sample_gan_raw.png}
+  \includegraphics[width=0.32\textwidth]{images/sample_gan_grey.png}
+  \caption{Samples from the raw and grey GANs' style latent spaces}
+\end{figure}
+
+Overall, these are much more detailed than the VAE samples, but introduce a lot of visual artefacts. 
+The grey-background does seem to produce better quality images, as the FIDs would indicate, but that remains subjective.
+
+Let's now compare the strongest eigenvectors of the PCA of the latent spaces.
+
+\subsubsection*{Original (raw)}
 
 
-\begin{thebibliography}{9}
-  [1] Ian Goodfellow and al. (2014) Generative Adversarial Networks. \href{arXiv:1812.04948}{arXiv:1812.04948} \\
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{raw}, 0} = 7.9$ \\
+      Hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/raw_gan_0.png}
+  \end{minipage}
+\end{figure}
 
-  [2] Terro Karras and al. (2018) A Style-Based Generator Architecture for Generative Adversarial Networks. \href{arXiv:1812.04948}{arXiv:1812.04948}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{raw}, 1} = 5.8$ \\
+      Head rotation
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/raw_gan_1.png}
+  \end{minipage}
+\end{figure}
 
-\end{thebibliography}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{raw}, 2} = 5.2$ \\
+      Hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/raw_gan_2.png}
+  \end{minipage}
+\end{figure}
+  
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{raw}, 3} = 4.8$ \\
+      Glasses, gender, age
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/raw_gan_3.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{raw}, 4} = 4.4$ \\
+      Glasses, gender, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/raw_gan_4.png}
+  \end{minipage}
+\end{figure}
+
+
+\subsubsection*{Grey-background}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey, 0}} = 4.3$ \\
+      Gender, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_0.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey, 1}} = 3.1$ \\
+      Gender, lipstick, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_1.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey, 2}} = 2.5$ \\
+      Head rotation
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_2.png}
+  \end{minipage}
+\end{figure}
+  
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey, 3}} = 2.2$ \\
+      Gender, skin, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_3.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_{\text{grey, 4}} = 1.9$ \\
+      Glasses, gender, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_4.png}
+  \end{minipage}
+\end{figure}
+
+The grey-background eigenvectors seem to have a much more pronounced effect on the facial attributes, even though the eigenvalues are smaller. \\
+\textbf{This demonstrates that a lot of the variance is uselessly captured by the background in the original model, and shows the effectiveness of our method at tackling this problem.}\\
+This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey, 2}}$, two eigenvectors that capture head rotation.
+
+\newpage
+\bibliographystyle{plain}  % Choose a style that suits your needs
+\bibliography{bibtex}  % The filename of your .bib file (without extension)
+
+\section*{Appendix}
+
+\subsubsection*{Grey-background}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_0 = 4.3$ \\
+      Gender, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_0.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_1 = 3.1$ \\
+      Gender, lipstick, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_1.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_2 = 2.5$ \\
+      Head rotation
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_2.png}
+  \end{minipage}
+\end{figure}
+  
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_3 = 2.2$ \\
+      Gender, skin, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_3.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_4 = 1.9$ \\
+      Glasses, gender, hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_4.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_5 = 1.6$ \\
+      Age, glasses
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_5.png}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.18\linewidth}
+      \centering
+      $\lambda_6 = 1.5$ \\
+      Hair
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{.81\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{eigen/grey_gan_6.png}
+  \end{minipage}
+\end{figure}
 
 \end{document}
