@@ -12,7 +12,7 @@ services:
     volumes:
       - ./backend:/app
     ports: 
-      - 5000:5002
+      - 5002:5002
 
   frontend:
     build: ./frontend
@@ -23,7 +23,7 @@ services:
       - './frontend:/app'
       - '/app/node_modules'
     ports:
-      - 8080:8082
+      - 8082:8082
 
 networks:
   mlnet:
