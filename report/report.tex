@@ -222,7 +222,7 @@ ProGAN yields much better results than conventional GANs, but the latent space i
 
 \subsubsection*{Principle - StyleGAN}
 
-The main contribution of StyleGAN is to introduce a style-vector $w$ in the generator.
+The main contribution of StyleGAN was to introduce a style-vector $w$ in the generator.
 
 In each forward pass, a Mapping network $\mathcal{M}$ is used to map the latent vector $z$ to the intermediate latent space of styles, $w$.
 Then, the generator $G$ uses $w$, instead of $z$, to generate the image. It also uses a learned constant $z_0$ to control the base style of the image, and some noise $\epsilon$.
@@ -297,7 +297,7 @@ VAEs converge very quickly, and epochs are short (40s on our hardware). Below is
     \caption{Training of grey and original VAEs. "adjusted" refers to the weight adjustment.}
 \end{figure}
 
-We can conclude that both models converge to a comparable FID (in their own scale), at farily high FID values. This is expected, as VAEs are not very good at generating realistic images. 
+We can conclude that both models converge to a comparable FID (in their own scale), at fairly high FID values. This is expected, as VAEs are not very good at generating realistic images. 
 
 \subsubsection*{StyleGAN}
 StyleGAN is a very ressource-intensive model. 
