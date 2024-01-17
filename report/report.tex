@@ -43,7 +43,7 @@
 \setlength{\abovedisplayskip}{0pt}
 \setlength{\belowdisplayskip}{0pt}
 
-\title{Advanced Machine Learning, Fall 2023}
+\title{Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy}
 
 % The \author macro works with any number of authors. There are two commands
 % used to separate the names and addresses of multiple authors: \And and \AND.
@@ -222,7 +222,7 @@ ProGAN yields much better results than conventional GANs, but the latent space i
 
 \subsubsection*{Principle - StyleGAN}
 
-The main contribution of StyleGAN is in introduce a style-vector $w$ in the generator.
+The main contribution of StyleGAN was to introduce a style-vector $w$ in the generator.
 
 In each forward pass, a Mapping network $\mathcal{M}$ is used to map the latent vector $z$ to the intermediate latent space of styles, $w$.
 Then, the generator $G$ uses $w$, instead of $z$, to generate the image. It also uses a learned constant $z_0$ to control the base style of the image, and some noise $\epsilon$.
@@ -298,7 +298,7 @@ VAEs converge very quickly, and epochs are short (40s on our hardware). Below is
     \caption{Training of grey and original VAEs. "adjusted" refers to the weight adjustment.}
 \end{figure}
 
-We can conclude that both models converge to a comparable FID (in their own scale), at farily high FID values. This is expected, as VAEs are not very good at generating realistic images. 
+We can conclude that both models converge to a comparable FID (in their own scale), at fairly high FID values. This is expected, as VAEs are not very good at generating realistic images. 
 
 \subsubsection*{StyleGAN}
 StyleGAN is a very ressource-intensive model. 
@@ -328,7 +328,7 @@ Even with these models, sampling from the latent spaces is not straightforward.
 
 For each input image $x$, the encoder outputs $\mu_x, \sigma_x$. We can then sample $z$ from $\mathcal{N}(\mu_x, \sigma_x)$.
 To generate now images, we can fit a Principal Component Analysis (PCA) on a large sample of $z$ generated from the true images to get the inverse transform $V_{\text{VAE}}$.
-This allows us to sample and control the latent spcae using its eigenvectors in $z$ space:
+This allows us to sample and control the latent space using its eigenvectors in $z$ space:
 
 \[z(x) = V_{\text{VAE}} \cdot x\]
 
@@ -389,7 +389,7 @@ Each row below is the effect of varying the corresponding eigenvector from -3 to
   \begin{minipage}{.18\linewidth}
       \centering
       $\lambda_{\text{raw}, 0} = 7.9$ \\
-      BG\footnotemark brightness, hair
+      BG brightness, hair
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
@@ -403,7 +403,7 @@ Each row below is the effect of varying the corresponding eigenvector from -3 to
   \begin{minipage}{.18\linewidth}
       \centering
       $\lambda_{\text{raw}, 1} = 5.8$ \\
-      BG red-ness, head rotation
+      BG\footnotemark red-ness, head rotation
   \end{minipage}%
   \hfill
   \begin{minipage}{.81\linewidth}
@@ -533,9 +533,9 @@ The grey-background eigenvectors seem to have a much more pronounced and clear e
 \textbf{This demonstrates that a lot of the variance is uselessly captured by the background in the original model, and shows the effectiveness of our method at tackling this problem.}\\
 This is clear when comparing $\lambda_{\text{raw}, 1}$ and $\lambda_{\text{grey, 2}}$, two eigenvectors that capture head rotation.
 
-This is also the case, in a lesser extent, for the VAE:
+The same can be observed in the VAE eigenvectors:
 
-\subsubsection*{Original (raw) - VAE $x$ eigenvectors}
+\subsubsection*{Original (raw) - VAE $z$ eigenvectors}
 
 \begin{figure}[H]
   \centering
@@ -551,35 +551,7 @@ This is also the case, in a lesser extent, for the VAE:
   \end{minipage}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_{\text{raw}, 1} = 1.15$ \\
-      Head rotation
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/raw_vae_1.png}
-  \end{minipage}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_{\text{raw}, 2} = 1.14$ \\
-      BG color
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/raw_vae_2.png}
-  \end{minipage}
-\end{figure}
-
-\subsubsection*{Grey-background - VAE $x$ eigenvectors}
+\subsubsection*{Grey-background - VAE $z$ eigenvectors}
 
 \begin{figure}[H]
   \centering
@@ -595,34 +567,6 @@ This is also the case, in a lesser extent, for the VAE:
   \end{minipage}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_{\text{grey}, 1} = 1.17$ \\
-      Head rotation
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/grey_vae_1.png}
-  \end{minipage}
-\end{figure}
-
-
-\begin{figure}[H]
-  \centering
-  \begin{minipage}{.18\linewidth}
-      \centering
-      $\lambda_{\text{grey}, 1} = 1.15$ \\
-      Skin tone
-  \end{minipage}%
-  \hfill
-  \begin{minipage}{.81\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{eigen/grey_vae_2.png}
-  \end{minipage}
-\end{figure}
 
 A full list of the eigenvectors can be found in the Appendix.
 
@@ -724,7 +668,7 @@ A full list of the eigenvectors can be found in the Appendix.
 \newpage
 
 
-\subsubsection*{Grey-background - VAE $x$ eigenvectors 0-14}
+\subsubsection*{Grey-background - VAE $z$ eigenvectors 0-14}
 
 \begin{figure}[H]
   \centering
@@ -747,7 +691,7 @@ A full list of the eigenvectors can be found in the Appendix.
 
 \newpage
 
-\subsubsection*{Original (raw) - VAE $x$ eigenvectors 0-14}
+\subsubsection*{Original (raw) - VAE $z$ eigenvectors 0-14}
 
 \begin{figure}[H]
   \centering
