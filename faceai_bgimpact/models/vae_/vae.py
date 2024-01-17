@@ -213,7 +213,7 @@ class VAE(AbstractModel):
         with torch.no_grad():
             num_batches = num_images // batch_size
 
-            data_iter = tqdm(enumerate(self.loader), total=len(self.loader), desc="Fitting PCA for VAE")
+            data_iter = enumerate(self.loader)
 
             for i, imgs in data_iter:
                 # Stop if we have enough samples
