@@ -23,7 +23,9 @@ We published the models and dataset transformations as a pip package. To install
 
 `pip install faceai-bgimpact`
 
-## Folder structure
+## Folder structure 
+
+This repositery is structured as following :
 
 ```
 FaceAI-BGImpact
@@ -68,6 +70,13 @@ FaceAI-BGImpact
 ├── README.md
 └── pyproject.toml                      # Poetry package management configuration file
 ```
+
+
+As required, our four models have been implemented from scratch. To improve the user experience with our models, we have maintained a consistent structure for each by introducing an abstract model class. This standardised structure makes it easy to move from one model to another, as they share common abstract methods. As a result, you can simply change the model name on the command line to run different training models without encountering problems.
+
+We developed the model structure by closely following the design principles of the StyleGan model available at https://github.com/huangzh13/StyleGAN.pytorch/tree/master. This code helped us to build not only our StyleGan model, but also our abstract model structure. Subsequently, we developed the remaining models independently, crafting each aspect from scratch without borrowing code from external repositories.
+There are only two external borrowing in our code. Firstly, to facilitate the debugging of the Progressive-Growing segment, we leveraged resources from the https://github.com/hukkelas/progan-pytorch repository. Secondly, with regard to the penalisation of StyleGan, in addition to the implemnattion of the WCGAN-GP, we have implemented R1 penalisation. For this implementation, we were inspired by the study of the official NVIDIA code, available at https://github.com/NVlabs/stylegan2-ada-pytorch. For the rest of the model, we all implemented them by our own.
+
 
 ## Training Script (train.py)
 
@@ -114,6 +123,7 @@ Checkpoint arguments:
 
 `faceai-bgimpact create-video --model StyleGAN --dataset ffhq_raw`
 
+
 ## Dependencies
 
 We use [Poetry](https://python-poetry.org/) for dependency management. To install the dependencies, you should use the provided poetry environment. If you do not have poetry installed, you can install it using pip:
@@ -148,7 +158,26 @@ Alternatively, with poetry, you can run:
 
 `poetry run pytest -v`
 
-## TODO:
+## Code standards
+
+- **Using Pre-Commit hooks**  
+  Pre-commit allows you to run scripts ('hooks') before each commit to your repository. The ones we used are **black** (python - code formatter), **flake8** (python - linter) and **mypy** (python - type checker).
+
+  To run them, you should install the hooks using `pre-commit install`, and then `pre-commit run`
+
+- **Code review and Pull requests**  
+  We encourage collaboration through the use of pull requests (PRs) for proposing changes to the codebase:
+
+  - **Create a Branch:** Start a new branch for your changes.
+  - **Make Changes:** Implement your code changes in the branch.
+  - **Commit & Push:** Commit changes and push to your fork.
+  - **Open a Pull Request:** Propose changes through a pull request.
+  - **Code Review:** Team members review and provide feedback.
+  - **Address Feedback:** Make necessary changes based on feedback.
+  - **Merge:** Once approved, changes are merged.
+
+
+## Areas for Improvement
 
 - VAE
 - BMSG-GAN (https://github.com/akanimax/BMSG-GAN)
