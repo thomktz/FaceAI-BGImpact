@@ -74,8 +74,8 @@ FaceAI-BGImpact
 
 As required, our four models have been implemented from scratch. To improve the user experience with our models, we have maintained a consistent structure for each by introducing an abstract model class. This standardised structure makes it easy to move from one model to another, as they share common abstract methods. As a result, you can simply change the model name on the command line to run different training models without encountering problems.
 
-We developed the model structure by closely following the design principles of the StyleGan model available at https://github.com/huangzh13/StyleGAN.pytorch/tree/master. This code helped us to build not only our StyleGan model, but also our abstract model structure. Subsequently, we developed the remaining models independently, crafting each aspect from scratch without borrowing code from external repositories.
-There are only two external borrowing in our code. Firstly, to facilitate the debugging of the Progressive-Growing segment, we leveraged resources from the https://github.com/hukkelas/progan-pytorch repository. Secondly, with regard to the penalisation of StyleGan, in addition to the implemnattion of the WCGAN-GP, we have implemented R1 penalisation. For this implementation, we were inspired by the study of the official NVIDIA code, available at https://github.com/NVlabs/stylegan2-ada-pytorch. For the rest of the model, we all implemented them by our own.
+We developed the model structure by closely following the design principles of the StyleGan model available at https://github.com/huangzh13/StyleGAN.pytorch/tree/master. This code helped us to build not only our StyleGan model, but also our abstract model structure. Subsequently, we developed the remaining models independently, crafting each aspect from scratch without borrowing code from external repositories.  
+There are only two external borrowing in our code. Firstly, to facilitate the debugging of the Progressive-Growing segment, we leveraged resources from the https://github.com/hukkelas/progan-pytorch repository. Secondly, with regard to the penalisation of StyleGan, in addition to the WCGAN-GP loss, we have also implemented R1 penalisation. For this, we were inspired by the study of the official NVIDIA code, available at https://github.com/NVlabs/stylegan2-ada-pytorch. For the other aspects of our models, we all implemented them by our own.
 
 
 ## Training Script (train.py)
@@ -123,6 +123,13 @@ Checkpoint arguments:
 
 `faceai-bgimpact create-video --model StyleGAN --dataset ffhq_raw`
 
+
+## Innovations in Our Implementation
+
+à reformuler : 
+- using loss R1 on stylegan 1 to ease the conv
+- pca on latent space of VAE and StyleGAN
+- Code pour génerer les vidéos de training, code pour sauvegarder les images pdt le training, code pour calculer les FIDs pendant le training, code qui plot automatiquement
 
 ## Dependencies
 
