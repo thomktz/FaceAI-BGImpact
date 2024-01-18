@@ -4,8 +4,8 @@ from flask import Flask
 from flask_cors import CORS
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from backend.extensions import api
-from backend.api import stylegan_ns, vae_ns
+from extensions import api
+from api import stylegan_ns
 
 
 def create_app():
@@ -30,10 +30,10 @@ def create_app():
         resources={
             r"/*": {
                 "origins": [
-                    "http://localhost:8080",
-                    "http://127.0.0.1:8080",
-                    "https://aml.kientz.net",
-                    "http://89.168.39.28:8080" "https://89.168.39.28:8080",
+                    "http://localhost:8082",
+                    "http://127.0.0.1:8082",
+                    "https://ml.kientz.net",
+                    "http://89.168.39.28:8082" "https://89.168.39.28:8082",
                 ],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
@@ -47,7 +47,7 @@ def create_app():
 
     # Initialize the Flask-RestX Api and register the namespaces
     api.add_namespace(stylegan_ns, path="/stylegan")
-    api.add_namespace(vae_ns, path="/vae")
+    # api.add_namespace(vae_ns, path="/vae")
 
     # For testing purposes
     @app.route("/hello")

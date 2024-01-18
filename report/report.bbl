@@ -1,0 +1,25 @@
+\begin{thebibliography}{1}
+
+\bibitem{gauthier2014conditional}
+Jon Gauthier.
+\newblock Conditional generative adversarial nets for convolutional face generation.
+\newblock Technical report, Stanford University, 2014.
+
+\bibitem{goodfellow2014generative}
+Ian Goodfellow et~al.
+\newblock Generative adversarial networks, 2014.
+
+\bibitem{harkonen2020ganspace}
+Erik Härkönen, Aaron Hertzmann, Jaakko Lehtinen, and Sylvain Paris.
+\newblock Ganspace: Discovering interpretable gan controls, 2020.
+
+\bibitem{kcyin2021impact}
+K.~KC, Z.~Yin, D.~Li, and Z.~Wu.
+\newblock Impacts of background removal on convolutional neural networks for plant disease classification in-situ.
+\newblock {\em Agriculture}, 11(827), 2021.
+
+\bibitem{kingma2013vae}
+Diederik Kingma and Max Welling.
+\newblock Auto-encoding variational bayes, 2013.
+
+\end{thebibliography}
