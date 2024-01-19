@@ -50,8 +50,9 @@ The package was published to PyPi, and can be installed using
 ```
 pip install faceai-bgimpact
 ```
-
 To install locally, clone the repository and run `poetry install` from the root folder instead.
+
+> Note: If running on a GPU-enabled machine, pip may try to install the GPU-version of torch. Since CUDA is very heavy and takes a long time to install, this is not recommended, unless you intend on training models. You may install Torch (CPU) ahead of time, like we're doing in the Web-app's [backend Dockerfile](https://github.com/thomktz/FaceAI-BGImpact/blob/main/webapp/backend/Dockerfile). But in general you shouldn't need to install the package if you're not planning on training, since you can use the Web-app to interact with models, and the Web-app is Dockerized.
 
 ## 🌄 Datasets
 
