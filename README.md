@@ -176,7 +176,7 @@ It is too resource-intensive to be hosted on a free server, so the best course o
 
 **⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy. At least 5GB of free space required.
 
-The web-application is dockerized, so please install Docker first. Then, refer to this video to install and run the application:
+The web-application is dockerized, so please install Docker first. Then, refer to this video (click image, or [here](https://www.youtube.com/watch?v=BU1d8SxDASY)) to install and run the application:
 
 [![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
