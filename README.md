@@ -158,11 +158,18 @@ The web-application is dockerized, to please install docker first. Then, refer t
 [![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
 But the general steps are:
-- Clone the repository
-- Go to the webapp/ folder
-- `docker compose up --build`
-- In a browser, go to http://localhost:8082
-- When you're done, don't forget to remove the docker image and container, as they are 5GB in total.
+```
+git clone https://github.com/thomktz/FaceAI-BGImpact.git
+```
+```
+cd FaceAI-BGImpact/webapp
+```
+```
+docker compose up --build
+```
+Then, in a browser, go to [http://localhost:8082](http://localhost:8082)  
+
+When you're done, don't forget to remove the docker image and container, as they are 5GB in total.
 
 ---
 
