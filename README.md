@@ -138,7 +138,11 @@ On the left, the generated image for the current resolution and alpha, on the ri
 
 We developped a web application to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python). It was too resource-intensive to be hosted on a free server, so the best course of action is to host it locally.
 
-**⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy.
+**⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy. At least 5GB of free space required.
+
+The web-application is dockerized, to please install docker first. Then, refer to this video to install and run the application:
+
+[![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
 ---
 
