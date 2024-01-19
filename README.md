@@ -2,6 +2,17 @@
 
 ![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
 
+<p align="center">
+   <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faceai-bgimpact">
+   
+  <img src="https://img.shields.io/pypi/v/faceai-bgimpact?style=flat-square" alt="Pypi" />
+  <img alt="Static Badge" src="https://img.shields.io/badge/pypi_size-725.8kB-orange">
+   <br>
+   <img src="https://img.shields.io/github/commit-activity/m/thomktz/FaceAI-BGImpact?style=flat-square" alt="Commits" />
+   <img alt="GitHub License" src="https://img.shields.io/github/license/thomktz/FaceAI-BGImpact">
+   <img src="https://img.shields.io/github/repo-size/thomktz/FaceAI-BGImpact?style=flat-square" alt="Size" />
+</p>
+
 Code for the paper:
 <p align="center">
    <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
@@ -13,18 +24,6 @@ Code for the paper:
 
 (Paper available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
 
-
-
-<p align="center">
-   <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faceai-bgimpact">
-   
-  <img src="https://img.shields.io/pypi/v/faceai-bgimpact?style=flat-square" alt="Pypi" />
-  <img alt="Static Badge" src="https://img.shields.io/badge/pypi_size-725.8kB-orange">
-   <br>
-   <img src="https://img.shields.io/github/commit-activity/m/thomktz/FaceAI-BGImpact?style=flat-square" alt="Commits" />
-   <img alt="GitHub License" src="https://img.shields.io/github/license/thomktz/FaceAI-BGImpact">
-   <img src="https://img.shields.io/github/repo-size/thomktz/FaceAI-BGImpact?style=flat-square" alt="Size" />
-</p>
 
 ---
 
