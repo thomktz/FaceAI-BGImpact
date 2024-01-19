@@ -72,7 +72,7 @@
 \maketitle
 
 \begin{abstract}
-  This study focuses on removing the background from datasets of faces to gauge the effect on the training and performance of facial generative models. We are also interested on the effect on the interpretability of the latent spaces of the models. 
+  This study focuses on removing the background from datasets of faces to gauge the effect on the training and performance of facial generative models. We are also interested in the effect on the interpretability of the latent spaces of the models. 
 \end{abstract}
 
 The code for this project can be found on our repository \href{https://github.com/thomktz/FaceAI-BGImpact}{FaceAI-BGImpact}. \\
@@ -82,7 +82,7 @@ The demo video of the web-application we made can be watched \href{https://www.y
 
 \quad The realm of image generation has seen some major breakthroughs in recent years. 
 An area of specific interest to us was that of the latent representations of complex images in generative models. 
-Observing these gives us an insight into what best characterizes an image, in the eyes of the trained algorithm. 
+Observing them gives us an insight into what best characterizes an image, in the eyes of the trained algorithm. 
 When applied to a dataset of human faces, they can give us objective\footnotemark insight into our most defining traits.
 \footnotetext[1]{Depending on dataset bias}
 Most image generation techniques will create an image from a scalar vector as input. 
@@ -254,7 +254,7 @@ At resolution $l$ and blending factor $\alpha$, we're comparing blended real ima
 
 \[ x(l, \alpha) = \alpha \times x_{l} + (1-\alpha) \times UpScale(x_{l-1}) \]
 
-One think to keep in mind is that grey-background images weight 16\% less on average (raw 1.87Mb, grey 1.58Mb), because data was removed from them. We will be comparing what we define as an adjusted FID for the original dataset as follows:
+One thing to keep in mind is that grey-background images weight 16\% less on average (raw 1.87Mb, grey 1.58Mb), because data was removed from them. We will be comparing what we define as an adjusted FID for the original dataset as follows:
 
 \[ \text{FID}_{\text{adjusted}} = \text{FID}_{\text{raw}} \times (1 - 0.16) \]
 

@@ -14,18 +14,18 @@
 </p>
 
 Code for the paper:
+
 <p align="center">
    <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
   <br/> 
    <i>
    This study focuses on removing the background from datasets of faces<br> 
    to gauge the effect on the training and performance of facial generative models. <br>
-   We are also interested on the effect on the interpretability of the latent spaces of the models. 
+   We are also interested in the effect on the interpretability of the latent spaces of the models. 
    </i>
 </p>
 
 (Paper available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
-
 
 ---
 
@@ -50,6 +50,7 @@ The package was published to PyPi, and can be installed using
 ```
 pip install faceai-bgimpact
 ```
+
 To install locally, clone the repository and run `poetry install` from the root folder instead.
 
 > Note: If running on a GPU-enabled machine, pip may try to install the GPU-version of torch. Since CUDA is very heavy and takes a long time to install, this is not recommended, unless you intend on training models. You may install Torch (CPU) ahead of time, like we're doing in the Web-app's [backend Dockerfile](https://github.com/thomktz/FaceAI-BGImpact/blob/main/webapp/backend/Dockerfile). But in general you shouldn't need to install the package if you're not planning on training, since you can use the Web-app to interact with models, and the Web-app is Dockerized.
@@ -174,7 +175,7 @@ On the left, the generated image for the current resolution and alpha, on the ri
 
 # The web application
 
-We developped a web application from scratch to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python). 
+We developped a web application from scratch to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python).
 It is too resource-intensive to be hosted on a free server, so the best course of action is to host it locally.
 
 **⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy. At least 5GB of free space required.
@@ -184,16 +185,20 @@ The web-application is dockerized, so please install Docker first. Then, refer t
 [![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
 But the general steps are:
+
 ```
 git clone https://github.com/thomktz/FaceAI-BGImpact.git
 ```
+
 ```
 cd FaceAI-BGImpact/webapp
 ```
+
 ```
 docker compose up --build
 ```
-Then, in a browser, go to [http://localhost:8082](http://localhost:8082)  
+
+Then, in a browser, go to [http://localhost:8082](http://localhost:8082)
 
 When you're done, don't forget to remove the docker image and container, as they are 5GB in total.
 
