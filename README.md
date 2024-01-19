@@ -1,10 +1,28 @@
 # FaceAI - Background Impact
 
-This repository is the implementation of our paper, "**_Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy_**" (available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
-
 ![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
 
-It contains:
+<p align="center">
+  Code for the paper <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
+  <br/> 
+</p>
+
+(Paper available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
+
+
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/thomktz/FaceAI-BGImpact?style=flat-square" alt="Licence MIT" />
+  <img src="https://img.shields.io/pypi/v/faceai-bgimpact?style=flat-square" alt="Pypi" />
+  <img src="https://img.shields.io/github/repo-size/thomktz/FaceAI-BGImpact?style=flat-square" alt="Size" />
+  <img src="https://img.shields.io/github/commit-activity/m/thomktz/FaceAI-BGImpact?style=flat-square" alt="Commits" />
+  <a href="https://www.python.org/downloads/release/python-3100/" 
+  target="_blank"><img src="https://img.shields.io/badge/python-3.10-blue.svg" alt="Python Version" /></a>
+</p>
+
+---
+
+The repository contains:
 
 - The `faceai-bgimpact`package:
   - Data processing scripts to create the FFHQ-Blur and FFHQ-Grey datasets
