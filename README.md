@@ -6,6 +6,9 @@ Code for the paper:
 <p align="center">
    <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
   <br/> 
+   This study focuses on removing the background from datasets of faces<br> 
+   to gauge the effect on the training and performance of facial generative models. <br>
+   We are also interested on the effect on the interpretability of the latent spaces of the models. 
 </p>
 
 (Paper available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
@@ -39,7 +42,7 @@ The repository contains:
 
 # The package
 
-The package was published to Pypi, and can be installed using
+The package was published to PyPi, and can be installed using
 
 ```
 pip install faceai-bgimpact
@@ -172,7 +175,7 @@ It is too resource-intensive to be hosted on a free server, so the best course o
 
 **⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy. At least 5GB of free space required.
 
-The web-application is dockerized, to please install docker first. Then, refer to this video to install and run the application:
+The web-application is dockerized, so please install Docker first. Then, refer to this video to install and run the application:
 
 [![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
