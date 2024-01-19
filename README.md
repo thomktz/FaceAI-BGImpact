@@ -6,7 +6,7 @@ This repository is the implementation of our paper, "**_Behind the Face: Unveili
 
 It contains:
 
-- A new `faceai-bgimpact`package:
+- The `faceai-bgimpact`package:
   - Data processing scripts to create the FFHQ-Blur and FFHQ-Grey datasets
   - A unified Deep Learning framework for training and evaluating Generative AI models
   - Models enabling latent space exploration with PCA
