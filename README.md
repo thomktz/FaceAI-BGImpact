@@ -2,8 +2,9 @@
 
 ![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
 
+Code for the paper:
 <p align="center">
-  Code for the paper <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
+   <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
   <br/> 
 </p>
 
