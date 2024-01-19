@@ -73,8 +73,8 @@ export default {
   data: () => ({
     settings: {
       modelName: "Grey",
-      slidersRange: 2.0,
-      nSlidersNew: 5,
+      slidersRange: 3.0,
+      nSlidersNew: 8,
       nSlidersOriginal: 10,
     },
     imageData: "",

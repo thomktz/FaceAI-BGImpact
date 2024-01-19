@@ -60,8 +60,8 @@ export default {
   emits: ["updateSettings", "modelChange"],
   data: () => ({
     modelName: "Grey",
-    slidersRange: 2.0,
-    nSlidersNew: 5,
+    slidersRange: 3.0,
+    nSlidersNew: 8,
     nSlidersOriginal: 10,
     modelTypes: ["Grey", "Blur", "Raw"],
   }),

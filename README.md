@@ -1,29 +1,170 @@
 # FaceAI - Background Impact
 
-This project implements various Generative AI models to generate faces:
+This repository is the implementation of our paper, "**_Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy_**" (available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
 
-- Deep Convolutional Generative Adversarial Network (DCGAN)
-- Progressive-growing StyleGAN
-- Variational Autoencoder (VAE)
+![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
 
-The projects also implements two new versions of the [Flicker-Face-HQ (FFHQ)](https://github.com)
+It contains:
+
+- A new `faceai-bgimpact`package:
+  - Data processing scripts to create the FFHQ-Blur and FFHQ-Grey datasets
+  - A unified Deep Learning framework for training and evaluating Generative AI models
+  - Models enabling latent space exploration with PCA
+  - A set of scripts to train, evaluate and generate images and videos from the models
+- A set of pre-trained models(\*)
+- A web application to take control of the pre-trained models(\*)
+
+(\*) = not included in the Pypi package.
+
+---
+
+# The package
+
+The package was published to Pypi, and can be installed using
+
+`pip install faceai-bgimpact`.
+
+## 🌄 Datasets
+
+#### **Download script**
+
+We uploaded the created datasets to Kaggle. To download them, please set up your Kaggle API token, then run:
+
+`faceai-bgimpact download-all-ffhq`
+
+#### **Generate**
+
+You can also choose to generate the Grey and Blur datasets yourself. To do so, first download the raw dataset using:
+
+`faceai-bgimpact download-all-ffhq --raw`
+
+Then, you can generate the masks using:
+
+`faceai-bgimpact create-masks`
+
+And finally, generate the grey and blur datasets using:
+
+`faceai-bgimpact create-blur-and-grey`
+
+#### **Kaggle**
+
+The datasets are available on Kaggle at the following links:
 
 - [FFHQ-Blur](https://www.kaggle.com/datasets/thomaskientz/ffhq-blur) (Where the background is blurred)
 - [FFHQ-Grey](https://www.kaggle.com/datasets/thomaskientz/ffhq-grey) (Where the background is greyed-out)
 
-![387467294_852111396644872_6368954973460925603_n](https://github.com/thomktz/FaceAI-BGImpact/assets/60552083/d2a015eb-eabe-4a9c-ad6e-7ed35051241f)
+## 🧠 Models
 
-The motivation stemmed from the fact that a lot of the variance in VAEs seemed to be wasted on the background of the image. There are no existing large-scale faces datasets with uniform background (the ORL dataset only has 400 images), so we decided to create our own.
+The package allows you to train and evaluate the following models:
 
-## Installation
+- **Variational Auto-encoder**
+- **DCGAN**
+- **StyleGAN**
 
-### Pip
+using these example commands:
 
-We published the models and dataset transformations as a pip package. To install, run:
+- `faceai-bgimpact train --model VAE --dataset ffhq_raw`
 
-`pip install faceai-bgimpact`
+  - (Train a VAE on the raw FFHQ dataset from scratch)
 
-## Folder structure 
+- `faceai-bgimpact train --model StyleGAN --dataset ffhq_grey --checkpoint-epoch 80`
+  - (Resume training a StyleGAN on the greyed-out FFHQ dataset from epoch 80)
+
+#### **Notes on implementation**
+
+We implemented the models from scratch, using PyTorch. Here is a list of the main inspirations we used, if any:
+
+- **StyleGAN**:
+  - There is no official PyTorch implementation of StyleGAN 1. Most of the code was implemented by hand from reading the StyleGAN paper and the ProGAN paper, although, some building blocks were taken from other repositories, below.
+  - [hukkelas/progan-pytorch](https://github.com/hukkelas/progan-pytorch): Inspiration for the progressive-growing structure, no actual code was used.
+  - [aladdinpersson/Machine-Learning-Collection](https://github.com/aladdinpersson/Machine-Learning-Collection/tree/558557c7989f0b10fee6e8d8f953d7269ae43d4f/ML/Pytorch/GANs/StyleGAN): We used this repository for the most granular building blocks, like the weight-scaled Conv2d layer, the pixelwise normalization layer, and the minibatch standard deviation layer.
+  - [NVlabs/stylegan2](https://github.com/NVlabs/stylegan2): Official StyleGAN2 implementation. StyleGAN2 has a very different architecture from StyleGAN1, but we used the R1 loss function from this repository. StyleGAN normally uses WGAN-GP regularization, but we had convergence issues. Using R1 regularization instead of WGAN-GP solved the issue.
+- **VAE**:
+  - The VAE was implemented from scratch, using the VAE paper as a reference.
+- **PCA**:
+  - The latent space exploration using PCA was all implemented from scratch.
+
+We also introduced a unified framework for the models. In practice we have an `AbstractModel` class, which is inherited by the `VAE`, `DCGAN` and `StyleGAN` classes. It enforces a common structure for the models, allowing the scripts to be nearly model-agnostic.
+
+We also put in place rigorous code standards, using pre-commit hooks (**_black_**, **_flake8_**, **_prettier_**) to enforce code formatting, and linting, as well as automated tests using **_PyTest_**, and a code review process using pull requests.
+
+> To run the pre-commit hooks, you should install the hooks using `pre-commit install`, and then `pre-commit run` (or `pre-commit run --all-files` to run on all files).
+
+> To run the tests, you should install PyTest using `pip install pytest`, and then run `pytest -v` (or `poetry run pytest -v` if you are using poetry).
+
+## 📝 Scripts
+
+The package also includes a set of scripts to train, evaluate and generate images and videos from the models.
+
+#### **Training**
+
+The `train` script is an entry point to train a model. It includes these command-line arguments:
+
+- `--model`: Required. Specifies the type of model to train with options "DCGAN", "StyleGAN", "VAE".
+- `--dataset`: Required. Selects the dataset to use with options "ffhq_raw", "ffhq_blur", "ffhq_grey".
+- `--latent-dim`: Optional. Defines the dimension of the latent space for generative models.
+- `--config-path`: Optional. Path to a custom JSON configuration file for model training.
+- `--lr`: Optional. Learning rate for DCGAN model training.
+- `--dlr`: Optional. Discriminator learning rate for StyleGAN training.
+- `--glr`: Optional. Generator learning rate for StyleGAN training.
+- `--mlr`: Optional. W-Mapping learning rate for StyleGAN training.
+- `--loss`: Optional. Specifies the loss function to use with defaults to "r1"; choices are "wgan", "wgan-gp", "r1".
+- `--batch-size`: Optional. Defines the batch size during training.
+- `--num-epochs`: Optional. Sets the number of epochs for training the model.
+- `--save-interval`: Optional. Epoch interval to wait before saving models and generated images.
+- `--image-interval`: Optional. Iteration interval to wait before saving generated images.
+- `--list`: Optional. Lists all available checkpoints if set.
+- `--checkpoint-path`: Optional. Path to a specific checkpoint file to resume training, takes precedence over `--checkpoint-epoch`.
+
+#### **Training video**
+
+The `create-video` script is an entry point to create a video from images saved throughout the training process. It includes these command-line arguments:
+
+- `--model`: Required. Specifies the type of model to train with options "DCGAN", "StyleGAN", "VAE".
+- `--dataset`: Required. Selects the dataset to use with options "ffhq_raw", "ffhq_blur", "ffhq_grey".
+- `frame-rate`: Optional. Defines the frame rate of the video.
+- `skip-frames`: Optional. Defines the number of images to skip between each frame of the video.
+
+Example usage:
+
+`faceai-bgimpact create-video --model StyleGAN --dataset ffhq_grey`
+
+=> [Output video](https://youtu.be/xDtf5vw9yT8)
+On the left, the generated image for the current resolution and alpha, on the right, a real image at the same resolution and alpha.
+
+---
+
+# The web application
+
+We developped a web application to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python). It was too resource-intensive to be hosted on a free server, so the best course of action is to host it locally.
+
+**⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy.
+
+---
+
+## Dependencies
+
+We use [Poetry](https://python-poetry.org/) for dependency management. To install the dependencies, you should use the provided poetry environment. If you do not have poetry installed, you can install it using pip:
+
+`pip install poetry`
+
+Then, you can install the dependencies using:
+
+`poetry install`
+
+And activate the environment using:
+
+`poetry shell`
+
+To install the package locally, you can run
+
+`poetry install`
+
+Since these packages are heavy (especially PyTorch), you may use your own environment if you wish, but it might not work as expected.
+
+Training on GPU is highly recommended. If you have a CUDA-enabled GPU, you should install the CUDA version of PyTorch.
+
+## Folder structure
 
 This repositery is structured as following :
 
@@ -53,9 +194,9 @@ FaceAI-BGImpact
 │   │   │   ├── loss.py                 # Loss functions for StyleGAN
 │   │   │   └── stylegan.py
 |   |   ├── vae_                        # VAE model implementation
-|   |   |   ├── decoder.py              
-│   │   │   ├── encoder.py              
-│   │   │   └── vae.py                  
+|   |   |   ├── decoder.py
+│   │   │   ├── encoder.py
+│   │   │   └── vae.py
 │   │   ├── abstract_model.py           # Abstract model class for common functionalities
 │   │   ├── data_loader.py              # Data loading utilities
 │   │   └── utils.py
@@ -70,122 +211,3 @@ FaceAI-BGImpact
 ├── README.md
 └── pyproject.toml                      # Poetry package management configuration file
 ```
-
-
-As required, our four models have been implemented from scratch. To improve the user experience with our models, we have maintained a consistent structure for each by introducing an abstract model class. This standardised structure makes it easy to move from one model to another, as they share common abstract methods. As a result, you can simply change the model name on the command line to run different training models without encountering problems.
-
-We developed the model structure by closely following the design principles of the StyleGan model available at https://github.com/huangzh13/StyleGAN.pytorch/tree/master. This code helped us to build not only our StyleGan model, but also our abstract model structure. Subsequently, we developed the remaining models independently, crafting each aspect from scratch without borrowing code from external repositories.  
-There are only two external borrowing in our code. Firstly, to facilitate the debugging of the Progressive-Growing segment, we leveraged resources from the https://github.com/hukkelas/progan-pytorch repository. Secondly, with regard to the penalisation of StyleGan, in addition to the WCGAN-GP loss, we have also implemented R1 penalisation. For this, we were inspired by the study of the official NVIDIA code, available at https://github.com/NVlabs/stylegan2-ada-pytorch. For the other aspects of our models, we all implemented them by our own.
-
-
-## Training Script (train.py)
-
-The `train.py` script is an entry point to train a model. It includes command-line arguments to specify the model type, configuration parameters, learning rate, latent dimension, batch size, number of epochs, and intervals for saving.
-
-## How to Use
-
-0. Ensure you have the package installed, or the required dependencies for dev installed (see Dependencies section below).
-
-1. To train a model, you call `faceai-bgimpact train` and specify the model type using the `--model` flag, and the dataset with the `--dataset` flag.
-
-2. Additional command-line arguments allow for fine-tuning the training process:
-
-Model arguments:
-
-- `--model`: Required. Specifies the type of model to train with options "DCGAN", "StyleGAN".
-- `--dataset`: Required. Selects the dataset to use with options "ffhq_raw", "ffhq_blur", "ffhq_grey".
-- `--latent-dim`: Optional. Defines the dimension of the latent space for generative models.
-- `--config-path`: Optional. Path to a custom JSON configuration file for model training.
-
-Training arguments:
-
-- `--lr`: Optional. Learning rate for DCGAN model training.
-- `--dlr`: Optional. Discriminator learning rate for StyleGAN training.
-- `--glr`: Optional. Generator learning rate for StyleGAN training.
-- `--mlr`: Optional. W-Mapping learning rate for StyleGAN training.
-- `--loss`: Optional. Specifies the loss function to use with defaults to "wgan-gp"; choices are "wgan", "wgan-gp", "basic".
-- `--batch-size`: Optional. Defines the batch size during training.
-- `--num-epochs`: Optional. Sets the number of epochs for training the model.
-- `--save-interval`: Optional. Epoch interval to wait before saving models and generated images.
-- `--image-interval`: Optional. Iteration interval to wait before saving generated images.
-
-Checkpoint arguments:
-
-- `--list`: Optional. Lists all available checkpoints if set.
-- `--checkpoint-path`: Optional. Path to a specific checkpoint file to resume training, takes precedence over `--checkpoint-epoch`.
-- `--checkpoint-epoch`: Optional. Specifies the epoch number from which to resume training.
-
-3. Example usage:
-
-`faceai-bgimpact download-all-ffhq`
-
-`faceai-bgimpact train --model StyleGAN --dataset ffhq_raw`
-
-`faceai-bgimpact create-video --model StyleGAN --dataset ffhq_raw`
-
-
-## Innovations in Our Implementation
-
-à reformuler : 
-- using loss R1 on stylegan 1 to ease the conv
-- pca on latent space of VAE and StyleGAN
-- Code pour génerer les vidéos de training, code pour sauvegarder les images pdt le training, code pour calculer les FIDs pendant le training, code qui plot automatiquement
-
-## Dependencies
-
-We use [Poetry](https://python-poetry.org/) for dependency management. To install the dependencies, you should use the provided poetry environment. If you do not have poetry installed, you can install it using pip:
-
-`pip install poetry`
-
-Then, you can install the dependencies using:
-
-`poetry install`
-
-And activate the environment using:
-
-`poetry shell`
-
-To install the package locally, you can run
-
-`poetry install`
-
-Since these packages are heavy (especially PyTorch), you may use your own environment if you wish, but it might not work as expected.
-
-Training on GPU is highly recommended. If you have a CUDA-enabled GPU, you should install the CUDA version of PyTorch.
-
-## Testing
-
-Automated tests can be run using PyTest. Ensure you have PyTest installed and run:
-
-`pytest -v`
-
-in the project root to execute all tests.
-
-Alternatively, with poetry, you can run:
-
-`poetry run pytest -v`
-
-## Code standards
-
-- **Using Pre-Commit hooks**  
-  Pre-commit allows you to run scripts ('hooks') before each commit to your repository. The ones we used are **black** (python - code formatter), **flake8** (python - linter) and **mypy** (python - type checker).
-
-  To run them, you should install the hooks using `pre-commit install`, and then `pre-commit run`
-
-- **Code review and Pull requests**  
-  We encourage collaboration through the use of pull requests (PRs) for proposing changes to the codebase:
-
-  - **Create a Branch:** Start a new branch for your changes.
-  - **Make Changes:** Implement your code changes in the branch.
-  - **Commit & Push:** Commit changes and push to your fork.
-  - **Open a Pull Request:** Propose changes through a pull request.
-  - **Code Review:** Team members review and provide feedback.
-  - **Address Feedback:** Make necessary changes based on feedback.
-  - **Merge:** Once approved, changes are merged.
-
-
-## Areas for Improvement
-
-- VAE
-- BMSG-GAN (https://github.com/akanimax/BMSG-GAN)
-- GANSpace (https://proceedings.neurips.cc/paper/2020/file/6fe43269967adbb64ec6149852b5cc3e-Paper.pdf)
