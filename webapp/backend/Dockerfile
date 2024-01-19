@@ -1,12 +1,12 @@
 # frontend Dockerfile
 # Use an official Python runtime as a parent image
-FROM anibali/pytorch:2.0.1-nocuda-ubuntu22.04
+FROM python:3.10.13-bullseye
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+RUN pip install scikit-learn==1.3.2
 RUN pip install faceai-bgimpact==0.2.3
 RUN pip install flask-restx==1.2.0
 RUN pip install flask-cors==4.0.0
