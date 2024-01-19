@@ -24,6 +24,8 @@ The package was published to Pypi, and can be installed using
 
 `pip install faceai-bgimpact`.
 
+To install locally, clone the repoistory and run `poetry install` from the root folder instead.
+
 ## 🌄 Datasets
 
 #### **Download script**
@@ -86,11 +88,11 @@ We implemented the models from scratch, using PyTorch. Here is a list of the mai
 
 We also introduced a unified framework for the models. In practice we have an `AbstractModel` class, which is inherited by the `VAE`, `DCGAN` and `StyleGAN` classes. It enforces a common structure for the models, allowing the scripts to be nearly model-agnostic.
 
-We also put in place rigorous code standards, using pre-commit hooks (**_black_**, **_flake8_**, **_prettier_**) to enforce code formatting, and linting, as well as automated tests using **_PyTest_**, and a code review process using pull requests.
+We also put in place rigorous code standards, using pre-commit hooks (**_black_**, **_flake8_**, **_prettier_**) to enforce code formatting, and linting, as well as automated tests using **_PyTest_**, and a code review process using pull requests. We used **** for package management.
 
 > To run the pre-commit hooks, you should install the hooks using `pre-commit install`, and then `pre-commit run` (or `pre-commit run --all-files` to run on all files).
 
-> To run the tests, you should install PyTest using `pip install pytest`, and then run `pytest -v` (or `poetry run pytest -v` if you are using poetry).
+> To run the tests, you should install PyTest using `pip install pytest`, and then run `pytest -v` (or ` run pytest -v` if you are using ).
 
 ## 📝 Scripts
 
@@ -136,7 +138,8 @@ On the left, the generated image for the current resolution and alpha, on the ri
 
 # The web application
 
-We developped a web application to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python). It was too resource-intensive to be hosted on a free server, so the best course of action is to host it locally.
+We developped a web application from scratch to control the latent space of StyleGAN using Vue.JS and Flask-RESTx (Python). 
+It is too resource-intensive to be hosted on a free server, so the best course of action is to host it locally.
 
 **⚠️ Warning ⚠️:** Since it contains Torch, the environment is quite heavy. At least 5GB of free space required.
 
@@ -144,33 +147,19 @@ The web-application is dockerized, to please install docker first. Then, refer t
 
 [![Watch the video](https://img.youtube.com/vi/BU1d8SxDASY/sd1.jpg)](https://www.youtube.com/watch?v=BU1d8SxDASY)
 
+But the general steps are:
+- Clone the repository
+- Go to the webapp/ folder
+- `docker compose up --build`
+- Go to http://localhost:8082
+- Go to tab GANSpace
+
+
 ---
-
-## Dependencies
-
-We use [Poetry](https://python-poetry.org/) for dependency management. To install the dependencies, you should use the provided poetry environment. If you do not have poetry installed, you can install it using pip:
-
-`pip install poetry`
-
-Then, you can install the dependencies using:
-
-`poetry install`
-
-And activate the environment using:
-
-`poetry shell`
-
-To install the package locally, you can run
-
-`poetry install`
-
-Since these packages are heavy (especially PyTorch), you may use your own environment if you wish, but it might not work as expected.
-
-Training on GPU is highly recommended. If you have a CUDA-enabled GPU, you should install the CUDA version of PyTorch.
 
 ## Folder structure
 
-This repositery is structured as following :
+The package is structured as following :
 
 ```
 FaceAI-BGImpact
@@ -186,8 +175,6 @@ FaceAI-BGImpact
 │   │   ├── create_blur_and_grey.py     # Functions to create blurred and greyed-out FFHQ datasets
 │   │   └── download_all_ffhq.py        # Functions to download all FFHQ datasets
 │   ├── models
-│   │   ├── provae                      # PROVAE model implementation
-│   │   │   ├── provae.py
 │   │   ├── dcgan_                      # DCGAN model implementation
 │   │   │   ├── dcgan.py
 │   │   │   ├── discriminator.py
@@ -211,7 +198,9 @@ FaceAI-BGImpact
 │   │   └── graph_fids.py
 │   ├── main.py                         # Entry point for the package
 │   └── Nirmala.ttf                     # Font file used in the project
-├── tests                               # Pytests
+├── tests/                              # Pytests
+├── webapp/                             # Web application folder
+├── report/                             # LaTeX report
 ├── README.md
 └── pyproject.toml                      # Poetry package management configuration file
 ```
