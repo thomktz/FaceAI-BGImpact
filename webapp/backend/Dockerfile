@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 RUN pip install scikit-learn==1.3.2
-RUN pip install faceai-bgimpact==0.2.3
+RUN pip install faceai-bgimpact==0.2.4
 RUN pip install flask-restx==1.2.0
 RUN pip install flask-cors==4.0.0
 
