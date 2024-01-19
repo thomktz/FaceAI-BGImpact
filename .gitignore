@@ -29,3 +29,5 @@ outputs/
 *.log
 *.out
 *.gz
+
+node_modules/
