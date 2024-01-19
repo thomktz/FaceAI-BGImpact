@@ -22,7 +22,9 @@ It contains:
 
 The package was published to Pypi, and can be installed using
 
-`pip install faceai-bgimpact`.
+```
+pip install faceai-bgimpact
+```
 
 To install locally, clone the repository and run `poetry install` from the root folder instead.
 
@@ -32,21 +34,29 @@ To install locally, clone the repository and run `poetry install` from the root 
 
 We uploaded the created datasets to Kaggle. To download them, please set up your Kaggle API token, then run:
 
-`faceai-bgimpact download-all-ffhq`
+```
+faceai-bgimpact download-all-ffhq
+```
 
 #### **Generate**
 
 You can also choose to generate the Grey and Blur datasets yourself. To do so, first download the raw dataset using:
 
-`faceai-bgimpact download-all-ffhq --raw`
+```
+faceai-bgimpact download-all-ffhq --raw
+```
 
 Then, you can generate the masks using:
 
-`faceai-bgimpact create-masks`
+```
+faceai-bgimpact create-masks
+```
 
 And finally, generate the grey and blur datasets using:
 
-`faceai-bgimpact create-blur-and-grey`
+```
+faceai-bgimpact create-blur-and-grey
+```
 
 #### **Kaggle**
 
@@ -151,9 +161,8 @@ But the general steps are:
 - Clone the repository
 - Go to the webapp/ folder
 - `docker compose up --build`
-- Go to http://localhost:8082
-- Go to tab GANSpace
-
+- In a browser, go to http://localhost:8082
+- When you're done, don't forget to remove the docker image and container, as they are 5GB in total.
 
 ---
 
