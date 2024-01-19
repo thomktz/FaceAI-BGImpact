@@ -88,7 +88,7 @@ We implemented the models from scratch, using PyTorch. Here is a list of the mai
 
 We also introduced a unified framework for the models. In practice we have an `AbstractModel` class, which is inherited by the `VAE`, `DCGAN` and `StyleGAN` classes. It enforces a common structure for the models, allowing the scripts to be nearly model-agnostic.
 
-We also put in place rigorous code standards, using pre-commit hooks (**_black_**, **_flake8_**, **_prettier_**) to enforce code formatting, and linting, as well as automated tests using **_PyTest_**, and a code review process using pull requests. We used **** for package management.
+We also put in place rigorous code standards, using pre-commit hooks (**_black_**, **_flake8_**, **_prettier_**) to enforce code formatting, and linting, as well as automated tests using **_PyTest_**, and a code review process using pull requests. We used **_poetry_** for package management.
 
 > To run the pre-commit hooks, you should install the hooks using `pre-commit install`, and then `pre-commit run` (or `pre-commit run --all-files` to run on all files).
 
