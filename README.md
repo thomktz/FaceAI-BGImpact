@@ -16,12 +16,13 @@ Code for the paper:
 
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/thomktz/FaceAI-BGImpact?style=flat-square" alt="Licence MIT" />
+   <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faceai-bgimpact">
+   
   <img src="https://img.shields.io/pypi/v/faceai-bgimpact?style=flat-square" alt="Pypi" />
   <img alt="Static Badge" src="https://img.shields.io/badge/pypi_size-725.8kB-orange">
    <br>
-  <img src="https://img.shields.io/github/commit-activity/m/thomktz/FaceAI-BGImpact?style=flat-square" alt="Commits" />
-  <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faceai-bgimpact">
+   <img src="https://img.shields.io/github/commit-activity/m/thomktz/FaceAI-BGImpact?style=flat-square" alt="Commits" />
+   <img alt="GitHub License" src="https://img.shields.io/github/license/thomktz/FaceAI-BGImpact">
    <img src="https://img.shields.io/github/repo-size/thomktz/FaceAI-BGImpact?style=flat-square" alt="Size" />
 </p>
 
