@@ -17,9 +17,11 @@ Code for the paper:
 <p align="center">
    <b>"Behind the Face: Unveiling the Effects of Background Subtraction on VAE and GAN Model Efficacy"</b>
   <br/> 
+   <i>
    This study focuses on removing the background from datasets of faces<br> 
    to gauge the effect on the training and performance of facial generative models. <br>
    We are also interested on the effect on the interpretability of the latent spaces of the models. 
+   </i>
 </p>
 
 (Paper available [here](https://github.com/thomktz/FaceAI-BGImpact/blob/main/report/report.pdf)).
